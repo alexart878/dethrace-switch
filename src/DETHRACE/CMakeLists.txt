@@ -10,12 +10,30 @@ target_include_directories(dethrace_obj
         pd
 )
 
+if (NINTENDO_SWITCH)
+
+    target_include_directories(
+        dethrace_obj
+        PUBLIC
+        ${DEVKITPRO}/libnx/include
+        ${DEVKITPRO}/portlibs/switch/include
+        ${DEVKITPRO}/portlibs/switch/include/SDL2
+        ${DEVKITPRO}/devkitA64/aarch64-none-elf/include
+    )
+
+endif ()
+
 if (DETHRACE_ASAN)
     target_compile_options(dethrace_obj PUBLIC -fsanitize=address)
     target_link_options(dethrace_obj PUBLIC -fsanitize=address)
 endif()
 
-target_link_libraries(dethrace_obj PUBLIC SDL2::SDL2 smackw32 harness BRender::Full BRender::DDI s3)
+if (NOT NINTENDO_SWITCH)
+    target_link_libraries(dethrace_obj PUBLIC SDL2::SDL2 smackw32 harness BRender::Full BRender::DDI s3)
+else()
+    target_compile_options(dethrace_obj PRIVATE -march=armv8-a -mtune=cortex-a57 -O2 -ffunction-sections)
+    target_link_libraries(dethrace_obj PUBLIC SDL2 smackw32 harness BRender::Full BRender::DDI s3)
+endif()
 
 if(MSVC)
     target_compile_definitions(dethrace_obj PRIVATE -D_CRT_SECURE_NO_WARNINGS)
@@ -245,3 +263,37 @@ if(DETHRACE_INSTALL)
         )
     endif()
 endif()
+
+if (NINTENDO_SWITCH)
+
+    # create .nro target
+    set(NRO_OUT "${CMAKE_BINARY_DIR}/dethrace.nro")
+    set(NRO_ICON "${CMAKE_SOURCE_DIR}/packaging/carma_256.jpg")
+    set(NACP_OUT "${CMAKE_BINARY_DIR}/dethrace.nacp")
+    set(NACP_NAME "DethRaceNX")
+    set(NACP_AUTHOR "alexart878")
+    set(NACP_VERSION "1.0")
+
+    if(NOT COMMAND nx_generate_nacp)
+        message(FATAL_ERROR "The `nx_generate_nacp` cmake command is not available. Please use an appropriate Nintendo Switch toolchain.")
+    endif()
+
+    if(NOT COMMAND nx_create_nro)
+        message(FATAL_ERROR "The `nx_create_nro` cmake command is not available. Please use an appropriate Nintendo Switch toolchain.")
+    endif()
+
+    nx_generate_nacp(
+        ${NACP_OUT}
+        NAME ${NACP_NAME}
+        AUTHOR ${NACP_AUTHOR}
+        VERSION ${NACP_VERSION}
+    )
+
+    nx_create_nro(
+        dethrace
+        OUTPUT ${NRO_OUT}
+        ICON ${NRO_ICON}
+        NACP ${NACP_OUT}
+    )
+
+endif ()

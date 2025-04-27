@@ -1,5 +1,9 @@
 #include <SDL.h>
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 #include "harness.h"
 #include "harness/config.h"
 #include "harness/hooks.h"
@@ -17,6 +21,10 @@ Uint32 last_frame_time;
 
 uint8_t directinput_key_state[SDL_NUM_SCANCODES];
 
+#ifdef __SWITCH__
+PadState pad;
+#endif
+
 static void* create_window_and_renderer(char* title, int x, int y, int width, int height) {
     render_width = width;
     render_height = height;
@@ -25,11 +33,27 @@ static void* create_window_and_renderer(char* title, int x, int y, int width, in
         LOG_PANIC("SDL_INIT_VIDEO error: %s", SDL_GetError());
     }
 
+    #ifndef __SWITCH__
+
     window = SDL_CreateWindow(title,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         width, height,
         SDL_WINDOW_RESIZABLE);
+
+    #else
+
+    padInitializeDefault(&pad);
+
+    window = SDL_CreateWindow(
+        title,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        width, height,
+        SDL_WINDOW_FULLSCREEN
+    );
+    
+    #endif
 
     if (window == NULL) {
         LOG_PANIC("Failed to create window: %s", SDL_GetError());
@@ -81,6 +105,8 @@ static void destroy_window(void* hWnd) {
 static int is_only_key_modifier(int modifier_flags, int flag_check) {
     return (modifier_flags & flag_check) && (modifier_flags & (KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI)) == (modifier_flags & flag_check);
 }
+
+#ifndef __SWITCH__
 
 static int get_and_handle_message(MSG_* msg) {
     SDL_Event event;
@@ -134,6 +160,179 @@ static int get_and_handle_message(MSG_* msg) {
     }
     return 0;
 }
+
+#else
+
+static int map_switch_key_to_sdl_scancode(uint32_t key) 
+{
+    switch (key) 
+    {
+        case HidNpadButton_A:       return SDL_SCANCODE_SPACE;
+        case HidNpadButton_B:       return SDL_SCANCODE_B;
+        case HidNpadButton_X:       return SDL_SCANCODE_X;
+        case HidNpadButton_Y:       return SDL_SCANCODE_Y;
+        case HidNpadButton_StickL:  return -1;
+        case HidNpadButton_StickR:  return -1;
+        case HidNpadButton_L:       return SDL_SCANCODE_L;
+        case HidNpadButton_R:       return SDL_SCANCODE_R;
+        case HidNpadButton_ZL:      return SDL_SCANCODE_KP_2;
+        case HidNpadButton_ZR:      return SDL_SCANCODE_KP_8;
+        case HidNpadButton_Plus:    return SDL_SCANCODE_RETURN;
+        case HidNpadButton_Minus:   return SDL_SCANCODE_ESCAPE;
+        case HidNpadButton_Left:    return SDL_SCANCODE_MINUS;
+        case HidNpadButton_Up:      return SDL_SCANCODE_KP_8;
+        case HidNpadButton_Right:   return SDL_SCANCODE_EQUALS;
+        case HidNpadButton_Down:    return SDL_SCANCODE_KP_2;
+
+        default: return -1;
+    }
+}
+
+uint32_t switch_buttons[] = {
+	HidNpadButton_A,
+    HidNpadButton_B,
+    HidNpadButton_X,
+    HidNpadButton_Y,
+    HidNpadButton_StickL,
+    HidNpadButton_StickR,
+    HidNpadButton_L,
+    HidNpadButton_R,
+    HidNpadButton_ZL,
+    HidNpadButton_ZR,
+    HidNpadButton_Plus,
+    HidNpadButton_Minus,
+    HidNpadButton_Left,
+    HidNpadButton_Up,
+    HidNpadButton_Right,
+    HidNpadButton_Down,
+};
+
+static int get_and_handle_message(MSG_* msg) 
+{
+    padUpdate(&pad);
+
+    int dinput_key;
+
+    u64 kDown = padGetButtonsDown(&pad);
+    u64 kUp = padGetButtonsUp(&pad);
+
+    for (int i = 0; i < 16; ++i)
+    {
+        if (kDown & BIT(i)) 
+        {
+            int sdl_scancode = map_switch_key_to_sdl_scancode(switch_buttons[i]);
+            
+            if (sdl_scancode >= 0) 
+            {
+                dinput_key = sdlScanCodeToDirectInputKeyNum[sdl_scancode];
+                
+                if (dinput_key == 0) 
+                {
+                    LOG_WARN("unexpected scan code %s (%d)", SDL_GetScancodeName(sdl_scancode), sdl_scancode);
+                    continue;
+                }
+                
+                directinput_key_state[dinput_key] = 0x80;
+            }
+        } 
+        else if (kUp & BIT(i))
+        {
+            int sdl_scancode = map_switch_key_to_sdl_scancode(switch_buttons[i]);
+            
+            if (sdl_scancode >= 0) 
+            {
+                dinput_key = sdlScanCodeToDirectInputKeyNum[sdl_scancode];
+                
+                if (dinput_key != 0)
+                {
+                    directinput_key_state[dinput_key] = 0x00;
+                }
+            }
+        }
+    }
+
+    HidAnalogStickState analog_stick_l = padGetStickPos(&pad, 0);
+    HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
+
+    // Left stick X
+
+    if (analog_stick_l.x > 0x3000)
+    {
+        // Right 
+        dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_6];
+        directinput_key_state[dinput_key] = 0x80;
+    }
+    else if (analog_stick_l.x < -0x3000)
+    {
+        // Left
+        dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_4];
+        directinput_key_state[dinput_key] = 0x80;
+    }
+    else
+    {
+        // Neutral
+        directinput_key_state[sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_4]] = 0x00;
+        directinput_key_state[sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_6]] = 0x00;
+    }
+
+    // Right stick X
+
+    if (analog_stick_r.x > 0x3000) 
+    {
+        // Right
+        dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_RIGHT];
+        directinput_key_state[dinput_key] = 0x80;
+    } 
+    else if (analog_stick_r.x < -0x3000) 
+    {
+        // Left
+        dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_LEFT];
+        directinput_key_state[dinput_key] = 0x80;
+    } 
+    else 
+    {
+        // Neutral
+        directinput_key_state[sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_RIGHT]] = 0x00;
+        directinput_key_state[sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_LEFT]] = 0x00;
+    }
+
+    // Right stick Y
+
+    if (analog_stick_r.y > 0x3000) 
+    {
+        // Up
+        dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_UP];
+        directinput_key_state[dinput_key] = 0x80;
+    } 
+    else if (analog_stick_r.y < -0x3000) 
+    {
+        // Down
+        dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_DOWN];
+        directinput_key_state[dinput_key] = 0x80;
+    } 
+    else 
+    {
+        // Neutral
+        directinput_key_state[sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_UP]] = 0x00;
+        directinput_key_state[sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_DOWN]] = 0x00;
+    }
+
+    SDL_Event event;
+    
+    while (SDL_PollEvent(&event)) 
+    {
+        switch (event.type) 
+        {
+            case SDL_QUIT:
+                msg->message = WM_QUIT;
+                return 1;
+        }
+    }
+
+    return 0;
+}
+
+#endif
 
 static void get_keyboard_state(unsigned int count, uint8_t* buffer) {
     memcpy(buffer, directinput_key_state, count);

@@ -7,6 +7,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 #include "brender.h"
 
 extern void Harness_Init(int* argc, char* argv[]);
@@ -41,6 +45,15 @@ int main(int argc, char* argv[]) {
             freopen("CONIN$", "r", stdin);
         }
     }
+#endif
+
+#ifdef __SWITCH__
+
+    // fsInitialize();
+    // hidInitialize();
+    // audoutInitialize();
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+
 #endif
 
     Harness_Init(&argc, argv);

@@ -6,6 +6,19 @@
 #include "harness/os.h"
 #include "harness/trace.h"
 
+#ifdef __SWITCH__
+
+#define MA_NO_PTHREAD_IN_HEADER
+#define MA_NO_RUNTIME_LINKING
+#define SAMPLES_NUM 512
+#define SAMPLE_RATE 44100
+#define CHANNELS_NUM 2
+
+#include <SDL.h>
+#include <SDL_mixer.h>
+
+#endif
+
 // Must come before miniaudio.h
 #define STB_VORBIS_HEADER_ONLY
 #include "stb/stb_vorbis.c"
@@ -47,17 +60,80 @@ ma_engine engine;
 ma_sound cda_sound;
 int cda_sound_initialized;
 
+#ifdef __SWITCH__
+
+void data_callback(void* pUserData, ma_uint8* pBuffer, int bufferSizeInBytes) 
+{
+    float bufferF32[SAMPLES_NUM * CHANNELS_NUM];
+    ma_uint32 bufferSizeInFrames = (ma_uint32)(bufferSizeInBytes * 2) / ma_get_bytes_per_frame(ma_format_f32, ma_engine_get_channels(&engine));
+    ma_engine_read_pcm_frames(&engine, bufferF32, bufferSizeInFrames, NULL);
+    int16_t *pBufferS16 = (int16_t *)pBuffer;
+    
+    for (int i = 0; i < bufferSizeInBytes / 2; i++) 
+    {
+        pBufferS16[i] = (int16_t)(bufferF32[i] * 32767.0f - 1.0f);
+    }
+}
+
+#endif
+
 tAudioBackend_error_code AudioBackend_Init(void) {
     ma_result result;
     ma_engine_config config;
 
     config = ma_engine_config_init();
+
+#ifdef __SWITCH__
+
+    config.noDevice = MA_TRUE;
+    config.channels = CHANNELS_NUM;
+    config.sampleRate = SAMPLE_RATE;
+
+#endif
+
     result = ma_engine_init(&config, &engine);
     if (result != MA_SUCCESS) {
         printf("Failed to initialize audio engine.");
+        LOG_PANIC("Failed to initialize audio engine.");
         return eAB_error;
     }
-    LOG_INFO("Playback device: '%s'", engine.pDevice->playback.name);
+
+#ifdef __SWITCH__
+
+    SDL_AudioSpec desiredSpec;
+    SDL_AudioSpec obtainedSpec;
+    SDL_AudioDeviceID deviceID;
+
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) 
+    {
+        printf("Failed to initialize SDL sub-system.\n");
+        LOG_PANIC("Failed to initialize SDL sub-system.");
+        return eAB_error;
+    }
+
+    MA_ZERO_OBJECT(&desiredSpec);
+    
+    desiredSpec.freq     = SAMPLE_RATE;
+    desiredSpec.format   = AUDIO_S16SYS;
+    desiredSpec.channels = CHANNELS_NUM;
+    desiredSpec.samples  = SAMPLES_NUM;
+    desiredSpec.callback = data_callback;
+    desiredSpec.userdata = NULL;
+    
+    deviceID = SDL_OpenAudioDevice(NULL, 0, &desiredSpec, &obtainedSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+
+    if (deviceID == 0)
+    {
+        printf("Failed to open SDL audio device.\n");
+        LOG_PANIC("Failed to open SDL audio device.");
+        return eAB_error;
+    }
+
+    // printf("Obtained: srate: %d chns: %d, samples: %d, format: %x\n", obtainedSpec.freq, obtainedSpec.channels, obtainedSpec.samples, obtainedSpec.format);
+    SDL_PauseAudioDevice(deviceID, 0);
+
+#endif
+
     ma_engine_set_volume(&engine, harness_game_config.volume_multiplier);
 
     return eAB_success;

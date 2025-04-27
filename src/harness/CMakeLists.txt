@@ -67,7 +67,21 @@ if (IO_PLATFORM STREQUAL "SDL2")
         platforms/sdl2.c
         platforms/sdl2_scancode_to_dinput.h
     )
-    target_link_libraries(harness PRIVATE SDL2::SDL2)
+    if (NOT NINTENDO_SWITCH)
+        target_link_libraries(harness PRIVATE SDL2::SDL2)
+    else ()
+        target_include_directories(harness PRIVATE /opt/devkitpro/portlibs/switch/include/SDL2)
+        target_include_directories(harness PRIVATE /opt/devkitpro/devkitA64/aarch64-none-elf/include)
+        target_link_libraries(harness PRIVATE 
+            "-Wl,--start-group"
+            stdc++
+            SDL2
+            EGL
+            drm_nouveau
+            glapi
+            "-Wl,--end-group"
+        )
+    endif ()
 endif()
 
 if(WIN32)
@@ -78,6 +92,10 @@ if(WIN32)
 elseif(APPLE)
     target_sources(harness PRIVATE
         os/macos.c
+    )
+elseif(NINTENDO_SWITCH)
+    target_sources(harness PRIVATE
+        os/switch.c
     )
 else()
     target_sources(harness PRIVATE

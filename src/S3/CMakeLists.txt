@@ -5,7 +5,11 @@ target_include_directories(s3
         include
 )
 
-target_link_libraries(s3 PRIVATE brender SDL2::SDL2 harness compile_with_werror)
+if (NOT NINTENDO_SWITCH)
+    target_link_libraries(s3 PRIVATE brender SDL2::SDL2 harness compile_with_werror)
+else()
+    target_link_libraries(s3 PRIVATE brender SDL2 harness compile_with_werror)
+endif()
 
 if(NOT MSVC)
     target_link_libraries(s3 PUBLIC pthread m)

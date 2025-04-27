@@ -16116,9 +16116,11 @@ static ma_result ma_thread_create__posix(ma_thread* pThread, ma_thread_priority 
             #endif
             } else if (priority == ma_thread_priority_realtime) {
             #ifdef SCHED_FIFO
+            #ifndef __SWITCH__
                 if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) == 0) {
                     scheduler = SCHED_FIFO;
                 }
+            #endif
             #endif
             #ifdef MA_LINUX
             } else {
@@ -16132,6 +16134,7 @@ static ma_result ma_thread_create__posix(ma_thread* pThread, ma_thread_priority 
             pthread_attr_setstacksize(&attr, stackSize);
         }
 
+        #ifndef __SWITCH__
         if (scheduler != -1) {
             int priorityMin = sched_get_priority_min(scheduler);
             int priorityMax = sched_get_priority_max(scheduler);
@@ -16157,6 +16160,7 @@ static ma_result ma_thread_create__posix(ma_thread* pThread, ma_thread_priority 
                 pthread_attr_setschedparam(&attr, &sched);
             }
         }
+        #endif
     }
 #else
     /* It's the emscripten build. We'll have a few unused parameters. */
@@ -17918,7 +17922,7 @@ DEVICE I/O
 
 /* Disable run-time linking on certain backends and platforms. */
 #ifndef MA_NO_RUNTIME_LINKING
-    #if defined(MA_EMSCRIPTEN) || defined(MA_ORBIS) || defined(MA_PROSPERO)
+    #if defined(MA_EMSCRIPTEN) || defined(MA_ORBIS) || defined(MA_PROSPERO) || defined(__SWITCH__)
         #define MA_NO_RUNTIME_LINKING
     #endif
 #endif
@@ -74085,6 +74089,11 @@ static ma_uint64 ma_engine_node_get_required_input_frame_count(const ma_engine_n
 
 static ma_result ma_engine_node_set_volume(ma_engine_node* pEngineNode, float volume)
 {
+#ifdef __SWITCH__
+    // Without this hack, some sounds overflow causing horrible crackling
+    volume /= 2.0f;
+#endif
+
     if (pEngineNode == NULL) {
         return MA_INVALID_ARGS;
     }

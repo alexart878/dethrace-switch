@@ -59,9 +59,11 @@ endfunction()
 
 test_big_endian(IS_BIGENDIAN)
 
-find_package(SDL2 CONFIG)
-if(NOT SDL2_FOUND)
-    find_package(SDL2 MODULE REQUIRED)
+if (NOT NINTENDO_SWITCH)
+    find_package(SDL2 CONFIG)
+    if(NOT SDL2_FOUND)
+        find_package(SDL2 MODULE REQUIRED)
+    endif()
 endif()
 
 
