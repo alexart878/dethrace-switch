@@ -1,34 +1,24 @@
-# Dethrace  
+# Dethrace NX 
 
-[![Workflow](https://github.com/dethrace-labs/dethrace/actions/workflows/workflow.yaml/badge.svg)](https://github.com/dethrace-labs/dethrace/actions/workflows/workflow.yml)
-[![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/dethrace_labs)
-[![Discord Carmageddon server](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/f5StsuP)
+This Nintendo Switch port based on this repo: [link](https://github.com/dethrace-labs/dethrace), thanks to its creators!
 
-Dethrace is an attempt to learn how the 1997 driving/mayhem game [Carmageddon](https://en.wikipedia.org/wiki/Carmageddon) works behind the scenes and rebuild it to run natively on modern systems.
+## Controls
 
-## Progress
-(Follow us on Discord or Twitter to get notified of updates!)
+### Menu
 
-#### Last updated June 17 2024
-- 92% of functions implemented
-- Latest screenshot:
+- Up / Down - DPAD Up / Down
+- Left / Right - Left Thumbstick Left / Right
+- OK - Plus (A)
+- Back - Minus
 
-<img width="752" alt="Screenshot 2024-05-27 at 8 44 10 AM" src="https://github.com/dethrace-labs/dethrace/assets/1063652/10b3b579-1eb1-4242-8b56-ff062cfff810">
+### Game sequence
 
-
-## Background
-Watcom debug symbols for an earlier internal build [were discovered](http://1amstudios.com/2014/12/02/carma1-symbols-dumped) named `DETHRSC.SYM` on the [Carmageddon Splat Pack](http://carmageddon.wikia.com/wiki/Carmageddon_Splat_Pack) expansion CD release. The symbols unfortunately did not match any known released executable, meaning they were interesting but not immediately usable to reverse engineer the game.
-
-This is what it looked like from the Watcom debugger - the names of all the methods were present but the code location they were pointing to was junk:
-
-![watcom-debugger](http://1amstudios.com/img/watcom-debugger.jpg)
-
-_CrayzKirk_ from the Carmageddon community picked it up and did a lot of painstaking work manually matching up many functions and data structures in the DOS executable to the debugging symbols.
-
-We are slowly replacing the original assembly code with equivalent C code, function by function.
-
-### Is "dethrace" a typo?
-No, well, I don't think so at least. The original files according to the symbol dump were stored in `c:\DETHRACE`, and the symbol file is called `DETHSRC.SYM`. Maybe they removed the "a" to be compatible with [8.3 filenames](https://en.wikipedia.org/wiki/8.3_filename)?
+- Pause - Minus
+- Gas - ZR (DPAD Up)
+- Brake - ZL (DPAD Down)
+- Left / Right - Left Thumbstick Left / Right
+- Camera control - Right Thumbstick
+- Screen size adjustment - DPAD Left / Right
 
 ## Game content
 
@@ -44,30 +34,17 @@ Dethrace does not ship with any content. You'll need access to the data from the
 
 ### Dependencies
 
-Dethrace has a dependency on SDL2. The easiest way to install SDL is via your favorite package manager.
+Those, who want improve something, or just compile by their own, should follow next steps:
 
-OSX:
-```sh
-brew install SDL2
-```
-
-Linux:
-```sh
-apt-get install libsdl2-dev
-```
-
-
-Point Dethrace at the Carmageddon install directory:
-```sh
-export DETHRACE_ROOT_DIR=/path/to/carmageddon
-```
+- Setup switch homebrew enviroment, more info: [link](https://devkitpro.org/wiki/Getting_Started)
+- Download switch-sdl2
 
 ### Clone
 
 Dethrace uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules), so we must pull them after the inital clone:
 ```sh
-git clone https://github.com/dethrace-labs/dethrace
-cd dethrace
+git clone https://github.com/alexart878/dethrace-switch.git
+cd dethrace-switch
 git submodule update --init --recursive
 ```
 
@@ -75,14 +52,12 @@ Dethrace uses [cmake](https://cmake.org/) for generating build files.
 
 To generate the build files (generally only required once):
 ```sh
-mkdir build
-cd build
-cmake ..
+cmake -B build -DNINTENDO_SWITCH=ON -DCMAKE_TOOLCHAIN_FILE=$DEVKITPRO/cmake/Switch.cmake
 ```
 
-Once cmake has generated the build files for your platform, run the build. For example:
+To build `.nro` executable:
 ```sh
-make
+cmake --build build/
 ```
 
 ## Running the game
@@ -91,7 +66,10 @@ Firstly, you need a copy of the [Carmageddon game content](https://github.com/de
 
 Dethrace expects to be placed into the top level Carmageddon folder. You know you have the right folder when you see the original `CARMA.EXE` there. If you are on Windows, you must also place `SDL2.dll` in the same folder.
 
+For NX version, create folder `sdmc:/switch/dethrace`, put `.nro` and data files (`CARMA` folder contents) to it.
+
 <img width="638" alt="Screenshot 2024-09-20 at 12 25 05 PM" src="https://github.com/user-attachments/assets/fda77818-9007-44fa-9d8d-c311396fd435">
+
 
 ### CD audio
 
@@ -101,12 +79,12 @@ Dethrace supports the GOG cd audio convention. If there is a `MUSIC` folder in t
 
 
 
-## Changelog
-[From the beginning until release](docs/CHANGELOG.md)
+
 
 ## Credits
 - CrayzKirk (manually matching up functions and data structures in the executable to the debugging symbols)
 - The developer at Stainless Software who left an old debugging .SYM file on the Splat Pack CD ;)
+- [dethrace-labs](https://github.com/dethrace-labs) for his original repo
 
 ## Legal
 Dethrace is released to the Public Domain. The documentation and function provided by Dethrace may only be utilized with assets provided by ownership of Carmageddon.
