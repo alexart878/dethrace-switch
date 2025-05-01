@@ -94,6 +94,10 @@ elseif(APPLE)
         os/macos.c
     )
 elseif(NINTENDO_SWITCH)
+
+    target_include_directories(harness PRIVATE ../DETHRACE)
+    target_include_directories(harness PRIVATE ../S3/include)
+
     target_sources(harness PRIVATE
         os/switch.c
     )

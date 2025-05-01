@@ -1,0 +1,45 @@
+# Dethrace Configuration File for Nintendo Switch
+
+# Enable force 640x480
+hires=false
+
+# Set YON multiplier (0.0 to 1.0)
+yon=0.75
+
+# Car simplification level (0 to 4)
+simple=4
+
+# Sound detail level (integer between 0 and 2)
+sound=2
+
+# Enable robots (German version gore toggle)
+robots=false
+
+# Enable low-memory (austere) mode
+lomem=false
+
+# Disable sound
+nosound=false
+
+# Extra memory in bytes (e.g., 2000000)
+spamfritter=true
+
+# Skip cutscenes
+nocutscenes=false
+
+# Disable replays
+noreplay=true
+
+# Disable Voodoo rendering
+novoodoo=false
+
+# Force Voodoo Rush mode (overrides vgraphics if true)
+vrush=false
+
+# Force Voodoo graphics mode (overrides vrush if true)
+vgraphics=false
+
+## DEVELOPER OPTIONS
+
+# Enable OpenGL mode
+opengl=true

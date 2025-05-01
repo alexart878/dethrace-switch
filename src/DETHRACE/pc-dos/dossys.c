@@ -24,6 +24,12 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#ifdef __SWITCH__
+
+void Switch_ConfigParse(int* gExtra_mem, int* gReplay_override, int* gNo_voodoo, int* gForce_voodoo_mode, int* gForce_voodoo_rush_mode);
+
+#endif
+
 // This code comes from DOS, so small changes need to be made to run correctly on windowed systems.
 // Generally the pc-win95 does the same thing
 #define PLAY_NICE_WITH_GUI 1
@@ -928,6 +934,14 @@ int original_main(int pArgc, char** pArgv) {
             Usage(pArgv[0]);
         }
     }
+
+#ifdef __SWITCH__
+
+    // parsing config.txt -> no commandline args on HOS
+
+    Switch_ConfigParse(&gExtra_mem, &gReplay_override, &gNo_voodoo, &gForce_voodoo_mode, &gForce_voodoo_rush_mode);
+
+#endif
 
 #ifdef DETHRACE_3DFX_PATCH
     if (!gNo_voodoo) {
