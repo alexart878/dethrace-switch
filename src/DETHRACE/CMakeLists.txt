@@ -275,7 +275,7 @@ if (NINTENDO_SWITCH)
     set(NACP_OUT "${CMAKE_BINARY_DIR}/dethrace.nacp")
     set(NACP_NAME "DethRaceNX")
     set(NACP_AUTHOR "alexart878")
-    set(NACP_VERSION "1.0")
+    set(NACP_VERSION "1.1")
 
     if(NOT COMMAND nx_generate_nacp)
         message(FATAL_ERROR "The `nx_generate_nacp` cmake command is not available. Please use an appropriate Nintendo Switch toolchain.")
