@@ -89,8 +89,8 @@ Dethrace supports the GOG cd audio convention. If there is a `MUSIC` folder in t
 - [dethrace-labs](https://github.com/dethrace-labs) for his original repo
 
 ## Legal
-Dethrace is released to the Public Domain. The documentation and function provided by Dethrace may only be utilized with assets provided by ownership of Carmageddon.
+Dethrace is released under the GPLv3 license. The documentation and function provided by Dethrace may only be utilized with assets provided by ownership of Carmageddon.
 
-The source code in this repository is for non-commerical use only. If you use the source code you may not charge others for access to it or any derivative work thereof.
+If you use the source code you may not charge others for access to it or any derivative work thereof.
 
 Dethrace and any of its' maintainers are in no way associated with or endorsed by SCi, Stainless Software or THQ Nordic.
