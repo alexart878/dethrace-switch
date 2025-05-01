@@ -2,6 +2,8 @@
 
 This Nintendo Switch port based on this repo: [link](https://github.com/dethrace-labs/dethrace), thanks to its creators!
 
+INPORTANT -> put `config.txt` from `docs` next to `dethrace.nro` executable
+
 ## Controls
 
 ### Menu
