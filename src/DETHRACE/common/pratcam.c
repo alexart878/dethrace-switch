@@ -13,50 +13,78 @@
 #include "loading.h"
 #include "pd/sys.h"
 #include "sound.h"
+#include "structur.h"
 #include "utility.h"
 #include <stdlib.h>
 
+// GLOBAL: CARM95 0x0050f064
 tS3_sound_tag gWhirr_noise = 0;
+
+// GLOBAL: CARM95 0x005362b0
 tFlic_descriptor gPrat_flic;
+
+// GLOBAL: CARM95 0x00536334
 tPrat_sequence* gPratcam_sequences;
+
+// GLOBAL: CARM95 0x00536324
 tPrat_flic_spec* gPratcam_flics;
+
+// GLOBAL: CARM95 0x00536320
 int gCurrent_pratcam_chunk;
+
+// GLOBAL: CARM95 0x0053632c
 int gPending_ambient_prat;
+
+// GLOBAL: CARM95 0x005362a0
 int gCurrent_pratcam_index;
+
+// GLOBAL: CARM95 0x00536340
 br_pixelmap* gPrat_buffer;
+
+// GLOBAL: CARM95 0x00536330
 int gNumber_of_prat_sequences;
+
+// GLOBAL: CARM95 0x005362a4
 int gNumber_of_prat_flics;
+
+// GLOBAL: CARM95 0x0053633c
 tU32 gLast_pratcam_frame_time;
+
+// GLOBAL: CARM95 0x00536328
 int gCurrent_pratcam_precedence;
+
+// GLOBAL: CARM95 0x00536338
 int gCurrent_ambient_prat_sequence;
+
+// GLOBAL: CARM95 0x005362a8
 int gCurrent_pratcam_alternative;
 
 // IDA: int __cdecl PratcamGetCurrent()
+// FUNCTION: CARM95 0x0044d0b0
 int PratcamGetCurrent(void) {
-    LOG_TRACE("()");
 
     return gCurrent_pratcam_index;
 }
 
 // IDA: int __cdecl PratcamGetAmbient()
+// FUNCTION: CARM95 0x0044d0c5
 int PratcamGetAmbient(void) {
-    LOG_TRACE("()");
 
     return gCurrent_ambient_prat_sequence;
 }
 
 // IDA: int __cdecl PratcamGetPending()
+// FUNCTION: CARM95 0x0044d0da
 int PratcamGetPending(void) {
-    LOG_TRACE("()");
 
     return gPending_ambient_prat;
 }
 
 // IDA: void __cdecl TogglePratcam()
+// FUNCTION: CARM95 0x0044d0ef
 void TogglePratcam(void) {
     tU32 the_time;
     tU32 time_diff;
-    LOG_TRACE("()");
 
     if (gAusterity_mode) {
         NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
@@ -69,14 +97,16 @@ void TogglePratcam(void) {
         the_time = GetTotalTime();
         gProgram_state.prat_cam_on = !gProgram_state.prat_cam_on;
         time_diff = the_time - gProgram_state.pratcam_move_start;
-        gProgram_state.pratcam_move_start = the_time;
-        if (time_diff <= 400) {
+        if (time_diff > 400) {
+            gProgram_state.pratcam_move_start = the_time;
+        } else {
             gProgram_state.pratcam_move_start = the_time - 400 + time_diff;
         }
     }
 }
 
 // IDA: void __usercall LoadPratcam(char *pFolder_name@<EAX>)
+// FUNCTION: CARM95 0x0044d745
 void LoadPratcam(char* pFolder_name) {
     FILE* f;
     FILE* g;
@@ -89,7 +119,6 @@ void LoadPratcam(char* pFolder_name) {
     char folder_path[256];
     char* str;
     char num_str[256];
-    LOG_TRACE("(\"%s\")", pFolder_name);
 
     if (gAusterity_mode) {
         return;
@@ -186,12 +215,12 @@ void LoadPratcam(char* pFolder_name) {
 }
 
 // IDA: void __cdecl NextPratcamChunk()
+// FUNCTION: CARM95 0x0044d2d8
 void NextPratcamChunk(void) {
     int i;
     int random_number;
     int count;
     tPrat_alternative* current_alternative;
-    LOG_TRACE("()");
 
     if (gCurrent_pratcam_index == -1) {
         gCurrent_pratcam_index = gCurrent_ambient_prat_sequence;
@@ -235,8 +264,8 @@ void NextPratcamChunk(void) {
 }
 
 // IDA: void __usercall NewPratcamSequence(int pSequence_index@<EAX>, int pStart_chunk@<EDX>)
+// FUNCTION: CARM95 0x0044d297
 void NewPratcamSequence(int pSequence_index, int pStart_chunk) {
-    LOG_TRACE("(%d, %d)", pSequence_index, pStart_chunk);
 
     gCurrent_pratcam_precedence = gPratcam_sequences[pSequence_index].precedence;
     gCurrent_pratcam_index = pSequence_index;
@@ -245,8 +274,8 @@ void NewPratcamSequence(int pSequence_index, int pStart_chunk) {
 }
 
 // IDA: void __usercall ChangeAmbientPratcamNow(int pIndex@<EAX>, int pStart_chunk@<EDX>)
+// FUNCTION: CARM95 0x0044d26a
 void ChangeAmbientPratcamNow(int pIndex, int pStart_chunk) {
-    LOG_TRACE("(%d, %d)", pIndex, pStart_chunk);
 
     gCurrent_ambient_prat_sequence = pIndex;
     gPending_ambient_prat = -1;
@@ -254,45 +283,37 @@ void ChangeAmbientPratcamNow(int pIndex, int pStart_chunk) {
 }
 
 // IDA: void __usercall ChangeAmbientPratcam(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x0044d1f0
 void ChangeAmbientPratcam(int pIndex) {
-    LOG_TRACE("(%d)", pIndex);
 
-    if (gRace_finished) {
-        return;
-    }
-    if (gInterface_within_race_mode) {
-        return;
-    }
-    if (pIndex == gCurrent_ambient_prat_sequence) {
-        return;
-    }
-    if (!gProgram_state.prat_cam_on) {
-        return;
-    }
-
-    if (gCurrent_pratcam_index == -1) {
-        ChangeAmbientPratcamNow(pIndex, 0);
+    if (gRace_finished || gInterface_within_race_mode) {
+        ;
     } else {
-        gPending_ambient_prat = pIndex;
+        if (pIndex != gCurrent_ambient_prat_sequence
+            && !gRace_finished
+            && gProgram_state.prat_cam_on) {
+            if (gCurrent_pratcam_index != -1) {
+                gPending_ambient_prat = pIndex;
+            } else {
+                ChangeAmbientPratcamNow(pIndex, 0);
+            }
+        }
     }
 }
 
 // IDA: void __usercall PratcamEventNow(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x0044d58e
 void PratcamEventNow(int pIndex) {
-    LOG_TRACE("(%d)", pIndex);
 
     NewPratcamSequence(pIndex, 0);
     gPending_ambient_prat = -1;
 }
 
 // IDA: void __usercall PratcamEvent(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x0044d517
 void PratcamEvent(int pIndex) {
-    LOG_TRACE("(%d)", pIndex);
 
-    if (gRace_finished) {
-        return;
-    }
-    if (gInterface_within_race_mode) {
+    if (gRace_finished || gInterface_within_race_mode) {
         return;
     }
 #if defined(DETHRACE_FIX_BUGS)
@@ -301,19 +322,16 @@ void PratcamEvent(int pIndex) {
         return;
     }
 #endif
-    if (gPratcam_sequences[pIndex].precedence <= gCurrent_pratcam_precedence) {
-        return;
+    if (gPratcam_sequences[pIndex].precedence > gCurrent_pratcam_precedence) {
+        if (!gRace_finished && gProgram_state.prat_cam_on) {
+            PratcamEventNow(pIndex);
+        }
     }
-    if (!gProgram_state.prat_cam_on) {
-        return;
-    }
-    PratcamEventNow(pIndex);
 }
 
 // IDA: int __cdecl HighResPratBufferWidth()
 int HighResPratBufferWidth(void) {
     int prat_width;
-    LOG_TRACE("()");
 
     if (!gDevious_2d || !gTextures_need_powers_of_2) {
         return 104;
@@ -327,7 +345,6 @@ int HighResPratBufferWidth(void) {
 // IDA: int __cdecl HighResPratBufferHeight()
 int HighResPratBufferHeight(void) {
     int prat_height;
-    LOG_TRACE("()");
 
     if (!gDevious_2d || !gTextures_need_powers_of_2) {
         return 110;
@@ -339,9 +356,9 @@ int HighResPratBufferHeight(void) {
 }
 
 // IDA: void __cdecl InitPratcam()
+// FUNCTION: CARM95 0x0044d5b1
 void InitPratcam(void) {
     void* the_pixels;
-    LOG_TRACE("()");
 
     if (gAusterity_mode) {
         return;
@@ -349,60 +366,49 @@ void InitPratcam(void) {
     gWhirr_noise = 0;
     gPrat_flic.data = NULL;
     gCurrent_ambient_prat_sequence = -1;
-    switch (gGraf_data_index) {
-    case 0:
-        the_pixels = BrMemAllocate(52 * 46, kMem_pratcam_pixelmap);
-        break;
-    case 1:
+    if (gGraf_data_index != 0) {
 #ifdef DETHRACE_3DFX_PATCH
         the_pixels = BrMemAllocate(HighResPratBufferWidth() * HighResPratBufferHeight(), kMem_pratcam_pixelmap);
 #else
         the_pixels = BrMemAllocate(104 * 110, kMem_pratcam_pixelmap);
 #endif
-        break;
-    default:
-        TELL_ME_IF_WE_PASS_THIS_WAY();
+    } else {
+        the_pixels = BrMemAllocate(52 * 46, kMem_pratcam_pixelmap);
     }
     if (gScreen->row_bytes < 0) {
         BrFatal("C:\\Msdev\\Projects\\DethRace\\Pratcam.c", 409, "Bruce bug at line %d, file C:\\Msdev\\Projects\\DethRace\\Pratcam.c", 409);
     }
-    switch (gGraf_data_index) {
-    case 0:
-        gPrat_buffer = DRPixelmapAllocate(gScreen->type, 52, 46, the_pixels, 0);
-        break;
-    case 1:
+    if (gGraf_data_index != 0) {
 #ifdef DETHRACE_3DFX_PATCH
         gPrat_buffer = DRPixelmapAllocate(BR_PMT_INDEX_8, HighResPratBufferWidth(), HighResPratBufferHeight(), the_pixels, 0);
 #else
         gPrat_buffer = DRPixelmapAllocate(gScreen->type, 104, 110, the_pixels, 0);
 #endif
-        break;
-    default:
-        TELL_ME_IF_WE_PASS_THIS_WAY();
+    } else {
+        gPrat_buffer = DRPixelmapAllocate(gScreen->type, 52, 46, the_pixels, 0);
     }
     gCurrent_pratcam_index = -1;
     gPending_ambient_prat = -1;
     gCurrent_pratcam_precedence = 0;
-    if (gNet_mode == eNet_mode_none) {
-        if (gProgram_state.frank_or_anniness == eFrankie) {
-            LoadPratcam("FRANK");
-        } else {
-            LoadPratcam("ANNIE");
-        }
-    } else if (gNet_players[gThis_net_player_index].car_index == 1 || gNet_players[gThis_net_player_index].car_index > 34) {
-        LoadPratcam("ANNIE");
-    } else {
-        LoadPratcam("FRANK");
-    }
+
+    LoadPratcam(
+        (gNet_mode != eNet_mode_none)
+            ? ((gNet_players[gThis_net_player_index].car_index == 1
+                   || gNet_players[gThis_net_player_index].car_index >= 35)
+                      ? "ANNIE"
+                      : "FRANK")
+            : ((gProgram_state.frank_or_anniness != eFrankie)
+                      ? "ANNIE"
+                      : "FRANK"));
 }
 
 // IDA: void __cdecl DisposePratcam()
+// FUNCTION: CARM95 0x0044e0dd
 void DisposePratcam(void) {
     int i;
     int j;
     int k;
     int l;
-    LOG_TRACE("()");
 
     if (gAusterity_mode) {
         return;
@@ -433,6 +439,7 @@ void DisposePratcam(void) {
 }
 
 // IDA: void __usercall DoPratcam(tU32 pThe_time@<EAX>)
+// FUNCTION: CARM95 0x0044e2e6
 void DoPratcam(tU32 pThe_time) {
     int i;
     int offset;
@@ -445,49 +452,77 @@ void DoPratcam(tU32 pThe_time) {
     br_pixelmap* the_image;
     br_pixelmap* right_image;
     br_pixelmap* left_image;
-    LOG_TRACE("(%d)", pThe_time);
 
     if (gAusterity_mode) {
         return;
     }
-    right_image = gProgram_state.current_car.prat_cam_right;
-    left_image = gProgram_state.current_car.prat_cam_left;
-    y_offset = (gNet_mode == eNet_mode_none) ? 0 : gCurrent_graf_data->net_head_box_bot + 1;
-
-    right_hand = gProgram_state.current_car.prat_left <= gBack_screen->width / 2;
-    if (right_hand) {
-        prat_cam_move_width = gProgram_state.current_car.prat_right + (right_image != NULL ? right_image->width : 0);
+    if (gNet_mode != eNet_mode_none) {
+        y_offset = gCurrent_graf_data->net_head_box_bot + 1;
     } else {
+        y_offset = 0;
+    }
+
+    right_hand = gProgram_state.current_car.prat_left > gBack_screen->width / 2;
+    left_image = gProgram_state.current_car.prat_cam_left;
+    right_image = gProgram_state.current_car.prat_cam_right;
+    if (right_hand) {
         prat_cam_move_width = gBack_screen->width - gProgram_state.current_car.prat_left + (left_image != NULL ? left_image->width : 0);
+    } else {
+        prat_cam_move_width = gProgram_state.current_car.prat_right + (right_image != NULL ? right_image->width : 0);
     }
     time_diff = pThe_time - gProgram_state.pratcam_move_start;
-    if (time_diff <= 400) {
-        offset = prat_cam_move_width * time_diff / (float)400;
-    } else {
+    if (time_diff > 400) {
         if (gWhirr_noise) {
             DRS3StopSound(gWhirr_noise);
             gWhirr_noise = 0;
         }
         if (!gProgram_state.prat_cam_on) {
             gCurrent_pratcam_index = -1;
-            gCurrent_pratcam_precedence = 0;
             gPending_ambient_prat = -1;
+            gCurrent_pratcam_precedence = 0;
             return;
+        } else {
+            offset = prat_cam_move_width;
         }
-        offset = prat_cam_move_width;
+    } else {
+        offset = prat_cam_move_width * ((float)time_diff / 400.0);
     }
 
-    old_last_time = gLast_pratcam_frame_time;
     if (gProgram_state.prat_cam_on) {
         offset = prat_cam_move_width - offset;
     }
-    if (right_hand) {
+    if (!right_hand) {
         offset = -offset;
     }
+    old_last_time = gLast_pratcam_frame_time;
 
     DontLetFlicFuckWithPalettes();
     DisableTranslationText();
     for (i = 0; i < (old_last_time != 0 ? ((pThe_time - old_last_time) / gPrat_flic.frame_period) : 1); i++) {
+#ifdef DETHRACE_FIX_BUGS
+        if (gPrat_flic.data == NULL) {
+            switch (gRace_over_reason) {
+            case eRace_over_laps:
+            case eRace_over_peds:
+            case eRace_over_opponents:
+                ChangeAmbientPratcamNow(kPratcam_race_complete, 0);
+                break;
+            case eRace_over_demo:
+            case eRace_over_out_of_time:
+                ChangeAmbientPratcamNow(kPratcam_out_of_time, 0);
+                break;
+            case eRace_over_abandoned:
+            case eRace_over_network_victory:
+            case eRace_over_network_loss:
+                ChangeAmbientPratcamNow(kPratcam_network_timeout, 0);
+                break;
+            default:
+            case eRace_not_over_yet:
+                ChangeAmbientPratcamNow(kPratcam_stationary_or_below_25mph, 0);
+                break;
+            }
+        }
+#endif
         if (PlayNextFlicFrame(&gPrat_flic)) {
             NextPratcamChunk();
             break;
@@ -539,16 +574,17 @@ void DoPratcam(tU32 pThe_time) {
         gPrat_buffer->width, gPrat_buffer->height);
 #endif
 
-    if (gProgram_state.current_car.prat_cam_top != NULL) {
-        top_border_height = gProgram_state.current_car.prat_cam_top->height;
+    the_image = gProgram_state.current_car.prat_cam_top;
+    if (the_image != NULL) {
+        top_border_height = the_image->height;
         DRPixelmapRectangleMaskedCopy(
             gBack_screen,
             gProgram_state.current_car.prat_left + offset,
             gProgram_state.current_car.prat_top - top_border_height + y_offset,
-            gProgram_state.current_car.prat_cam_top,
+            the_image,
             0, 0,
-            gProgram_state.current_car.prat_cam_top->width,
-            gProgram_state.current_car.prat_cam_top->height);
+            the_image->width,
+            the_image->height);
     } else {
         top_border_height = 0;
     }
@@ -569,21 +605,22 @@ void DoPratcam(tU32 pThe_time) {
             0, 0,
             right_image->width, right_image->height);
     }
-    if (gProgram_state.current_car.prat_cam_bottom != NULL) {
+    the_image = gProgram_state.current_car.prat_cam_bottom;
+    if (the_image != NULL) {
         DRPixelmapRectangleMaskedCopy(
             gBack_screen,
             gProgram_state.current_car.prat_left + offset,
             gProgram_state.current_car.prat_bottom + y_offset,
-            gProgram_state.current_car.prat_cam_bottom,
+            the_image,
             0, 0,
-            gProgram_state.current_car.prat_cam_bottom->width,
-            gProgram_state.current_car.prat_cam_bottom->height);
+            the_image->width,
+            the_image->height);
     }
 }
 
 // IDA: void __usercall TestPratCam(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x0044e6d5
 void TestPratCam(int pIndex) {
-    LOG_TRACE("(%d)", pIndex);
 
     if (PDKeyDown(KEY_CTRL_ANY)) {
         pIndex += 40;
@@ -598,71 +635,71 @@ void TestPratCam(int pIndex) {
 }
 
 // IDA: void __cdecl PratCam0()
+// FUNCTION: CARM95 0x0044e6c0
 void PratCam0(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(0);
+    TestPratCam(kPratcam_stationary_or_below_25mph);
 }
 
 // IDA: void __cdecl PratCam1()
+// FUNCTION: CARM95 0x0044e72e
 void PratCam1(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(1);
+    TestPratCam(kPratcam_between_25_and_67mph);
 }
 
 // IDA: void __cdecl PratCam2()
+// FUNCTION: CARM95 0x0044e743
 void PratCam2(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(2);
+    TestPratCam(kPratcam_between_67_and_167mph);
 }
 
 // IDA: void __cdecl PratCam3()
+// FUNCTION: CARM95 0x0044e758
 void PratCam3(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(3);
+    TestPratCam(kPratcam_over_137mph);
 }
 
 // IDA: void __cdecl PratCam4()
+// FUNCTION: CARM95 0x0044e76d
 void PratCam4(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(4);
+    TestPratCam(kPratcam_accelerating_unused_4);
 }
 
 // IDA: void __cdecl PratCam5()
+// FUNCTION: CARM95 0x0044e782
 void PratCam5(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(5);
+    TestPratCam(kPratcam_flying);
 }
 
 // IDA: void __cdecl PratCam6()
+// FUNCTION: CARM95 0x0044e797
 void PratCam6(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(6);
+    TestPratCam(kPratcam_falling);
 }
 
 // IDA: void __cdecl PratCam7()
+// FUNCTION: CARM95 0x0044e7ac
 void PratCam7(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(7);
+    TestPratCam(kPratcam_rolling_gently);
 }
 
 // IDA: void __cdecl PratCam8()
+// FUNCTION: CARM95 0x0044e7c1
 void PratCam8(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(8);
+    TestPratCam(kPratcam_rolling_medium);
 }
 
 // IDA: void __cdecl PratCam9()
+// FUNCTION: CARM95 0x0044e7d6
 void PratCam9(void) {
-    LOG_TRACE("()");
 
-    TestPratCam(9);
+    TestPratCam(kPratcam_rolling_violent);
 }

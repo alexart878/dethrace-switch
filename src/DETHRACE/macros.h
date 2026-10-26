@@ -1,28 +1,33 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-#define DR_JOIN2(A,B) A##B
-#define DR_JOIN(A,B) DR_JOIN2(A, B)
-#define DR_STATIC_ASSERT(V) typedef int DR_JOIN(dr_static_assert_, __COUNTER__)[(V)?1:-1]
+/*
+ * All macros contained in this file were created as part of the reverse engineering effort
+ * and may or may not exist (or use the same names) in the retail code.
+ *
+ */
+
+#define DR_JOIN2(A, B) A##B
+#define DR_JOIN(A, B) DR_JOIN2(A, B)
+#define DR_STATIC_ASSERT(V) typedef int DR_JOIN(dr_static_assert_, __COUNTER__)[(V) ? 1 : -1]
 
 #define VEHICLE_TYPE_FROM_ID(id) ((tVehicle_type)(id >> 8))
-#define VEHICLE_INDEX_FROM_ID(id) ((id)&0x00ff)
-
-// #define VEC3_TRANSLATE(mat) (*(br_vector3*)(&mat->m[3][0]))
+#define VEHICLE_INDEX_FROM_ID(id) ((id) & 0x00ff)
 
 #define SLOBYTE(x) (*((signed char*)&(x)))
 
 #define STR_STARTS_WITH(haystack, needle) strncmp(haystack, needle, strlen(needle))
-#define STR_ENDS_WITH(haystack, needle) strcmp(haystack + strlen(haystack) - strlen(needle), needle)
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CONSTRAIN_BETWEEN(lowerbound, upperbound, val) (MIN((upperbound), MAX((lowerbound), (val))))
 
-#define COUNT_OF(array) (sizeof((array)) / sizeof((array)[0]))
+#define COUNT_OF(array) (int)(sizeof((array)) / sizeof((array)[0]))
 #define LEN(array) (sizeof((array)) / sizeof((array)[0]))
 
-#define DEG_TO_RAD(degrees) ((degrees)*3.141592653589793 / 180.0)
+#define MAT(m, row, col) (*((br_scalar*)(m) + (row) * 3 + (col)))
+
+#define DEG_TO_RAD(degrees) ((degrees) * 3.141592653589793 / 180.0)
 
 #define V11MODEL(model) (((struct v11model*)model->prepared))
 #define CAR(c) ((tCar_spec*)c)
@@ -37,7 +42,7 @@
 #define Vector3DistanceSquared(V1, V2) \
     ((((V1)->v[0] - (V2)->v[0])) * (((V1)->v[0] - (V2)->v[0])) + (((V1)->v[1] - (V2)->v[1])) * (((V1)->v[1] - (V2)->v[1])) + (((V1)->v[2] - (V2)->v[2])) * (((V1)->v[2] - (V2)->v[2])))
 
-#define Vector3Distance(V1, V2) sqrtf(Vector3DistanceSquared((V1), (V2)))
+#define Vector3Distance(V1, V2) sqrt(Vector3DistanceSquared((V1), (V2)))
 #define Vector3AreEqual(V1, V2) \
     ((V1)->v[0] == (V2)->v[0] && (V1)->v[1] == (V2)->v[1] && (V1)->v[2] == (V2)->v[2])
 #define Vector3EqualElements(V, A, B, C) \
@@ -56,4 +61,62 @@
         (V2) = (T);                         \
     } while (0)
 
+#define ReadThreeFloats(pF, a, b, c)          \
+    do {                                      \
+        float x_0, x_1, x_2;                  \
+        GetThreeFloats(pF, &x_0, &x_1, &x_2); \
+        a = x_0;                              \
+        b = x_1;                              \
+        c = x_2;                              \
+                                              \
+    } while (0)
+
+#define ReadPairOfFloats(pF, a, b)         \
+    do {                                   \
+        float x[2];                        \
+        GetPairOfFloats(pF, &x[1], &x[0]); \
+        a = x[1];                          \
+        b = x[0];                          \
+    } while (0)
+
+#define ReadPairOfInts(pF, a, b)         \
+    do {                                 \
+        int d[2];                        \
+        GetPairOfInts(pF, &d[1], &d[0]); \
+        a = d[1];                        \
+        b = d[0];                        \
+    } while (0)
+
+#define mGetThreeFloats(pF) \
+    float x_0, x_1, x_2;    \
+    GetThreeFloats(pF, &x_0, &x_1, &x_2);
+
+// Many switches in the original code did not include handling all values, causing warnings in modern compilers
+#ifdef DETHRACE_FIX_BUGS
+#define DETHRACE_DEFAULT_BREAK \
+    default:                   \
+        break;
+#else
+#define DETHRACE_DEFAULT_BREAK
+#endif
+
+#ifdef DETHRACE_FIX_BUGS
+// Fixes ubsan runtime errors related to memcpy arguments:
+// e.g. null pointer passed as argument 2, which is declared to never be null
+#define DR_SAFE_MEMCPY(DST, SRC, N)    \
+    do {                               \
+        if ((N) != 0) {                \
+            memcpy((DST), (SRC), (N)); \
+        }                              \
+    } while (0)
+#else
+#define DR_SAFE_MEMCPY(DST, SRC, N) memcpy((DST), (SRC), (N))
+#endif
+
+// "Force first" - for asm matching it can be helpful to try and force one branch/operation to be evaluated first
+#define DR_FF(x) ((x) * 1)
+// Object-pointer variant; uintptr_t preserves the pointer width.
+#define DR_FF_PTR(x) ((void*)DR_FF((uintptr_t)(x)))
+
+// MACROS_H
 #endif

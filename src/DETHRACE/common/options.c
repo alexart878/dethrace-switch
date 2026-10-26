@@ -25,7 +25,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+// GLOBAL: CARM95 0x00519ad8
 int gKey_defns[18] = { 48, 49, 46, 47, 53, 44, 59, 57, 55, 45, 50, 51, 52, 56, 62, 63, 64, 66 };
+
+// GLOBAL: CARM95 0x00519b20
 tRadio_bastards gRadio_bastards__options[13] = {
     // suffix added to avoid duplicate symbol
     { 4, 36, 0, { 132, 175, 221, 253, 0 } },
@@ -42,18 +45,34 @@ tRadio_bastards gRadio_bastards__options[13] = {
     { 3, 150, 0, { 132, 164, 207, 0, 0 } },
     { 4, 153, 0, { 177, 199, 220, 242, 0 } },
 };
+
+// GLOBAL: CARM95 0x0053d1d4
 int gKey_count;
+
+// GLOBAL: CARM95 0x0053d1d0
 int gLast_graph_sel__options; // suffix added to avoid duplicate symbol
+
+// GLOBAL: CARM95 0x0053d2f0
 char* gKey_names[125];
+
+// GLOBAL: CARM95 0x0053d4e4
 int gPending_entry;
+
+// GLOBAL: CARM95 0x0053d2ec
 tInterface_spec* gThe_interface_spec__options; // suffix added to avoid duplicate symbol
+
+// GLOBAL: CARM95 0x0053d1e0
 int gOrig_key_mapping[67];
+
+// GLOBAL: CARM95 0x0053d1d8
 br_pixelmap* gDials_pix;
+
+// GLOBAL: CARM95 0x0053d4e8
 int gCurrent_key;
 
 // IDA: void __usercall DrawDial(int pWhich_one@<EAX>, int pWhich_stage@<EDX>)
+// FUNCTION: CARM95 0x0049990d
 void DrawDial(int pWhich_one, int pWhich_stage) {
-    LOG_TRACE("(%d, %d)", pWhich_one, pWhich_stage);
 
     RemoveTransientBitmaps(1);
     DRPixelmapRectangleMaskedCopy(gBack_screen,
@@ -70,10 +89,10 @@ void DrawDial(int pWhich_one, int pWhich_stage) {
 }
 
 // IDA: void __usercall MoveDialFromTo(int pWhich_one@<EAX>, int pOld_stage@<EDX>, int pNew_stage@<EBX>)
+// FUNCTION: CARM95 0x0049998a
 void MoveDialFromTo(int pWhich_one, int pOld_stage, int pNew_stage) {
     tS32 time_diff;
     tU32 start_time;
-    LOG_TRACE("(%d, %d, %d)", pWhich_one, pOld_stage, pNew_stage);
 
     DrawDial(pWhich_one, pOld_stage);
     start_time = PDGetTotalTime();
@@ -84,34 +103,34 @@ void MoveDialFromTo(int pWhich_one, int pOld_stage, int pNew_stage) {
 
     start_time = PDGetTotalTime();
     DrawDial(pWhich_one, pNew_stage < 24 ? pNew_stage + 1 : 22);
-    while ((time_diff = PDGetTotalTime() - start_time) < 20) {
+    while (PDGetTotalTime() - start_time < 20) {
     }
 
     start_time = PDGetTotalTime();
-    DrawDial(pWhich_one, pNew_stage == 0 ? 2 : pNew_stage - 1);
-    while ((time_diff = PDGetTotalTime() - start_time) < 20) {
+    DrawDial(pWhich_one, pNew_stage != 0 ? pNew_stage - 1 : pNew_stage + 2);
+    while (PDGetTotalTime() - start_time < 20) {
     }
 
     start_time = PDGetTotalTime();
     DrawDial(pWhich_one, pNew_stage < 24 ? pNew_stage + 1 : 22);
-    while ((time_diff = PDGetTotalTime() - start_time) < 20) {
+    while (PDGetTotalTime() - start_time < 20) {
     }
 
     start_time = PDGetTotalTime();
     DrawDial(pWhich_one, pNew_stage);
-    while ((time_diff = PDGetTotalTime() - start_time) < 20) {
+    while (PDGetTotalTime() - start_time < 20) {
     }
 
     start_time = PDGetTotalTime();
-    DrawDial(pWhich_one, pNew_stage == 0 ? 2 : pNew_stage - 1);
-    while ((time_diff = PDGetTotalTime() - start_time) < 20) {
+    DrawDial(pWhich_one, pNew_stage != 0 ? pNew_stage - 1 : pNew_stage + 2);
+    while (PDGetTotalTime() - start_time < 20) {
     }
     DrawDial(pWhich_one, pNew_stage);
 }
 
 // IDA: void __cdecl SoundOptionsStart()
+// FUNCTION: CARM95 0x004998c0
 void SoundOptionsStart(void) {
-    LOG_TRACE("()");
 
     DrawDial(0, 0);
     DrawDial(1, 0);
@@ -120,121 +139,125 @@ void SoundOptionsStart(void) {
 }
 
 // IDA: int __usercall SoundOptionsDone@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x00499b6c
 int SoundOptionsDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
     MoveDialFromTo(0, 4 * gProgram_state.music_volume, 0);
-    MoveDialFromTo(0, 4 * gProgram_state.effects_volume, 0);
+    MoveDialFromTo(1, 4 * gProgram_state.effects_volume, 0);
     return pCurrent_choice;
 }
 
 // IDA: int __usercall SoundOptionsLeft@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00499ba9
 int SoundOptionsLeft(int* pCurrent_choice, int* pCurrent_mode) {
     int old_value;
     int* the_value;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
-    if (*pCurrent_choice == 2) {
-        return 0;
+    if (*pCurrent_choice != 2) {
+
+        the_value = (*pCurrent_choice == 0) ? &gProgram_state.music_volume : &gProgram_state.effects_volume;
+        old_value = *the_value;
+        *the_value -= 1;
+        if (*the_value < 0) {
+            *the_value = 0;
+        }
+        SetSoundVolumes();
+        DRS3StartSound(gEffects_outlet, 3000);
+        MoveDialFromTo(*pCurrent_choice, 4 * old_value, 4 * *the_value);
     }
-    the_value = (*pCurrent_choice == 0) ? &gProgram_state.music_volume : &gProgram_state.effects_volume;
-    old_value = *the_value;
-    *the_value -= 1;
-    if (*the_value < 0) {
-        *the_value = 0;
-    }
-    SetSoundVolumes();
-    DRS3StartSound(gEffects_outlet, 3000);
-    MoveDialFromTo(*pCurrent_choice, 4 * old_value, 4 * *the_value);
     return 0;
 }
 
 // IDA: int __usercall SoundOptionsRight@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00499c49
 int SoundOptionsRight(int* pCurrent_choice, int* pCurrent_mode) {
     int old_value;
     int* the_value;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
-    if (*pCurrent_choice == 2) {
-        return 0;
+    if (*pCurrent_choice != 2) {
+        the_value = (*pCurrent_choice == 0) ? &gProgram_state.music_volume : &gProgram_state.effects_volume;
+        old_value = *the_value;
+        *the_value += 1;
+        if (*the_value > 6) {
+            *the_value = 6;
+        }
+        SetSoundVolumes();
+        DRS3StartSound(gEffects_outlet, 3000);
+        MoveDialFromTo(*pCurrent_choice, 4 * old_value, 4 * *the_value);
     }
-    the_value = (*pCurrent_choice == 0) ? &gProgram_state.music_volume : &gProgram_state.effects_volume;
-    old_value = *the_value;
-    *the_value += 1;
-    if (*the_value >= 6) {
-        *the_value = 6;
-    }
-    SetSoundVolumes();
-    DRS3StartSound(gEffects_outlet, 3000);
-    MoveDialFromTo(*pCurrent_choice, 4 * old_value, 4 * *the_value);
     return 0;
 }
 
 // IDA: int __usercall SoundClick@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x00499ce9
 int SoundClick(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
     float x_delta;
     float y_delta;
     float angle;
     int old_value;
     int* the_value;
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
 #define ANGLE_RANGE_START (20 * PI / 360)
 #define ANGLE_RANGE_END (340 * PI / 360)
 
     x_delta = pX_offset - gCurrent_graf_data->dial__x_centre;
     y_delta = gCurrent_graf_data->dial__y_centre - pY_offset;
-    if (y_delta <= 0.f) {
-        return 0;
-    }
-    angle = x_delta == 0.f ? PI / 2 : atanf(y_delta / x_delta);
-    if (angle < 0.f) {
-        angle += PI;
-    }
-    if (angle > ANGLE_RANGE_START && angle < ANGLE_RANGE_END) {
-        the_value = (*pCurrent_choice == 0) ? &gProgram_state.music_volume : &gProgram_state.effects_volume;
-        old_value = *the_value;
-        *the_value = (ANGLE_RANGE_END - angle + 0.233001455141243) / 0.4660029102824859;
-        if (*the_value > 6) {
-            *the_value = 6;
-        } else if (*the_value < 0) {
-            *the_value = 0;
+    if (y_delta > 0.f) {
+        angle = x_delta != 0.f ? atan(y_delta / x_delta) : PI / 2;
+        if (angle < 0.f) {
+            angle += PI;
         }
-        if (*the_value != old_value) {
-            SetSoundVolumes();
-            if (old_value < *the_value) {
-                DRS3StartSound(gEffects_outlet, 3000);
-            } else {
-                DRS3StartSound(gEffects_outlet, 3000);
+        if (angle > ANGLE_RANGE_START && angle < ANGLE_RANGE_END) {
+            the_value = (*pCurrent_choice == 0) ? &gProgram_state.music_volume : &gProgram_state.effects_volume;
+            old_value = *the_value;
+            *the_value = (ANGLE_RANGE_END - angle + 0.23300145514124296) / 0.4660029102824859;
+            if (*the_value > 6) {
+                *the_value = 6;
+            } else if (*the_value < 0) {
+                *the_value = 0;
             }
-            MoveDialFromTo(*pCurrent_choice, 4 * old_value, 4 * *the_value);
+            if (*the_value != old_value) {
+                SetSoundVolumes();
+                if (old_value < *the_value) {
+                    DRS3StartSound(gEffects_outlet, 3000);
+                } else {
+                    DRS3StartSound(gEffects_outlet, 3000);
+                }
+                MoveDialFromTo(*pCurrent_choice, 4 * old_value, 4 * *the_value);
+            }
         }
     }
     return 0;
 }
 
 // IDA: void __cdecl DoSoundOptions()
+// FUNCTION: CARM95 0x0049b7bf
 void DoSoundOptions(void) {
+    // GLOBAL: CARM95 0x00519cc0
     static tFlicette flicker_on[3] = {
         { 156, { 26, 52 }, { 21, 50 } },
         { 156, { 155, 310 }, { 88, 211 } },
         { 43, { 38, 76 }, { 153, 367 } },
     };
+    // GLOBAL: CARM95 0x00519d00
     static tFlicette flicker_off[3] = {
         { 155, { 26, 52 }, { 21, 50 } },
         { 155, { 155, 310 }, { 88, 211 } },
         { 42, { 38, 76 }, { 153, 367 } },
     };
+    // GLOBAL: CARM95 0x00519d40
     static tFlicette push[3] = {
         { 156, { 26, 52 }, { 21, 50 } },
         { 156, { 155, 310 }, { 88, 211 } },
         { 43, { 38, 76 }, { 153, 367 } },
     };
+    // GLOBAL: CARM95 0x00519d80
     static tMouse_area mouse_areas[3] = {
         { { 26, 52 }, { 21, 50 }, { 144, 288 }, { 97, 233 }, 0, 0, 0, SoundClick },
         { { 155, 310 }, { 88, 211 }, { 273, 546 }, { 164, 394 }, 1, 0, 0, SoundClick },
         { { 38, 76 }, { 153, 367 }, { 101, 202 }, { 173, 415 }, 2, 0, 0, NULL },
     };
+    // GLOBAL: CARM95 0x00519e10
     static tInterface_spec interface_spec = {
         0,
         150,
@@ -288,7 +311,6 @@ void DoSoundOptions(void) {
         NULL,
     };
     int result;
-    LOG_TRACE("()");
 
     DoInterfaceScreen(&interface_spec, 0, 0);
     if (!gProgram_state.racing) {
@@ -299,129 +321,133 @@ void DoSoundOptions(void) {
 }
 
 // IDA: void __cdecl GetGraphicsOptions()
+// FUNCTION: CARM95 0x0049b87f
 void GetGraphicsOptions(void) {
     int value;
     br_scalar br_value;
-    LOG_TRACE("()");
 
     value = GetCarSimplificationLevel();
-    if (value > 1) {
-        value--;
+    if (value < 2) {
+        gRadio_bastards__options[0].current_value = value;
+    } else {
+        gRadio_bastards__options[0].current_value = value - 1;
     }
-    gRadio_bastards__options[0].current_value = value;
 
     switch (GetCarTexturingLevel()) {
     case eCTL_none:
-        value = 2;
+        gRadio_bastards__options[1].current_value = 2;
         break;
     case eCTL_transparent:
-        value = 1;
+        gRadio_bastards__options[1].current_value = 1;
         break;
     case eCTL_full:
-        value = 0;
+        gRadio_bastards__options[1].current_value = 0;
         break;
-    case eCTL_count:
-        TELL_ME_IF_WE_PASS_THIS_WAY();
-        break;
+
+        DETHRACE_DEFAULT_BREAK;
     }
-    gRadio_bastards__options[1].current_value = value;
 
     switch (GetShadowLevel()) {
     case eShadow_none:
-        value = 2;
+        gRadio_bastards__options[2].current_value = 2;
         break;
     case eShadow_us_only:
-        value = 1;
+        gRadio_bastards__options[2].current_value = 1;
         break;
     default:
-        value = 0;
+        gRadio_bastards__options[2].current_value = 0;
         break;
     }
-    gRadio_bastards__options[2].current_value = value;
 
     switch (GetWallTexturingLevel()) {
     case eWTL_none:
-        value = 2;
+        gRadio_bastards__options[3].current_value = 2;
         break;
     case eWTL_linear:
-        value = 1;
+        gRadio_bastards__options[3].current_value = 1;
         break;
     case eWTL_full:
-        value = 0;
+        gRadio_bastards__options[3].current_value = 0;
         break;
-    case eWTL_count:
-        TELL_ME_IF_WE_PASS_THIS_WAY();
-        break;
+
+        DETHRACE_DEFAULT_BREAK;
     }
-    gRadio_bastards__options[3].current_value = value;
 
     switch (GetRoadTexturingLevel()) {
     case eRTL_none:
-        value = 2;
+        gRadio_bastards__options[4].current_value = 2;
         break;
     case eRTL_full:
-        value = 0;
+        gRadio_bastards__options[4].current_value = 0;
         break;
-    case eRTL_count:
-        TELL_ME_IF_WE_PASS_THIS_WAY();
-        break;
-    }
-    gRadio_bastards__options[4].current_value = value;
 
-    value = (int)((35.f - GetYon()) / 5.f);
-    gRadio_bastards__options[5].current_value = value;
+        DETHRACE_DEFAULT_BREAK;
+    }
+
+    br_value = GetYon();
+    gRadio_bastards__options[5].current_value = (int)((35.f - br_value) / 5.f);
+    if (gRadio_bastards__options[5].current_value > 3) {
+        gRadio_bastards__options[5].current_value = 3;
+    }
 
     br_value = GetYonFactor();
-    if (br_value < .5f) {
-        if (br_value < .25f) {
-            value = 3;
-        } else {
-            value = 2;
-        }
+    if (br_value >= 1.f) {
+        gRadio_bastards__options[6].current_value = 0;
+    } else if (br_value >= .5f) {
+        gRadio_bastards__options[6].current_value = 1;
+    } else if (br_value >= .25f) {
+        gRadio_bastards__options[6].current_value = 2;
     } else {
-        if (br_value < 1.f) {
-            value = 1;
-        } else {
-            value = 0;
-        }
+        gRadio_bastards__options[6].current_value = 3;
     }
-    gRadio_bastards__options[6].current_value = value;
 
-    value = !GetSkyTextureOn();
-    gRadio_bastards__options[7].current_value = value;
+    if (GetSkyTextureOn()) {
+        gRadio_bastards__options[7].current_value = 0;
+    } else {
+        gRadio_bastards__options[7].current_value = 1;
+    }
 
-    value = !GetDepthCueingOn();
-    gRadio_bastards__options[8].current_value = value;
+    if (GetDepthCueingOn()) {
+        gRadio_bastards__options[8].current_value = 0;
+    } else {
+        gRadio_bastards__options[8].current_value = 1;
+    }
 
-    value = !GetAccessoryRendering();
-    gRadio_bastards__options[9].current_value = value;
+    if (GetAccessoryRendering()) {
+        gRadio_bastards__options[9].current_value = 0;
+    } else {
+        gRadio_bastards__options[9].current_value = 1;
+    }
 
-    value = !GetSmokeOn();
-    gRadio_bastards__options[10].current_value = value;
+    if (GetSmokeOn()) {
+        gRadio_bastards__options[10].current_value = 0;
+    } else {
+        gRadio_bastards__options[10].current_value = 1;
+    }
 
-    value = 2 - GetSoundDetailLevel();
-    gRadio_bastards__options[11].current_value = value;
+    value = GetSoundDetailLevel();
+    gRadio_bastards__options[11].current_value = 2 - value;
 }
 
 // IDA: void __cdecl SetGraphicsOptions()
+// FUNCTION: CARM95 0x0049bb74
 void SetGraphicsOptions(void) {
-    LOG_TRACE("()");
 
-    if (gRadio_bastards__options[0].current_value < 2) {
-        SetCarSimplificationLevel(gRadio_bastards__options[0].current_value);
-    } else {
+    if (gRadio_bastards__options[0].current_value >= 2) {
         SetCarSimplificationLevel(gRadio_bastards__options[0].current_value + 1);
+    } else {
+        SetCarSimplificationLevel(gRadio_bastards__options[0].current_value);
     }
 
     switch (gRadio_bastards__options[1].current_value) {
-    case 0:
-        SetCarTexturingLevel(eCTL_full);
+    case 2:
+        SetCarTexturingLevel(eCTL_none);
         break;
     case 1:
         SetCarTexturingLevel(eCTL_transparent);
         break;
-    case 2:
-        SetCarTexturingLevel(eCTL_none);
+    case 0:
+        SetCarTexturingLevel(eCTL_full);
         break;
     }
 
@@ -484,8 +510,8 @@ void SetGraphicsOptions(void) {
 }
 
 // IDA: void __usercall PlayRadioOn2(int pIndex@<EAX>, int pValue@<EDX>)
+// FUNCTION: CARM95 0x00499efe
 void PlayRadioOn2(int pIndex, int pValue) {
-    LOG_TRACE("(%d, %d)", pIndex, pValue);
 
     RunFlicAt(288,
         gRadio_bastards__options[pIndex].left[pValue],
@@ -493,8 +519,8 @@ void PlayRadioOn2(int pIndex, int pValue) {
 }
 
 // IDA: void __usercall PlayRadioOff2(int pIndex@<EAX>, int pValue@<EDX>)
+// FUNCTION: CARM95 0x0049a05d
 void PlayRadioOff2(int pIndex, int pValue) {
-    LOG_TRACE("(%d, %d)", pIndex, pValue);
 
     RunFlicAt(287,
         gRadio_bastards__options[pIndex].left[pValue],
@@ -502,8 +528,8 @@ void PlayRadioOff2(int pIndex, int pValue) {
 }
 
 // IDA: void __usercall PlayRadioOn(int pIndex@<EAX>, int pValue@<EDX>)
+// FUNCTION: CARM95 0x00499feb
 void PlayRadioOn__options(int pIndex, int pValue) {
-    LOG_TRACE("(%d, %d)", pIndex, pValue);
 
     RemoveTransientBitmaps(1);
     DontLetFlicFuckWithPalettes();
@@ -514,8 +540,8 @@ void PlayRadioOn__options(int pIndex, int pValue) {
 }
 
 // IDA: void __usercall PlayRadioOff(int pIndex@<EAX>, int pValue@<EDX>)
+// FUNCTION: CARM95 0x0049a024
 void PlayRadioOff__options(int pIndex, int pValue) {
-    LOG_TRACE("(%d, %d)", pIndex, pValue);
 
     RemoveTransientBitmaps(1);
     DontLetFlicFuckWithPalettes();
@@ -526,9 +552,9 @@ void PlayRadioOff__options(int pIndex, int pValue) {
 }
 
 // IDA: void __cdecl DrawInitialRadios()
+// FUNCTION: CARM95 0x00499e9b
 void DrawInitialRadios(void) {
     int i;
-    LOG_TRACE("()");
 
     RemoveTransientBitmaps(1);
     DontLetFlicFuckWithPalettes();
@@ -542,8 +568,8 @@ void DrawInitialRadios(void) {
 }
 
 // IDA: void __usercall RadioChanged(int pIndex@<EAX>, int pNew_value@<EDX>)
+// FUNCTION: CARM95 0x00499fa8
 void RadioChanged(int pIndex, int pNew_value) {
-    LOG_TRACE("(%d, %d)", pIndex, pNew_value);
 
     PlayRadioOff__options(pIndex, gRadio_bastards__options[pIndex].current_value);
     PlayRadioOn__options(pIndex, pNew_value);
@@ -551,9 +577,9 @@ void RadioChanged(int pIndex, int pNew_value) {
 }
 
 // IDA: int __usercall GraphOptLeft@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00499f34
 int GraphOptLeft(int* pCurrent_choice, int* pCurrent_mode) {
     int new_value;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     DRS3StartSound(gEffects_outlet, 3000);
     new_value = gRadio_bastards__options[*pCurrent_choice - 2].current_value - 1;
@@ -565,9 +591,9 @@ int GraphOptLeft(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall GraphOptRight@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049a093
 int GraphOptRight(int* pCurrent_choice, int* pCurrent_mode) {
     int new_value;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     DRS3StartSound(gEffects_outlet, 3000);
     new_value = gRadio_bastards__options[*pCurrent_choice + -2].current_value + 1;
@@ -579,8 +605,8 @@ int GraphOptRight(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall GraphOptUp@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049a109
 int GraphOptUp(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (*pCurrent_mode == 0) {
         *pCurrent_mode = 1;
@@ -598,8 +624,8 @@ int GraphOptUp(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall GraphOptDown@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049a19b
 int GraphOptDown(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (*pCurrent_mode == 0) {
         *pCurrent_mode = 1;
@@ -617,9 +643,9 @@ int GraphOptDown(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall RadioClick@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0049a22d
 int RadioClick(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
     int i;
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     for (i = gRadio_bastards__options[*pCurrent_choice - 2].count - 1; i >= 0; i--) {
         if (gThe_interface_spec__options->mouse_areas[2].left[gGraf_data_index] + pX_offset + 3 >= gRadio_bastards__options[*pCurrent_choice - 2].left[i]) {
@@ -632,8 +658,8 @@ int RadioClick(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_o
 }
 
 // IDA: int __usercall GraphOptGoAhead@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049a2d1
 int GraphOptGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     GraphOptRight(pCurrent_choice, pCurrent_mode);
     return 0;
@@ -641,8 +667,8 @@ int GraphOptGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
 
 // IDA: void __usercall PlotAGraphBox(int pIndex@<EAX>, int pColour_value@<EDX>)
 //  Suffix added to avoid duplicate symbol
+// FUNCTION: CARM95 0x0049a34d
 void PlotAGraphBox__options(int pIndex, int pColour_value) {
-    LOG_TRACE("(%d, %d)", pIndex, pColour_value);
 
     if (pIndex < 0) {
         return;
@@ -656,33 +682,35 @@ void PlotAGraphBox__options(int pIndex, int pColour_value) {
 
 // IDA: void __usercall DrawAGraphBox(int pIndex@<EAX>)
 //  Suffix added to avoid duplicate symbol
+// FUNCTION: CARM95 0x0049a334
 void DrawAGraphBox__options(int pIndex) {
-    LOG_TRACE("(%d)", pIndex);
 
     PlotAGraphBox__options(pIndex, 45);
 }
 
 // IDA: void __usercall EraseAGraphBox(int pIndex@<EAX>)
 //  Suffix added to avoid duplicate symbol
+// FUNCTION: CARM95 0x0049a3e1
 void EraseAGraphBox__options(int pIndex) {
-    LOG_TRACE("(%d)", pIndex);
 
     PlotAGraphBox__options(pIndex, 0);
 }
 
 // IDA: void __usercall DrawGraphBox(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049a2f3
 void DrawGraphBox(int pCurrent_choice, int pCurrent_mode) {
-    LOG_TRACE("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
-    if (pCurrent_choice != gCurrent_key) {
-        EraseAGraphBox__options(gCurrent_key - 2);
+    if (pCurrent_choice != gLast_graph_sel__options) {
+        EraseAGraphBox__options(gLast_graph_sel__options - 2);
         DrawAGraphBox__options(pCurrent_choice - 2);
-        gCurrent_key = pCurrent_choice;
+        gLast_graph_sel__options = pCurrent_choice;
     }
 }
 
 // IDA: void __cdecl DoGraphicsOptions()
+// FUNCTION: CARM95 0x0049b805
 void DoGraphicsOptions(void) {
+    // GLOBAL: CARM95 0x00519f40
     static tFlicette flicker_on[14] = {
         { 43, { 45, 90 }, { 166, 398 } },
         { 43, { 220, 440 }, { 166, 398 } },
@@ -699,6 +727,7 @@ void DoGraphicsOptions(void) {
         { 248, { 49, 98 }, { 138, 331 } },
         { 249, { 49, 98 }, { 150, 360 } },
     };
+    // GLOBAL: CARM95 0x0051a058
     static tFlicette flicker_off[14] = {
         { 42, { 45, 90 }, { 166, 398 } },
         { 42, { 220, 440 }, { 166, 398 } },
@@ -715,6 +744,7 @@ void DoGraphicsOptions(void) {
         { 275, { 49, 98 }, { 138, 331 } },
         { 276, { 49, 98 }, { 150, 360 } },
     };
+    // GLOBAL: CARM95 0x0051a170
     static tFlicette push[14] = {
         { 154, { 45, 90 }, { 166, 398 } },
         { 45, { 220, 440 }, { 166, 398 } },
@@ -731,8 +761,9 @@ void DoGraphicsOptions(void) {
         { 45, { 210, 440 }, { 170, 408 } },
         { 45, { 210, 440 }, { 170, 408 } },
     };
+    // GLOBAL: CARM95 0x0051a288
     static tMouse_area mouse_areas[14] = {
-        { { 45, 90 }, { 165, 396 }, { 104, 214 }, { 185, 444 }, 0, 0, 0, NULL },
+        { { 45, 90 }, { 165, 396 }, { 107, 214 }, { 185, 444 }, 0, 0, 0, NULL },
         { { 220, 440 }, { 165, 396 }, { 276, 552 }, { 185, 444 }, 1, 0, 0, NULL },
         { { 49, 98 }, { 35, 84 }, { 284, 568 }, { 43, 103 }, 2, 1, 0, RadioClick },
         { { 49, 98 }, { 44, 106 }, { 284, 568 }, { 52, 125 }, 3, 1, 0, RadioClick },
@@ -747,6 +778,7 @@ void DoGraphicsOptions(void) {
         { { 49, 98 }, { 137, 329 }, { 284, 322 }, { 145, 348 }, 12, 1, 0, RadioClick },
         { { 49, 98 }, { 149, 358 }, { 284, 322 }, { 157, 377 }, 13, 1, 0, RadioClick },
     };
+    // GLOBAL: CARM95 0x0051a528
     static tInterface_spec interface_spec = {
         0,
         160,
@@ -758,7 +790,7 @@ void DoGraphicsOptions(void) {
         { -1, 0 },
         { -1, 0 },
         { 0, 2 },
-        { 1, 2 },
+        { 1, 13 },
         { NULL, GraphOptLeft },
         { -1, 0 },
         { 1, 0 },
@@ -799,10 +831,9 @@ void DoGraphicsOptions(void) {
         0,
         NULL,
     };
-    LOG_TRACE("()");
 
     gThe_interface_spec__options = &interface_spec;
-    gCurrent_key = -1;
+    gLast_graph_sel__options = -1;
     LoadFont(kFont_GRYLIT);
     GetGraphicsOptions();
     if (DoInterfaceScreen(&interface_spec, 0, 0) == 0) {
@@ -817,7 +848,9 @@ void DoGraphicsOptions(void) {
 }
 
 // IDA: void __cdecl CalibrateJoysticks()
+// FUNCTION: CARM95 0x0049bf81
 void CalibrateJoysticks(void) {
+#ifdef __DOS__
     tJoy_calib_stage stage;
     int escaped;
     int joy_value_x;
@@ -835,9 +868,7 @@ void CalibrateJoysticks(void) {
     int saved_2y;
     int max;
     char s[256];
-    LOG_TRACE("()");
 
-#ifdef __DOS__
     NOT_IMPLEMENTED();
 #else
     NetFullScreenMessage(kMiscString_USE_SYSTEM_CONTROL_PANEL_FOR_JOYSTICKS, 0);
@@ -845,15 +876,19 @@ void CalibrateJoysticks(void) {
 }
 
 // IDA: void __usercall StripControls(unsigned char *pStr@<EAX>)
+// FUNCTION: CARM95 0x0049c0b4
 void StripControls(unsigned char* pStr) {
     int i;
     int len;
-    LOG_TRACE("(%p)", pStr);
 
     len = strlen((char*)pStr);
     for (i = 0; i < len; i++) {
         if (pStr[i] < ' ') {
-            memmove(&pStr[i], &pStr[i + 1], (len - i) * sizeof(char));
+#ifdef DETHRACE_FIX_BUGS
+            memmove(&pStr[i], &pStr[i] + 1, (len - i) * sizeof(char));
+#else
+            memcpy(&pStr[i], &pStr[i] + 1, (len - i) * sizeof(char));
+#endif
             len--;
 #ifdef DETHRACE_FIX_BUGS
             // correctly handle stripping multiple control characters
@@ -864,12 +899,12 @@ void StripControls(unsigned char* pStr) {
 }
 
 // IDA: void __cdecl LoadKeyNames()
+// FUNCTION: CARM95 0x0049bf9b
 void LoadKeyNames(void) {
     int i;
     FILE* f;
     tPath_name the_path;
     unsigned char s[256];
-    LOG_TRACE("()");
 
     PathCat(the_path, gApplication_path, "KEYNAMES.TXT");
     f = DRfopen(the_path, "rt");
@@ -886,9 +921,9 @@ void LoadKeyNames(void) {
 }
 
 // IDA: void __cdecl DisposeKeyNames()
+// FUNCTION: CARM95 0x0049c133
 void DisposeKeyNames(void) {
     int i;
-    LOG_TRACE("()");
 
     for (i = 0; i < COUNT_OF(gKey_names); i++) {
         BrMemFree(gKey_names[i]);
@@ -896,43 +931,47 @@ void DisposeKeyNames(void) {
 }
 
 // IDA: void __cdecl SaveOrigKeyMapping()
+// FUNCTION: CARM95 0x0049ab5e
 void SaveOrigKeyMapping(void) {
-    LOG_TRACE("()");
 
     memcpy(gOrig_key_mapping, gKey_mapping, sizeof(gKey_mapping));
 }
 
 // IDA: void __usercall GetKeyCoords(int pIndex@<EAX>, int *pY@<EDX>, int *pName_x@<EBX>, int *pKey_x@<ECX>, int *pEnd_box)
+// FUNCTION: CARM95 0x0049a8e2
 void GetKeyCoords(int pIndex, int* pY, int* pName_x, int* pKey_x, int* pEnd_box) {
     int col;
-    LOG_TRACE("(%d, %p, %p, %p, %p)", pIndex, pY, pName_x, pKey_x, pEnd_box);
 
-    if (pIndex >= 0) {
-        col = gKey_count + 1;
-        *pY = (pIndex % ((gKey_count + 1) / 2)) * gCurrent_graf_data->key_assign_y_pitch + gCurrent_graf_data->key_assign_y;
-        if (pIndex < col / 2) {
-            *pName_x = gCurrent_graf_data->key_assign_col_1;
-            *pKey_x = gCurrent_graf_data->key_assign_col_1_a;
-            *pEnd_box = gCurrent_graf_data->key_assign_col_2 - 7;
-        } else {
-            *pName_x = gCurrent_graf_data->key_assign_col_2;
-            *pKey_x = gCurrent_graf_data->key_assign_col_2_a;
-            *pEnd_box = gCurrent_graf_data->key_assign_col_2 + gCurrent_graf_data->key_assign_col_2 - gCurrent_graf_data->key_assign_col_1 - 7;
-        }
-    } else {
+    if (pIndex < 0) {
         *pName_x = gCurrent_graf_data->key_assign_col_1;
         *pKey_x = 0;
         *pEnd_box = gCurrent_graf_data->key_assign_col_2 + gCurrent_graf_data->key_assign_col_2 - gCurrent_graf_data->key_assign_col_1 - 7;
         *pY = gCurrent_graf_data->key_assign_key_map_y;
+    } else {
+        if ((gKey_count + 1) / 2 <= pIndex) {
+            col = 1;
+        } else {
+            col = 0;
+        }
+        *pY = (pIndex % ((gKey_count + 1) / 2)) * gCurrent_graf_data->key_assign_y_pitch + gCurrent_graf_data->key_assign_y;
+        if (col != 0) {
+            *pName_x = gCurrent_graf_data->key_assign_col_2;
+            *pKey_x = gCurrent_graf_data->key_assign_col_2_a;
+            *pEnd_box = gCurrent_graf_data->key_assign_col_2 + gCurrent_graf_data->key_assign_col_2 - gCurrent_graf_data->key_assign_col_1 - 7;
+        } else {
+            *pName_x = gCurrent_graf_data->key_assign_col_1;
+            *pKey_x = gCurrent_graf_data->key_assign_col_1_a;
+            *pEnd_box = gCurrent_graf_data->key_assign_col_2 - 7;
+        }
     }
 }
 
 // IDA: void __cdecl SetKeysToDefault()
+// FUNCTION: CARM95 0x0049b3f3
 void SetKeysToDefault(void) {
     FILE* f;
     tPath_name the_path;
     int i;
-    LOG_TRACE("()");
 
     PathCat(the_path, gApplication_path, "DKEYMAPX.TXT");
     the_path[strlen(the_path) - 5] = '0' + gKey_map_index;
@@ -947,11 +986,11 @@ void SetKeysToDefault(void) {
 }
 
 // IDA: void __cdecl SaveKeyMapping()
+// FUNCTION: CARM95 0x0049ab7a
 void SaveKeyMapping(void) {
     FILE* f;
     tPath_name the_path;
     int i;
-    LOG_TRACE("()");
 
     PathCat(the_path, gApplication_path, "KEYMAP_X.TXT");
     the_path[strlen(the_path) - 5] = '0' + gKey_map_index;
@@ -969,8 +1008,8 @@ void SaveKeyMapping(void) {
 }
 
 // IDA: void __usercall ChangeKeyMapIndex(int pNew_one@<EAX>)
+// FUNCTION: CARM95 0x0049ab3c
 void ChangeKeyMapIndex(int pNew_one) {
-    LOG_TRACE("(%d)", pNew_one);
 
     SaveKeyMapping();
     gKey_map_index = pNew_one;
@@ -979,6 +1018,7 @@ void ChangeKeyMapIndex(int pNew_one) {
 }
 
 // IDA: void __usercall DrawKeyAssignments(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049a3fa
 void DrawKeyAssignments(int pCurrent_choice, int pCurrent_mode) {
     int i;
     int y;
@@ -990,8 +1030,8 @@ void DrawKeyAssignments(int pCurrent_choice, int pCurrent_mode) {
     int end_box;
     tDR_font* font_n;
     tDR_font* font_k;
+    // GLOBAL: CARM95 0x51a654
     static int on_radios_last_time;
-    LOG_TRACE("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
 #if defined(DETHRACE_FIX_BUGS)
     font_k = &gFonts[kFont_GRYDK];
@@ -1050,21 +1090,21 @@ void DrawKeyAssignments(int pCurrent_choice, int pCurrent_mode) {
         TurnFlicTransparencyOn();
         RunFlicAt(193, gCurrent_graf_data->key_assign_flic_x, gCurrent_graf_data->key_assign_flic_y);
         TurnFlicTransparencyOff();
-        DontLetFlicFuckWithPalettes();
+        LetFlicFuckWithPalettes();
     } else if (!on_radios_last_time && pCurrent_mode != 0 && gCurrent_key < 0) {
         DontLetFlicFuckWithPalettes();
         TurnFlicTransparencyOn();
         RunFlicAt(194, gCurrent_graf_data->key_assign_flic_x, gCurrent_graf_data->key_assign_flic_y);
         TurnFlicTransparencyOff();
-        DontLetFlicFuckWithPalettes();
+        LetFlicFuckWithPalettes();
     }
     on_radios_last_time = pCurrent_mode != 0 && gCurrent_key < 0;
 }
 
 // IDA: int __usercall KeyAssignLeft@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049aa3a
 int KeyAssignLeft(int* pCurrent_choice, int* pCurrent_mode) {
     int new_index;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (gCurrent_key < 0) {
         if (gKey_map_index == 0) {
@@ -1075,6 +1115,7 @@ int KeyAssignLeft(int* pCurrent_choice, int* pCurrent_mode) {
         ChangeKeyMapIndex(new_index);
         RadioChanged(12, new_index);
         DRS3StartSound(gEffects_outlet, 3000);
+        return 1;
     } else {
         if (gCurrent_key >= (gKey_count + 1) / 2) {
             gCurrent_key -= (gKey_count + 1) / 2;
@@ -1085,41 +1126,41 @@ int KeyAssignLeft(int* pCurrent_choice, int* pCurrent_mode) {
             }
         }
         DRS3StartSound(gEffects_outlet, 3000);
+        return 1;
     }
-    return 1;
 }
 
 // IDA: int __usercall KeyAssignRight@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049ac6f
 int KeyAssignRight(int* pCurrent_choice, int* pCurrent_mode) {
     int new_index;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (gCurrent_key < 0) {
-        if (gKey_map_index < 3) {
-            new_index = gKey_map_index + 1;
-        } else {
+        if (gKey_map_index >= 3) {
             new_index = 0;
+        } else {
+            new_index = gKey_map_index + 1;
         }
         ChangeKeyMapIndex(new_index);
         RadioChanged(12, new_index);
         DRS3StartSound(gEffects_outlet, 3000);
-    } else {
-        if (gCurrent_key >= (gKey_count + 1) / 2) {
-            gCurrent_key -= (gKey_count + 1) / 2;
-        } else {
-            gCurrent_key += (gKey_count + 1) / 2;
-            if (gCurrent_key >= gKey_count) {
-                gCurrent_key -= (gKey_count + 1) / 2;
-            }
-        }
-        DRS3StartSound(gEffects_outlet, 3000);
+        return 1;
     }
+    if (gCurrent_key >= (gKey_count + 1) / 2) {
+        gCurrent_key -= (gKey_count + 1) / 2;
+    } else {
+        gCurrent_key += (gKey_count + 1) / 2;
+        if (gCurrent_key >= gKey_count) {
+            gCurrent_key -= (gKey_count + 1) / 2;
+        }
+    }
+    DRS3StartSound(gEffects_outlet, 3000);
     return 1;
 }
 
 // IDA: int __usercall KeyAssignUp@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049ad71
 int KeyAssignUp(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (*pCurrent_mode == 0) {
         gCurrent_key = -1;
@@ -1136,47 +1177,50 @@ int KeyAssignUp(int* pCurrent_choice, int* pCurrent_mode) {
     } else if (gCurrent_key == (gKey_count + 1) / 2) {
         *pCurrent_choice = 0;
         *pCurrent_mode = 0;
-    } else if (gCurrent_key == 0) {
+    } else if (gCurrent_key != 0) {
+        gCurrent_key -= 1;
+    } else {
         *pCurrent_choice = 0;
         *pCurrent_mode = 0;
-    } else {
-        gCurrent_key -= 1;
     }
     DRS3StartSound(gEffects_outlet, 3000);
     return 1;
 }
 
 // IDA: int __usercall KeyAssignDown@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049ae9b
 int KeyAssignDown(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (*pCurrent_mode == 0) {
-        if (*pCurrent_choice >= 2) {
-            gCurrent_key = (gKey_count + 1) / 2;
-        } else {
+        if (*pCurrent_choice < 2) {
             gCurrent_key = 0;
+        } else {
+            gCurrent_key = (gKey_count + 1) / 2;
         }
         *pCurrent_choice = 4;
         *pCurrent_mode = 1;
     } else if (gCurrent_key < 0) {
         *pCurrent_choice = 0;
         *pCurrent_mode = 0;
-    } else if (gCurrent_key < (gKey_count + 1) / 2) {
-        if (gCurrent_key < ((gKey_count + 1) / 2 - 1)) {
+    } else {
+        if ((gKey_count + 1) / 2 <= gCurrent_key) {
+            if (gCurrent_key < gKey_count - 1) {
+                gCurrent_key += 1;
+            } else {
+                gCurrent_key = -1;
+            }
+        } else if (gCurrent_key < ((gKey_count + 1) / 2 - 1)) {
             gCurrent_key += 1;
         } else {
             gCurrent_key = -1;
         }
-    } else if (gCurrent_key < gKey_count - 1) {
-        gCurrent_key += 1;
-    } else {
-        gCurrent_key = -1;
     }
     DRS3StartSound(gEffects_outlet, 3000);
     return 1;
 }
 
 // IDA: int __usercall KeyAssignGoAhead@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0049afa5
 int KeyAssignGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
     int key;
     int i;
@@ -1188,13 +1232,12 @@ int KeyAssignGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
     int key_x;
     int end_box;
     tDR_font* font;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     RemoveTransientBitmaps(1);
     if (*pCurrent_mode == 0) {
         key = -1;
         if (*pCurrent_choice == 0) {
-            for (i = 0; i < COUNT_OF(gKey_defns); i++) {
+            for (i = 0; i < BR_ASIZE(gKey_defns); i++) {
                 if (gKey_mapping[gKey_defns[i]] == -2) {
                     key = i;
                     break;
@@ -1262,7 +1305,7 @@ int KeyAssignGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
                 if (key != -1 && key != 63) {
                     for (i = 27; i < 65; i++) {
                         if (gKey_mapping[i] == key && gKey_defns[gCurrent_key] != i) {
-                            for (j = 0; j < COUNT_OF(gKey_defns); j++) {
+                            for (j = 0; j < BR_ASIZE(gKey_defns); j++) {
                                 if (gKey_defns[j] == i) {
                                     gKey_mapping[i] = -2;
                                     gPending_entry = j;
@@ -1304,11 +1347,11 @@ int KeyAssignGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall MouseyClickBastard@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0049b4bd
 int MouseyClickBastard(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
     int i;
     int x_coord;
     int y_coord;
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     if (gCurrent_key < 0) {
         GetMousePosition(&x_coord, &y_coord);
@@ -1320,7 +1363,6 @@ int MouseyClickBastard(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, 
                 break;
             }
         }
-        return 0;
     } else {
         KeyAssignGoAhead(pCurrent_choice, pCurrent_mode);
     }
@@ -1328,9 +1370,9 @@ int MouseyClickBastard(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, 
 }
 
 // IDA: void __cdecl DrawInitialKMRadios()
+// FUNCTION: CARM95 0x0049b56c
 void DrawInitialKMRadios(void) {
     int i;
-    LOG_TRACE("()");
 
     RemoveTransientBitmaps(1);
     DontLetFlicFuckWithPalettes();
@@ -1338,29 +1380,34 @@ void DrawInitialKMRadios(void) {
     PlayRadioOn2(12, gKey_map_index);
     gRadio_bastards__options[12].current_value = gKey_map_index;
     TurnFlicTransparencyOff();
-    DontLetFlicFuckWithPalettes();
+    LetFlicFuckWithPalettes();
 }
 
 // IDA: void __cdecl DoControlOptions()
+// FUNCTION: CARM95 0x0049be2c
 void DoControlOptions(void) {
+    // GLOBAL: CARM95 0x0051a658
     static tFlicette flicker_on[4] = {
         { 177, { 51, 102 }, { 166, 398 } },
         { 177, { 112, 224 }, { 166, 398 } },
         { 177, { 173, 346 }, { 166, 398 } },
         { 177, { 234, 468 }, { 166, 398 } },
     };
+    // GLOBAL: CARM95 0x0051a6a8
     static tFlicette flicker_off[4] = {
         { 176, { 51, 102 }, { 166, 398 } },
         { 176, { 112, 224 }, { 166, 398 } },
         { 176, { 173, 346 }, { 166, 398 } },
         { 176, { 234, 468 }, { 166, 398 } },
     };
+    // GLOBAL: CARM95 0x0051a6f8
     static tFlicette push[4] = {
         { 172, { 51, 102 }, { 166, 398 } },
         { 175, { 112, 224 }, { 166, 398 } },
         { 174, { 173, 346 }, { 166, 398 } },
         { 173, { 234, 468 }, { 166, 398 } },
     };
+    // GLOBAL: CARM95 0x0051a748
     static tMouse_area mouse_areas[5] = {
         { { 51, 102 }, { 166, 398 }, { 102, 204 }, { 187, 449 }, 0, 0, 0, NULL },
         { { 112, 224 }, { 166, 398 }, { 164, 328 }, { 187, 449 }, 1, 0, 0, NULL },
@@ -1368,6 +1415,7 @@ void DoControlOptions(void) {
         { { 234, 468 }, { 166, 398 }, { 286, 572 }, { 187, 449 }, 3, 0, 0, NULL },
         { { 45, 90 }, { 33, 79 }, { 285, 570 }, { 159, 382 }, 4, 1, 0, MouseyClickBastard },
     };
+    // GLOBAL: CARM95 0x0051a838
     static tInterface_spec interface_spec = {
         0, 170, 179, 0, 0, 0, 1,
         { -1, -1 }, { -1, 0 }, { 0, 4 }, { 3, 4 }, { NULL, KeyAssignLeft },
@@ -1387,7 +1435,6 @@ void DoControlOptions(void) {
     int swap_font_3;
     int second_time_around;
     int orig_key_map_index;
-    LOG_TRACE("()");
 
     orig_key_map_index = gKey_map_index;
     second_time_around = 0;
@@ -1426,8 +1473,8 @@ void DoControlOptions(void) {
 }
 
 // IDA: void __cdecl LoadSoundOptionsData()
+// FUNCTION: CARM95 0x0049b5b2
 void LoadSoundOptionsData(void) {
-    LOG_TRACE("()");
 
     gDials_pix = LoadPixelmap("DIALSTCK.PIX");
     if (gDials_pix == NULL) {
@@ -1436,20 +1483,23 @@ void LoadSoundOptionsData(void) {
 }
 
 // IDA: void __cdecl FreeSoundOptionsData()
+// FUNCTION: CARM95 0x0049b5e6
 void FreeSoundOptionsData(void) {
-    LOG_TRACE("()");
 
     BrPixelmapFree(gDials_pix);
 }
 
 // IDA: void __cdecl DrawDisabledOptions()
+// FUNCTION: CARM95 0x0049b5ff
 void DrawDisabledOptions(void) {
     br_pixelmap* image;
-    LOG_TRACE("()");
 
     PrintMemoryDump(0, "INSIDE OPTIONS");
 
-    if (!harness_game_config.sound_options) {
+#ifdef DETHRACE_FIX_BUGS
+    if (!harness_game_config.sound_options)
+#endif
+    {
         // Disable sound options menu
         image = LoadPixelmap("NOSNDOPT.PIX");
         DisableChoice(0);
@@ -1473,31 +1523,37 @@ void DrawDisabledOptions(void) {
 }
 
 // IDA: void __cdecl DoOptions()
+// FUNCTION: CARM95 0x0049b705
 void DoOptions(void) {
+    // GLOBAL: CARM95 0x0051a968
     static tFlicette flicker_on[4] = {
         { 43, { 57, 114 }, { 41, 98 } },
         { 43, { 57, 114 }, { 78, 187 } },
         { 43, { 57, 114 }, { 114, 274 } },
         { 43, { 57, 114 }, { 154, 370 } }
     };
+    // GLOBAL: CARM95 0x0051a9b8
     static tFlicette flicker_off[4] = {
         { 42, { 57, 114 }, { 41, 98 } },
         { 42, { 57, 114 }, { 78, 187 } },
         { 42, { 57, 114 }, { 114, 274 } },
         { 42, { 57, 114 }, { 154, 370 } },
     };
+    // GLOBAL: CARM95 0x0051aa08
     static tFlicette push[4] = {
         { 144, { 57, 114 }, { 41, 98 } },
         { 146, { 57, 114 }, { 78, 187 } },
         { 145, { 57, 114 }, { 114, 274 } },
         { 45, { 57, 114 }, { 154, 370 } },
     };
+    // GLOBAL: CARM95 0x0051aa58
     static tMouse_area mouse_areas[4] = {
         { { 57, 114 }, { 41, 98 }, { 123, 246 }, { 62, 149 }, 0, 0, 0, NULL },
         { { 57, 114 }, { 78, 187 }, { 123, 246 }, { 99, 238 }, 1, 0, 0, NULL },
         { { 57, 114 }, { 114, 274 }, { 123, 246 }, { 135, 324 }, 2, 0, 0, NULL },
         { { 57, 114 }, { 154, 370 }, { 123, 246 }, { 175, 420 }, 3, 0, 0, NULL },
     };
+    // GLOBAL: CARM95 0x0051ab18
     static tInterface_spec interface_spec = {
         0,
         140,
@@ -1551,7 +1607,6 @@ void DoOptions(void) {
         NULL,
     };
     int result;
-    LOG_TRACE("()");
 
     PrintMemoryDump(0, "BEFORE ENTERING OPTIONS");
     PreloadBunchOfFlics(1);

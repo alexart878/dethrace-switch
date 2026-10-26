@@ -1,8 +1,17 @@
 // Based on https://gist.github.com/jvranish/4441299
 
-// this has to be first
-#include <windows.h>
+#define _WIN32_WINNT 0x0600 // or higher (e.g., 0x0A00 for Windows 10)
+
+#include <winsock2.h>
+
+#include <ws2tcpip.h> // for getaddrinfo, inet_pton, etc.
+
+#include <iphlpapi.h> // for GetAdaptersAddresses
+
+#include <ipifcons.h>
+
 //
+#include <windows.h> // only after winsock2.h
 
 #include <dbghelp.h>
 
@@ -12,10 +21,16 @@
 
 #include <errno.h> /* errno, strerror */
 #include <io.h>    /* _access_s, F_OK */
+#include <locale.h>
+#include <shlobj.h>
 #include <stddef.h>
 #include <stdio.h>  /* errno_t, FILE, fgets, fopen_s, fprintf*/
 #include <stdlib.h> /* _splitpath */
 #include <string.h> /* strcpy, strerror, strlen, strrchr */
+#include <wchar.h>
+
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib, "ws2_32.lib")
 
 #ifndef F_OK
 #define F_OK 0
@@ -29,6 +44,8 @@ static char path_addr2line[1024];
 
 static char dirname_buf[_MAX_DIR];
 static char fname_buf[_MAX_FNAME];
+
+static LPTOP_LEVEL_EXCEPTION_FILTER prevUnhandledExceptionFilter;
 
 HANDLE directory_handle = NULL;
 char last_found_file[260];
@@ -324,7 +341,12 @@ void OS_InstallSignalHandler(char* program_name) {
         }
     }
     strcpy(windows_program_name, program_name);
-    SetUnhandledExceptionFilter(windows_exception_handler);
+    prevUnhandledExceptionFilter = SetUnhandledExceptionFilter(windows_exception_handler);
+}
+
+void OS_RemoveSignalHandler(void) {
+    SetUnhandledExceptionFilter(prevUnhandledExceptionFilter);
+    prevUnhandledExceptionFilter = NULL;
 }
 
 char* OS_GetFirstFileInDirectory(char* path) {
@@ -390,4 +412,97 @@ char* OS_Basename(const char* path) {
 
 char* OS_GetWorkingDirectory(char* argv0) {
     return OS_Dirname(argv0);
+}
+
+int OS_GetPrefPath(char* dest, char* app) {
+    const char* base = NULL;
+    char path[1024];
+    char full[1024];
+
+    static char appdata[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appdata))) {
+        base = appdata;
+    }
+
+    if (base == NULL) {
+        return -1;
+    }
+
+    snprintf(full, sizeof(full), "%s/%s/", base, app);
+    CreateDirectoryA(full, NULL);
+
+    strcpy(dest, full);
+    return 0;
+}
+
+int OS_GetAdapterAddress(char* name, void* pSockaddr_in) {
+    DWORD ret, bufLen = 15000;
+    IP_ADAPTER_ADDRESSES* adapter_addrs = (IP_ADAPTER_ADDRESSES*)malloc(bufLen);
+    int found = 0;
+
+    if (!adapter_addrs) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return 0;
+    }
+
+    // Convert input name to wide char
+    wchar_t wideName[256] = { 0 };
+    if (name && strlen(name) > 0) {
+        mbstowcs(wideName, name, sizeof(wideName) / sizeof(wideName[0]) - 1);
+    }
+
+    ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_PREFIX, NULL, adapter_addrs, &bufLen);
+    if (ret == ERROR_BUFFER_OVERFLOW) {
+        free(adapter_addrs);
+        adapter_addrs = (IP_ADAPTER_ADDRESSES*)malloc(bufLen);
+        if (!adapter_addrs)
+            return 0;
+        ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_PREFIX, NULL, adapter_addrs, &bufLen);
+    }
+
+    if (ret != NO_ERROR) {
+        free(adapter_addrs);
+        return 0;
+    }
+
+    for (IP_ADAPTER_ADDRESSES* aa = adapter_addrs; aa != NULL; aa = aa->Next) {
+        LOG_DEBUG2("name: %s", aa->FriendlyName); // Skip if name is provided and doesn't match FriendlyName
+        if (wcslen(wideName) > 0 && wcscmp(aa->FriendlyName, wideName) != 0)
+            continue;
+
+        for (IP_ADAPTER_UNICAST_ADDRESS* ua = aa->FirstUnicastAddress; ua != NULL; ua = ua->Next) {
+            if (ua->Address.lpSockaddr->sa_family == AF_INET) {
+                struct sockaddr_in* sa_in = (struct sockaddr_in*)ua->Address.lpSockaddr;
+                *((struct sockaddr_in*)pSockaddr_in) = *sa_in;
+                found = 1;
+                goto cleanup;
+            }
+        }
+    }
+
+cleanup:
+    free(adapter_addrs);
+    return found;
+}
+
+int OS_InitSockets(void) {
+    WSADATA wsadata;
+    return WSAStartup(MAKEWORD(2, 2), &wsadata);
+}
+
+int OS_GetLastSocketError(void) {
+    return WSAGetLastError();
+}
+
+void OS_CleanupSockets(void) {
+    WSACleanup();
+}
+
+int OS_SetSocketNonBlocking(int socket) {
+    unsigned long nobio = 1;
+    return ioctlsocket(socket, FIONBIO, &nobio);
+}
+
+int OS_CloseSocket(int socket) {
+    return closesocket(socket);
 }

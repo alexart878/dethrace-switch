@@ -13,7 +13,8 @@
 
 #include "brender.h"
 
-extern void Harness_Init(int* argc, char* argv[]);
+extern int Harness_Init(int* argc, char* argv[]);
+extern int Harness_Quit(void);
 extern int original_main(int pArgc, char* pArgv[]);
 
 void BR_CALLBACK _BrBeginHook(void) {
@@ -22,17 +23,22 @@ void BR_CALLBACK _BrBeginHook(void) {
     struct br_device* BR_EXPORT BrDrv1VirtualFramebufferBegin(char* arguments);
     struct br_device* BR_EXPORT BrDrv1GLBegin(char* arguments);
 
+#if _MSC_VER != 1020
     BrDevAddStatic(NULL, BrDrv1SoftPrimBegin, NULL);
     BrDevAddStatic(NULL, BrDrv1SoftRendBegin, NULL);
     BrDevAddStatic(NULL, BrDrv1VirtualFramebufferBegin, NULL);
     BrDevAddStatic(NULL, BrDrv1GLBegin, NULL);
+#endif
 }
 
 void BR_CALLBACK _BrEndHook(void) {
 }
 
 int main(int argc, char* argv[]) {
+    int result;
+
 #ifdef _WIN32
+#if _MSC_VER != 1020
     /* Attach to the console that started us if any */
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         /* We attached successfully, lets redirect IO to the consoles handles if not already redirected */
@@ -49,17 +55,20 @@ int main(int argc, char* argv[]) {
         }
     }
 #endif
-
-#ifdef __SWITCH__
-
-    // fsInitialize();
-    // hidInitialize();
-    // audoutInitialize();
-    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-
 #endif
 
-    Harness_Init(&argc, argv);
+#ifdef __SWITCH__
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+#endif
 
-    return original_main(argc, argv);
+    result = Harness_Init(&argc, argv);
+    if (result != 0) {
+        return result;
+    }
+
+    result = original_main(argc, argv);
+
+    Harness_Quit();
+
+    return result;
 }

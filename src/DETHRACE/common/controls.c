@@ -37,6 +37,7 @@
 #include "world.h"
 #include <stdlib.h>
 
+// GLOBAL: CARM95 0x0051b1c0
 tToggle_element gToggle_array[] = {
     { KEYMAP_MIRROR, -2, 1, 1, 0, ToggleMirror },
     { KEYMAP_MAP, -2, 1, 1, 0, ToggleMap },
@@ -82,10 +83,19 @@ tToggle_element gToggle_array[] = {
     { KEYMAP_INFO, KEYMAP_SHIFT_ANY, 1, 1, 0, ToggleInfo },
     { KEYMAP_INFO, KEYMAP_CONTROL_ANY, 1, 1, 0, ToggleInfo }
 };
+
+// GLOBAL: CARM95 0x0051b5c8
 int gRepair_last_time;
+
+// GLOBAL: CARM95 0x0051b5cc
 int gHad_auto_recover;
+
+// GLOBAL: CARM95 0x0051b5d0
 tU32 gLast_repair_time;
+
+// GLOBAL: CARM95 0x0051b5d4
 tEdit_mode gWhich_edit_mode = eEdit_mode_options;
+// GLOBAL: CARM95 0x0051b5d8
 char* gEdit_mode_names[10] = {
     "Cheat",
     "Accessories",
@@ -100,6 +110,8 @@ char* gEdit_mode_names[10] = {
 };
 
 // order is: { None, CTRL, ALT, CTRL+ALT, SHIFT, CTRL+SHIFT, ALT+SHIFT, CTRL+ALT+SHIFT }
+
+// GLOBAL: CARM95 0x0051b600
 tEdit_func* gEdit_funcs[10][18][8] = {
     { // CHEAT EDIT MODE
 
@@ -211,7 +223,7 @@ tEdit_func* gEdit_funcs[10][18][8] = {
         { DropSpecVol7, DropSpecVol7, DropSpecVol7, DropSpecVol7, DropSpecVol7, DropSpecVol7, DropSpecVol7, DropSpecVol7 },
         // 8
         { DropSpecVol8, DropSpecVol8, DropSpecVol8, DropSpecVol8, DropSpecVol8, DropSpecVol8, DropSpecVol8, DropSpecVol8 },
-        // 09
+        // 9
         { DropSpecVol9, DropSpecVol9, DropSpecVol9, DropSpecVol9, DropSpecVol9, DropSpecVol9, DropSpecVol9, DropSpecVol9 },
         { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL } },
 
@@ -484,67 +496,86 @@ tEdit_func* gEdit_funcs[10][18][8] = {
     }
 };
 
-tCheat gKev_keys[44] = {
-    { .code = 0xa11ee75d, .code2 = 0xf805eddd, .action_proc = SetFlag, .num = 0x0a11ee75d },
-    { .code = 0x564e78b9, .code2 = 0x99155115, .action_proc = SetFlag, .num = 0x0564e78b9 },
-    { .code = 0x1f47e5e8, .code2 = 0xa715222c, .action_proc = SetFlag2, .num = 1 },
-    { .code = 0x39d4c4c4, .code2 = 0xf0a2c5b0, .action_proc = FinishLap, .num = 0 },
-    { .code = 0x2654216c, .code2 = 0xf8256d15, .action_proc = GetPowerup, .num = 1 },
-    { .code = 0x4294ec89, .code2 = 0xc38ad60e, .action_proc = GetPowerup, .num = 2 },
-    { .code = 0x2ceb2850, .code2 = 0xa0c2d27e, .action_proc = GetPowerup, .num = 3 },
-    { .code = 0x2d5f3125, .code2 = 0x9ce8a541, .action_proc = GetPowerup, .num = 4 },
-    { .code = 0x2169c78b, .code2 = 0x7f3c9229, .action_proc = GetPowerup, .num = 5 },
-    { .code = 0x2203c0cb, .code2 = 0x79729be4, .action_proc = GetPowerup, .num = 6 },
-    { .code = 0x34f4e3ec, .code2 = 0x868c534d, .action_proc = GetPowerup, .num = 7 },
-    { .code = 0x34010316, .code2 = 0x591d1eb2, .action_proc = GetPowerup, .num = 8 },
-    { .code = 0x214fe3bc, .code2 = 0x87285111, .action_proc = GetPowerup, .num = 9 },
-    { .code = 0x2fabc390, .code2 = 0x0c93d9f7, .action_proc = GetPowerup, .num = 10 },
-    { .code = 0x2902e890, .code2 = 0x40969f67, .action_proc = GetPowerup, .num = 11 },
-    { .code = 0x2f458288, .code2 = 0x058074e2, .action_proc = GetPowerup, .num = 12 },
-    { .code = 0x249da152, .code2 = 0x8f287346, .action_proc = GetPowerup, .num = 13 },
-    { .code = 0x23aae08b, .code2 = 0xa668103d, .action_proc = GetPowerup, .num = 14 },
-    { .code = 0x32130661, .code2 = 0x56f03459, .action_proc = GetPowerup, .num = 15 },
-    { .code = 0x2734e944, .code2 = 0xfe1e4639, .action_proc = GetPowerup, .num = 16 },
-    { .code = 0x28341139, .code2 = 0x355f6d02, .action_proc = GetPowerup, .num = 17 },
-    { .code = 0x20508831, .code2 = 0x123d1961, .action_proc = GetPowerup, .num = 18 },
-    { .code = 0x346b8bcb, .code2 = 0x4aba696c, .action_proc = GetPowerup, .num = 19 },
-    { .code = 0x3fc93df0, .code2 = 0x29fa9efb, .action_proc = GetPowerup, .num = 20 },
-    { .code = 0x2a80b09b, .code2 = 0x058516f5, .action_proc = GetPowerup, .num = 21 },
-    { .code = 0x2f548fd1, .code2 = 0x696744da, .action_proc = GetPowerup, .num = 22 },
-    { .code = 0x3cb74f32, .code2 = 0xb915d88d, .action_proc = GetPowerup, .num = 23 },
-    { .code = 0x297b53ba, .code2 = 0x218d4d2d, .action_proc = GetPowerup, .num = 24 },
-    { .code = 0x351bc37d, .code2 = 0xb2a63343, .action_proc = GetPowerup, .num = 25 },
-    { .code = 0x2b624386, .code2 = 0x9ba6260e, .action_proc = GetPowerup, .num = 26 },
-    { .code = 0x2ba4ae23, .code2 = 0xc163a76c, .action_proc = GetPowerup, .num = 27 },
-    { .code = 0x2fb92dca, .code2 = 0x4ad7d54e, .action_proc = GetPowerup, .num = 32 },
-    { .code = 0x3a42191b, .code2 = 0xeff70f4c, .action_proc = GetPowerup, .num = 35 },
-    { .code = 0x2aca3190, .code2 = 0xd9004f25, .action_proc = GetPowerup, .num = 36 },
-    { .code = 0x37c1f613, .code2 = 0xb7faf351, .action_proc = GetPowerup, .num = 37 },
-    { .code = 0x2ba3f603, .code2 = 0x29f2425c, .action_proc = GetPowerup, .num = 38 },
-    { .code = 0x416eff61, .code2 = 0x2667df4b, .action_proc = GetPowerup, .num = 39 },
-    { .code = 0x2554125c, .code2 = 0x393ca35d, .action_proc = GetPowerup, .num = 41 },
-    { .code = 0x3fff84d5, .code2 = 0x84a42df4, .action_proc = GetPowerup, .num = 42 },
-    { .code = 0x37e83018, .code2 = 0xb609aee6, .action_proc = GetPowerup, .num = 43 },
-    { .code = 0x2db03b19, .code2 = 0x924a84b7, .action_proc = GetPowerup, .num = 44 },
-    { .code = 0x30a19fab, .code2 = 0x2b0c2782, .action_proc = GetPowerup, .num = 45 },
-    { .code = 0x0, .code2 = 0x0, .action_proc = 0x0, .num = 0x0 }
+// GLOBAL: CARM95 0x0051cc80
+tCheat gKev_keys[43] = {
+    { 0xa11ee75d, 0xf805eddd, SetFlag, 0x0a11ee75d },
+    { 0x564e78b9, 0x99155115, SetFlag, 0x0564e78b9 },
+    { 0x1f47e5e8, 0xa715222c, SetFlag2, 1 },
+    { 0x39d4c4c4, 0xf0a2c5b0, FinishLap, 0 },
+    { 0x2654216c, 0xf8256d15, GetPowerup, 1 },
+    { 0x4294ec89, 0xc38ad60e, GetPowerup, 2 },
+    { 0x2ceb2850, 0xa0c2d27e, GetPowerup, 3 },
+    { 0x2d5f3125, 0x9ce8a541, GetPowerup, 4 },
+    { 0x2169c78b, 0x7f3c9229, GetPowerup, 5 },
+    { 0x2203c0cb, 0x79729be4, GetPowerup, 6 },
+    { 0x34f4e3ec, 0x868c534d, GetPowerup, 7 },
+    { 0x34010316, 0x591d1eb2, GetPowerup, 8 },
+    { 0x214fe3bc, 0x87285111, GetPowerup, 9 },
+    { 0x2fabc390, 0x0c93d9f7, GetPowerup, 10 },
+    { 0x2902e890, 0x40969f67, GetPowerup, 11 },
+    { 0x2f458288, 0x058074e2, GetPowerup, 12 },
+    { 0x249da152, 0x8f287346, GetPowerup, 13 },
+    { 0x23aae08b, 0xa668103d, GetPowerup, 14 },
+    { 0x32130661, 0x56f03459, GetPowerup, 15 },
+    { 0x2734e944, 0xfe1e4639, GetPowerup, 16 },
+    { 0x28341139, 0x355f6d02, GetPowerup, 17 },
+    { 0x20508831, 0x123d1961, GetPowerup, 18 },
+    { 0x346b8bcb, 0x4aba696c, GetPowerup, 19 },
+    { 0x3fc93df0, 0x29fa9efb, GetPowerup, 20 },
+    { 0x2a80b09b, 0x058516f5, GetPowerup, 21 },
+    { 0x2f548fd1, 0x696744da, GetPowerup, 22 },
+    { 0x3cb74f32, 0xb915d88d, GetPowerup, 23 },
+    { 0x297b53ba, 0x218d4d2d, GetPowerup, 24 },
+    { 0x351bc37d, 0xb2a63343, GetPowerup, 25 },
+    { 0x2b624386, 0x9ba6260e, GetPowerup, 26 },
+    { 0x2ba4ae23, 0xc163a76c, GetPowerup, 27 },
+    { 0x2fb92dca, 0x4ad7d54e, GetPowerup, 32 },
+    { 0x3a42191b, 0xeff70f4c, GetPowerup, 35 },
+    { 0x2aca3190, 0xd9004f25, GetPowerup, 36 },
+    { 0x37c1f613, 0xb7faf351, GetPowerup, 37 },
+    { 0x2ba3f603, 0x29f2425c, GetPowerup, 38 },
+    { 0x416eff61, 0x2667df4b, GetPowerup, 39 },
+    { 0x2554125c, 0x393ca35d, GetPowerup, 41 },
+    { 0x3fff84d5, 0x84a42df4, GetPowerup, 42 },
+    { 0x37e83018, 0xb609aee6, GetPowerup, 43 },
+    { 0x2db03b19, 0x924a84b7, GetPowerup, 44 },
+    { 0x30a19fab, 0x2b0c2782, GetPowerup, 45 },
+    { 0x0, 0x0, 0x0, 0x0 },
 };
+
+// GLOBAL: CARM95 0x0051cf30
 int gAllow_car_flying;
+
+// GLOBAL: CARM95 0x0051cf34
 int gEntering_message;
+
+// GLOBAL: CARM95 0x0051cf38
 tU32 gPalette_fade_time; // was gRecover_timer
+
+// GLOBAL: CARM95 0x0053d608
 char* gAbuse_text[10];
+
+// GLOBAL: CARM95 0x0053d648
 char gString[84];
+
+// GLOBAL: CARM95 0x0053d5f8
 int gToo_late;
+
+// GLOBAL: CARM95 0x0053d5fc
 int gRecover_timer;
+
+// GLOBAL: CARM95 0x0053d63c
 int gRecovery_voucher_count;
+
+// GLOBAL: CARM95 0x00550550
 int gInstant_handbrake;
+
+// GLOBAL: CARM95 0x00550554
 int gAuto_repair;
 
-int _unittest_controls_lastGetPowerup = 0;
-
 // IDA: void __cdecl AbortRace()
+// FUNCTION: CARM95 0x004a0c70
 void AbortRace(void) {
-    LOG_TRACE("()");
 
     if (!gRace_finished) {
         gAbandon_game = 1;
@@ -552,57 +583,58 @@ void AbortRace(void) {
 }
 
 // IDA: void __cdecl F4Key()
+// FUNCTION: CARM95 0x004a0c92
 void F4Key(void) {
     char s[256];
     tEdit_mode old_edit_mode;
-    LOG_TRACE("()");
 
     old_edit_mode = gWhich_edit_mode;
-    if (gI_am_cheating == 0xa11ee75d || (gI_am_cheating == 0x564e78b9 && gNet_mode == eNet_mode_none)) {
-        if (PDKeyDown(KEY_SHIFT_ANY)) {
-            gWhich_edit_mode--;
-            if ((int)gWhich_edit_mode < 0) {
-                gWhich_edit_mode = COUNT_OF(gEdit_funcs) - 1;
-            }
+    if (!(gI_am_cheating == 0xa11ee75d || (gI_am_cheating == 0x564e78b9 && gNet_mode == eNet_mode_none))) {
+        gWhich_edit_mode = eEdit_mode_options;
+        return;
+    }
+    if (PDKeyDown(KEY_SHIFT_ANY)) {
+        if (gWhich_edit_mode == 0) {
+            gWhich_edit_mode = COUNT_OF(gEdit_funcs) - 1;
         } else {
-            gWhich_edit_mode++;
-            if (gWhich_edit_mode >= COUNT_OF(gEdit_funcs)) {
-                gWhich_edit_mode = 0;
-            }
-        }
-        sprintf(s, "Edit mode: %s", gEdit_mode_names[gWhich_edit_mode]);
-        NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -4, s, 0);
-        if (gWhich_edit_mode == eEdit_mode_spec_vol && old_edit_mode != eEdit_mode_spec_vol) {
-            ShowSpecialVolumes();
-        } else if (gWhich_edit_mode != eEdit_mode_spec_vol && old_edit_mode == eEdit_mode_spec_vol) {
-            HideSpecialVolumes();
+            gWhich_edit_mode--;
         }
     } else {
-        gWhich_edit_mode = eEdit_mode_options;
+        gWhich_edit_mode++;
+        if (gWhich_edit_mode >= COUNT_OF(gEdit_funcs)) {
+            gWhich_edit_mode = 0;
+        }
+    }
+    sprintf(s, "Edit mode: %s", gEdit_mode_names[gWhich_edit_mode]);
+    NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, s, 0);
+    if (gWhich_edit_mode == eEdit_mode_spec_vol && old_edit_mode != eEdit_mode_spec_vol) {
+        ShowSpecialVolumes();
+    } else if (gWhich_edit_mode != eEdit_mode_spec_vol && old_edit_mode == eEdit_mode_spec_vol) {
+        HideSpecialVolumes();
     }
 }
 
 // IDA: void __usercall SetFlag(int i@<EAX>)
+// FUNCTION: CARM95 0x004a0db7
 void SetFlag(int i) {
-    LOG_TRACE("(%d)", i);
 
     if (gNet_mode == eNet_mode_none) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 3000, -4, "You Cheat!");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 3000, -kFont_MEDIUMHD, "You Cheat!");
     }
     gI_am_cheating = i;
     F4Key();
 }
 
 // IDA: void __usercall FinishLap(int i@<EAX>)
+// FUNCTION: CARM95 0x004a0df4
 void FinishLap(int i) {
-    LOG_TRACE("(%d)", i);
 
     IncrementLap();
 }
 
 // IDA: void __cdecl EnsureSpecialVolumesHidden()
+// FUNCTION: CARM95 0x004a0e04
 void EnsureSpecialVolumesHidden(void) {
-    LOG_TRACE("()");
 
     if (gWhich_edit_mode == eEdit_mode_spec_vol) {
         HideSpecialVolumes();
@@ -610,8 +642,8 @@ void EnsureSpecialVolumesHidden(void) {
 }
 
 // IDA: void __cdecl ShowSpecialVolumesIfRequ()
+// FUNCTION: CARM95 0x004a0e21
 void ShowSpecialVolumesIfRequ(void) {
-    LOG_TRACE("()");
 
     if (gWhich_edit_mode == eEdit_mode_spec_vol) {
         ShowSpecialVolumes();
@@ -619,156 +651,154 @@ void ShowSpecialVolumesIfRequ(void) {
 }
 
 // IDA: void __usercall DoEditModeKey(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x004a0e53
 void DoEditModeKey(int pIndex) {
     int modifiers;
-    LOG_TRACE("(%d)", pIndex);
 
-    if (gI_am_cheating == 0xa11ee75d || (gI_am_cheating == 0x564e78b9 && gNet_mode == eNet_mode_none)) {
-        modifiers = 0;
-        if (PDKeyDown(KEY_SHIFT_ANY)) {
-            modifiers |= 4;
-        }
-        if (PDKeyDown(KEY_ALT_ANY)) {
-            modifiers |= 2;
-        }
-        if (PDKeyDown(KEY_CTRL_ANY)) {
-            modifiers |= 1;
-        }
-        if (gEdit_funcs[gWhich_edit_mode][pIndex][modifiers] != NULL) {
-            gEdit_funcs[gWhich_edit_mode][pIndex][modifiers]();
-        }
-    } else {
+    if (!(gI_am_cheating == 0xa11ee75d || (gI_am_cheating == 0x564e78b9 && gNet_mode == eNet_mode_none))) {
         gWhich_edit_mode = eEdit_mode_options;
+        return;
+    }
+
+    if (PDKeyDown(KEY_SHIFT_ANY)) {
+        modifiers = 4;
+    } else {
+        modifiers = 0;
+    }
+    modifiers = PDKeyDown(KEY_ALT_ANY) ? modifiers | 2 : modifiers;
+    modifiers = PDKeyDown(KEY_CTRL_ANY) ? modifiers | 1 : modifiers;
+    if (gEdit_funcs[gWhich_edit_mode][pIndex][modifiers] != NULL) {
+        (*gEdit_funcs[gWhich_edit_mode][pIndex][modifiers])();
     }
 }
 
 // IDA: void __cdecl F5Key()
+// FUNCTION: CARM95 0x004a0e3e
 void F5Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(0);
 }
 
 // IDA: void __cdecl F6Key()
+// FUNCTION: CARM95 0x004a0f3d
 void F6Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(1);
 }
 
 // IDA: void __cdecl F7Key()
+// FUNCTION: CARM95 0x004a0f52
 void F7Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(2);
 }
 
 // IDA: void __cdecl F8Key()
+// FUNCTION: CARM95 0x004a0f67
 void F8Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(3);
 }
 
 // IDA: void __cdecl F10Key()
+// FUNCTION: CARM95 0x004a0f7c
 void F10Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(4);
 }
 
 // IDA: void __cdecl F11Key()
+// FUNCTION: CARM95 0x004a0f91
 void F11Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(5);
 }
 
 // IDA: void __cdecl F12Key()
+// FUNCTION: CARM95 0x004a0fa6
 void F12Key(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(6);
 }
 
 // IDA: void __cdecl NumberKey0()
+// FUNCTION: CARM95 0x004a0fbb
 void NumberKey0(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(7);
 }
 
 // IDA: void __cdecl NumberKey1()
+// FUNCTION: CARM95 0x004a0fd0
 void NumberKey1(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(8);
 }
 
 // IDA: void __cdecl NumberKey2()
+// FUNCTION: CARM95 0x004a0fe5
 void NumberKey2(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(9);
 }
 
 // IDA: void __cdecl NumberKey3()
+// FUNCTION: CARM95 0x004a0ffa
 void NumberKey3(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(10);
 }
 
 // IDA: void __cdecl NumberKey4()
+// FUNCTION: CARM95 0x004a100f
 void NumberKey4(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(11);
 }
 
 // IDA: void __cdecl NumberKey5()
+// FUNCTION: CARM95 0x004a1024
 void NumberKey5(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(12);
 }
 
 // IDA: void __cdecl NumberKey6()
+// FUNCTION: CARM95 0x004a1039
 void NumberKey6(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(13);
 }
 
 // IDA: void __cdecl NumberKey7()
+// FUNCTION: CARM95 0x004a104e
 void NumberKey7(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(14);
 }
 
 // IDA: void __cdecl NumberKey8()
+// FUNCTION: CARM95 0x004a1063
 void NumberKey8(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(15);
 }
 
 // IDA: void __cdecl NumberKey9()
+// FUNCTION: CARM95 0x004a1078
 void NumberKey9(void) {
-    LOG_TRACE("()");
 
     DoEditModeKey(16);
 }
 
 // IDA: void __cdecl LookLeft()
+// FUNCTION: CARM95 0x004a108d
 void LookLeft(void) {
-    LOG_TRACE("()");
 
     if (gAusterity_mode) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
     } else {
-        PratcamEvent(27);
+        PratcamEvent(kPratcam_cockpit_head_left);
         gProgram_state.old_view = gProgram_state.which_view;
         if (gProgram_state.which_view == eView_left) {
             LookForward();
@@ -785,13 +815,13 @@ void LookLeft(void) {
 }
 
 // IDA: void __cdecl LookForward()
+// FUNCTION: CARM95 0x004a113a
 void LookForward(void) {
-    LOG_TRACE("()");
 
     if (gProgram_state.which_view == eView_right) {
-        PratcamEvent(27);
+        PratcamEvent(kPratcam_cockpit_head_left);
     } else if (gProgram_state.which_view == eView_left) {
-        PratcamEvent(28);
+        PratcamEvent(kPratcam_cockpit_head_right);
     }
     if (gProgram_state.which_view != eView_forward) {
         gProgram_state.old_view = gProgram_state.which_view;
@@ -803,13 +833,13 @@ void LookForward(void) {
 }
 
 // IDA: void __cdecl LookRight()
+// FUNCTION: CARM95 0x004a11b2
 void LookRight(void) {
-    LOG_TRACE("()");
 
     if (gAusterity_mode) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
     } else {
-        PratcamEvent(28);
+        PratcamEvent(kPratcam_cockpit_head_right);
         gProgram_state.old_view = gProgram_state.which_view;
         if (gProgram_state.which_view == eView_right) {
             LookForward();
@@ -826,110 +856,110 @@ void LookRight(void) {
 }
 
 // IDA: void __cdecl DamageTest()
+// FUNCTION: CARM95 0x004a125f
 void DamageTest(void) {
-    LOG_TRACE("()");
 }
 
 // IDA: void __cdecl TDamageEngine()
+// FUNCTION: CARM95 0x004a126a
 void TDamageEngine(void) {
-    LOG_TRACE("()");
 
     DamageEngine(21);
 }
 
 // IDA: void __cdecl TDamageDriver()
+// FUNCTION: CARM95 0x004a127f
 void TDamageDriver(void) {
-    LOG_TRACE("()");
 
-    if (gProgram_state.current_car.damage_units[eDamage_driver].damage_level >= 80) {
-        DamageUnit(&gProgram_state.current_car, eDamage_driver, 2);
-    } else {
+    if (gProgram_state.current_car.damage_units[eDamage_driver].damage_level < 80) {
         DamageUnit(&gProgram_state.current_car, eDamage_driver, 80 - gProgram_state.current_car.damage_units[2].damage_level);
+    } else {
+        DamageUnit(&gProgram_state.current_car, eDamage_driver, 2);
     }
 }
 
 // IDA: void __cdecl TDamageTrans()
+// FUNCTION: CARM95 0x004a12d4
 void TDamageTrans(void) {
-    LOG_TRACE("()");
 
     DamageTrans(21);
 }
 
 // IDA: void __cdecl TDamageSteering()
+// FUNCTION: CARM95 0x004a12e9
 void TDamageSteering(void) {
-    LOG_TRACE("()");
 
     DamageSteering(21);
 }
 
 // IDA: void __cdecl TDamageLFWheel()
+// FUNCTION: CARM95 0x004a12fe
 void TDamageLFWheel(void) {
-    LOG_TRACE("()");
 
     DamageLFWheel(21);
 }
 
 // IDA: void __cdecl TDamageLFBrake()
+// FUNCTION: CARM95 0x004a1313
 void TDamageLFBrake(void) {
-    LOG_TRACE("()");
 
     DamageLFBrake(21);
 }
 
 // IDA: void __cdecl TDamageLRBrake()
+// FUNCTION: CARM95 0x004a1328
 void TDamageLRBrake(void) {
-    LOG_TRACE("()");
 
     DamageLRBrake(21);
 }
 
 // IDA: void __cdecl TDamageLRWheel()
+// FUNCTION: CARM95 0x004a133d
 void TDamageLRWheel(void) {
-    LOG_TRACE("()");
 
     DamageLRWheel(21);
 }
 
 // IDA: void __cdecl TDamageRFWheel()
+// FUNCTION: CARM95 0x004a1352
 void TDamageRFWheel(void) {
-    LOG_TRACE("()");
 
     DamageRFWheel(21);
 }
 
 // IDA: void __cdecl TDamageRFBrake()
+// FUNCTION: CARM95 0x004a1367
 void TDamageRFBrake(void) {
-    LOG_TRACE("()");
 
     DamageRFBrake(21);
 }
 
 // IDA: void __cdecl TDamageRRBrake()
+// FUNCTION: CARM95 0x004a137c
 void TDamageRRBrake(void) {
-    LOG_TRACE("()");
 
     DamageRRBrake(21);
 }
 
 // IDA: void __cdecl TDamageRRWheel()
+// FUNCTION: CARM95 0x004a1391
 void TDamageRRWheel(void) {
-    LOG_TRACE("()");
 
     DamageRRWheel(21);
 }
 
 // IDA: void __cdecl MoveBonnetForward()
+// FUNCTION: CARM95 0x004a13a6
 void MoveBonnetForward(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[2] -= .005f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[2] -= .005;
 }
 
 // IDA: void __cdecl SaveBonnet()
+// FUNCTION: CARM95 0x004a13dd
 void SaveBonnet(void) {
     br_actor* bonny;
     tPath_name the_path;
-    LOG_TRACE("()");
 
     bonny = gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor;
     PathCat(the_path, gApplication_path, bonny->identifier);
@@ -937,181 +967,184 @@ void SaveBonnet(void) {
 }
 
 // IDA: void __cdecl MoveBonnetBackward()
+// FUNCTION: CARM95 0x004a142f
 void MoveBonnetBackward(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[2] += .005f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[2] += .005;
 }
 
 // IDA: void __cdecl MoveBonnetLeft()
+// FUNCTION: CARM95 0x004a1466
 void MoveBonnetLeft(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[0] -= .005f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[0] -= .005;
 }
 
 // IDA: void __cdecl ShrinkBonnetX()
+// FUNCTION: CARM95 0x004a149d
 void ShrinkBonnetX(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[0][0] *= .98f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[0][0] *= .98;
 }
 
 // IDA: void __cdecl SwellBonnetX()
+// FUNCTION: CARM95 0x004a14d4
 void SwellBonnetX(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[0][0] *= 1.02f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[0][0] *= 1.02;
 }
 
 // IDA: void __cdecl ShrinkBonnetY()
+// FUNCTION: CARM95 0x004a150b
 void ShrinkBonnetY(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[1][1] *= .98f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[1][1] *= .98;
 }
 
 // IDA: void __cdecl SwellBonnetY()
+// FUNCTION: CARM95 0x004a1542
 void SwellBonnetY(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[1][1] *= 1.02f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[1][1] *= 1.02;
 }
 
 // IDA: void __cdecl ShrinkBonnetZ()
+// FUNCTION: CARM95 0x004a1579
 void ShrinkBonnetZ(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[2][2] *= .98f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[2][2] *= .98;
 }
 
 // IDA: void __cdecl SwellBonnetZ()
+// FUNCTION: CARM95 0x004a15b0
 void SwellBonnetZ(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[2][2] *= 1.02f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat.m[2][2] *= 1.02;
 }
 
 // IDA: void __cdecl MoveBonnetDown()
+// FUNCTION: CARM95 0x004a15e7
 void MoveBonnetDown(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[1] += .005f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[1] += .005;
 }
 
 // IDA: void __cdecl MoveBonnetRight()
+// FUNCTION: CARM95 0x004a161e
 void MoveBonnetRight(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[0] += .005f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[0] += .005;
 }
 
 // IDA: void __cdecl MoveBonnetUp()
+// FUNCTION: CARM95 0x004a1655
 void MoveBonnetUp(void) {
-    LOG_TRACE("()");
 
-    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[1] -= .005f;
+    gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.translate.t.v[1] -= .005;
 }
 
 // IDA: void __cdecl TiltBonnetDownX()
+// FUNCTION: CARM95 0x004a168c
 void TiltBonnetDownX(void) {
-    LOG_TRACE("()");
 
     BrMatrix34PreRotateX(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, BR_ANGLE_DEG(.5f));
 }
 
 // IDA: void __cdecl TiltBonnetUpX()
+// FUNCTION: CARM95 0x004a16b5
 void TiltBonnetUpX(void) {
-    LOG_TRACE("()");
 
-    BrMatrix34PreRotateX(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, -BR_ANGLE_DEG(.5f));
+    BrMatrix34PreRotateX(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, -BR_ANGLE_DEG(.59f));
 }
 
 // IDA: void __cdecl TiltBonnetDownY()
+// FUNCTION: CARM95 0x004a16e1
 void TiltBonnetDownY(void) {
-    LOG_TRACE("()");
 
     BrMatrix34PreRotateY(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, BR_ANGLE_DEG(.5f));
 }
 
 // IDA: void __cdecl TiltBonnetUpY()
+// FUNCTION: CARM95 0x004a170a
 void TiltBonnetUpY(void) {
-    LOG_TRACE("()");
 
-    BrMatrix34PreRotateY(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, -BR_ANGLE_DEG(.5f));
+    BrMatrix34PreRotateY(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, -BR_ANGLE_DEG(.59f));
 }
 
 // IDA: void __cdecl TiltBonnetDownZ()
+// FUNCTION: CARM95 0x004a1736
 void TiltBonnetDownZ(void) {
-    LOG_TRACE("()");
 
     BrMatrix34PreRotateZ(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, BR_ANGLE_DEG(.5f));
 }
 
 // IDA: void __cdecl TiltBonnetUpZ()
+// FUNCTION: CARM95 0x004a175f
 void TiltBonnetUpZ(void) {
-    LOG_TRACE("()");
 
-    BrMatrix34PreRotateZ(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, -BR_ANGLE_DEG(.5f));
+    BrMatrix34PreRotateZ(&gProgram_state.current_car.car_model_actors[gProgram_state.current_car.car_actor_count - 1].actor->t.t.mat, -BR_ANGLE_DEG(.59f));
 }
 
 // IDA: void __cdecl ToggleCockpit()
+// FUNCTION: CARM95 0x004a178b
 void ToggleCockpit(void) {
     br_scalar ts;
-    LOG_TRACE("()");
 
-    if ((&gProgram_state.current_car == gCar_to_view || gProgram_state.cockpit_on) && !gMap_mode) {
-        if (!gAusterity_mode || gProgram_state.cockpit_on) {
+    if (&gProgram_state.current_car != gCar_to_view && !gProgram_state.cockpit_on) {
+        return;
+    }
+
+    if (!gMap_mode) {
+        if (gAusterity_mode && !gProgram_state.cockpit_on) {
+            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
+            return;
+        } else {
             gProgram_state.cockpit_on = !gProgram_state.cockpit_on;
-            if (gProgram_state.cockpit_on) {
-                gCamera = gCamera_list[0];
-            } else {
-                gCamera = gCamera_list[1];
+            gCamera = gProgram_state.cockpit_on ? gCamera_list[0] : gCamera_list[1];
+
+            if (!gProgram_state.cockpit_on) {
                 InitialiseExternalCamera();
                 PositionExternalCamera(&gProgram_state.current_car, 1);
             }
             AdjustRenderScreenSize();
             AdjustHeadups();
             MungeForwardSky();
-        } else {
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_NOT_ENOUGH_MEMORY));
         }
     }
 }
 
 // IDA: void __cdecl ToggleMirror()
+// FUNCTION: CARM95 0x004a1895
 void ToggleMirror(void) {
-    LOG_TRACE("()");
 
     gProgram_state.mirror_on = !gProgram_state.mirror_on;
     ReinitialiseRearviewCamera();
     if (gProgram_state.mirror_on) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -4, GetMiscString(kMiscString_MirrorOn));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -kFont_MEDIUMHD, GetMiscString(kMiscString_MirrorOn));
     } else {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -4, GetMiscString(kMiscString_MirrorOff));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -kFont_MEDIUMHD, GetMiscString(kMiscString_MirrorOff));
     }
 }
 
 // IDA: void __cdecl ConcussMe()
 // dethrace: this is not referenced in the retail executables. Left over debug code.
+// FUNCTION: CARM95 0x004a1919
 void ConcussMe(void) {
-    LOG_TRACE("()");
 
     SufferFromConcussion(1.f);
     NewScreenWobble(IRandomPosNeg(15), IRandomPosNeg(10), IRandomBetween(10, 60));
-    PratcamEvent(3);
+    PratcamEvent(kPratcam_over_137mph);
 }
 
 // IDA: void __cdecl CheckHelp()
 void CheckHelp(void) {
-    LOG_TRACE("()");
 }
 
 // IDA: void __cdecl CheckLoadSave()
+// FUNCTION: CARM95 0x004a29b5
 void CheckLoadSave(void) {
     int save_load_allowed;
     int switched_res;
-    LOG_TRACE8("()");
 
     save_load_allowed = !gProgram_state.saving && !gProgram_state.loading && gProgram_state.prog_status == eProg_game_ongoing && !gProgram_state.dont_save_or_load;
 
@@ -1149,6 +1182,7 @@ void CheckLoadSave(void) {
 }
 
 // IDA: void __usercall CheckToggles(int pRacing@<EAX>)
+// FUNCTION: CARM95 0x004a198a
 void CheckToggles(int pRacing) {
     int i;
     int new_state;
@@ -1179,97 +1213,98 @@ void CheckToggles(int pRacing) {
 }
 
 // IDA: int __usercall CarWorldOffFallenCheckThingy@<EAX>(tCar_spec *pCar@<EAX>, int pCheck_around@<EDX>)
+// FUNCTION: CARM95 0x004a1b4d
 int CarWorldOffFallenCheckThingy(tCar_spec* pCar, int pCheck_around) {
     br_vector3 car_pos;
     br_vector3 offset_c;
     br_vector3 offset_w;
     int result;
-    LOG_TRACE("(%p, %d)", pCar, pCheck_around);
 
-    if (pCar->number_of_wheels_on_ground != 0) {
-        return 0;
+    if (pCar->number_of_wheels_on_ground == 0) {
+        if (!gCar_flying || pCar->driver != eDriver_local_human) {
+            if (!gAction_replay_mode) {
+                BrVector3Copy(&car_pos, &pCar->car_master_actor->t.t.translate.t);
+                car_pos.v[1] += 0.5f;
+                if (FindYVerticallyBelow2(&car_pos) < -100.f) {
+                    BrVector3Set(&offset_c, 0.f, 1.f, 0.f);
+                    BrMatrix34ApplyV(&offset_w, &offset_c, &pCar->car_master_actor->t.t.mat);
+                    BrVector3Add(&car_pos, &pCar->car_master_actor->t.t.translate.t, &offset_w);
+                    if (FindYVerticallyBelow2(&car_pos) < -100.f) {
+                        if (pCheck_around) {
+                            pCar->car_master_actor->t.t.translate.t.v[0] += 0.05f;
+                            result = CarWorldOffFallenCheckThingy(pCar, 0);
+                            pCar->car_master_actor->t.t.translate.t.v[0] -= 0.05f;
+                            if (!result) {
+                                return 0;
+                            }
+                            pCar->car_master_actor->t.t.translate.t.v[2] += 0.05f;
+                            result = CarWorldOffFallenCheckThingy(pCar, 0);
+                            pCar->car_master_actor->t.t.translate.t.v[2] -= 0.05f;
+                            return result;
+                        } else {
+                            return 1;
+                        }
+                    }
+                }
+            }
+        }
     }
-    if (pCar->driver == eDriver_local_human && gCar_flying) {
-        return 0;
-    }
-    if (gAction_replay_mode) {
-        return 0;
-    }
-    BrVector3Copy(&car_pos, &pCar->car_master_actor->t.t.translate.t);
-    if (FindYVerticallyBelow2(&car_pos) >= -100.f) {
-        return 0;
-    }
-    BrVector3Set(&offset_c, 0.f, 1.f, 0.f);
-    BrMatrix34ApplyV(&offset_w, &offset_c, &pCar->car_master_actor->t.t.mat);
-    if (FindYVerticallyBelow2(&car_pos) >= -100.f) {
-        // FIXME: testing twice using `FindYVerticallyBelow2' is meaningless
-        return 0;
-    }
-    if (!pCheck_around) {
-        return 1;
-    }
-    pCar->car_master_actor->t.t.translate.t.v[0] += 0.05f;
-    result = CarWorldOffFallenCheckThingy(pCar, 0);
-    pCar->car_master_actor->t.t.translate.t.v[0] -= 0.05f;
-    if (!result) {
-        return 0;
-    }
-    pCar->car_master_actor->t.t.translate.t.v[2] += 0.05f;
-    result = CarWorldOffFallenCheckThingy(pCar, 0);
-    pCar->car_master_actor->t.t.translate.t.v[2] -= 0.05f;
-    if (!result) {
-        return 0;
-    }
-    return 1;
+    return 0;
 }
 
 // IDA: int __usercall HasCarFallenOffWorld@<EAX>(tCar_spec *pCar@<EAX>)
+// FUNCTION: CARM95 0x004a1b2f
 int HasCarFallenOffWorld(tCar_spec* pCar) {
-    LOG_TRACE("(%p)", pCar);
 
     return CarWorldOffFallenCheckThingy(pCar, 1);
 }
 
 // IDA: void __cdecl CheckForBeingOutOfThisWorld()
+// FUNCTION: CARM95 0x004a3328
 void CheckForBeingOutOfThisWorld(void) {
+    // GLOBAL: CARM95 0x53d638
     static tU32 the_time;
+    // GLOBAL: CARM95 0x51cf3c
     static tU32 sLast_check;
     int time_step;
-    LOG_TRACE("()");
 
-    the_time = PDGetTotalTime();
+    time_step = PDGetTotalTime() - the_time;
+    the_time += time_step;
 
-    if (gRecover_timer == 0 || ((gProgram_state.current_car.frame_collision_flag || gProgram_state.current_car.number_of_wheels_on_ground) && !IsCarInTheSea())) {
-        gRecover_timer = 0;
-        if ((the_time - sLast_check) > 200) {
-            sLast_check = the_time;
-            if (HasCarFallenOffWorld(&gProgram_state.current_car)) {
-                gRecover_timer = 3000;
+    if (gRecover_timer != 0) {
+        if ((gProgram_state.current_car.frame_collision_flag || gProgram_state.current_car.number_of_wheels_on_ground) && !IsCarInTheSea()) {
+            gRecover_timer = 0;
+        } else {
+            gRecover_timer -= gFrame_period;
+            if (gRecover_timer <= 0 || IsCarInTheSea() == 2) {
+                gRecover_timer = 0;
+                RecoverCar();
+                gHad_auto_recover = 1;
             }
+            return;
         }
-        if (IsCarInTheSea()) {
-            if (!gRecover_timer) {
-                gRecover_timer = 3000;
-            }
-        }
-        return;
     }
-    gRecover_timer -= gFrame_period;
-    if (gRecover_timer <= 0 || IsCarInTheSea() == 2) {
-        gRecover_timer = 0;
-        RecoverCar();
-        gHad_auto_recover = 1;
+    if ((the_time - sLast_check) > 200) {
+        sLast_check = the_time;
+        if (HasCarFallenOffWorld(&gProgram_state.current_car)) {
+            gRecover_timer = 3000;
+        }
+    }
+    if (IsCarInTheSea()) {
+        if (!gRecover_timer) {
+            gRecover_timer = 3000;
+        }
     }
 }
 
 // IDA: void __usercall CheckHornLocal(tCar_spec *pCar@<EAX>)
+// FUNCTION: CARM95 0x004a34a8
 void CheckHornLocal(tCar_spec* pCar) {
-    LOG_TRACE("(%p)", pCar);
 
     if (pCar->keys.horn == 1 && pCar->horn_sound_tag == 0) {
         pCar->horn_sound_tag = DRS3StartSound(gEffects_outlet, 5209);
     } else if (pCar->keys.horn == 0 && pCar->horn_sound_tag != 0) {
-        if (S3SoundStillPlaying(pCar->horn_sound_tag) != 0) {
+        while (S3SoundStillPlaying(pCar->horn_sound_tag) != 0) {
             DRS3StopSound(pCar->horn_sound_tag);
             DRS3StopOutletSound(gEffects_outlet);
         }
@@ -1280,8 +1315,8 @@ void CheckHornLocal(tCar_spec* pCar) {
 }
 
 // IDA: void __usercall CheckHorn3D(tCar_spec *pCar@<EAX>)
+// FUNCTION: CARM95 0x004a3582
 void CheckHorn3D(tCar_spec* pCar) {
-    LOG_TRACE("(%p)", pCar);
 
     if (pCar->keys.horn && pCar->horn_sound_tag == 0) {
         pCar->horn_sound_tag = DRS3StartSound3D(gEffects_outlet,
@@ -1306,78 +1341,65 @@ void CheckHorn3D(tCar_spec* pCar) {
 }
 
 // IDA: void __cdecl CheckHorns()
+// FUNCTION: CARM95 0x004a343d
 void CheckHorns(void) {
     int i;
-    LOG_TRACE("()");
 
-    if (gNet_mode != eNet_mode_none) {
+    if (gNet_mode == eNet_mode_none) {
+        CheckHornLocal(&gProgram_state.current_car);
+    } else {
         for (i = 0; i < gNumber_of_net_players; i++) {
             CheckHorn3D(gNet_players[i].car);
         }
-    } else {
-        CheckHornLocal(&gProgram_state.current_car);
     }
 }
 
 // IDA: void __cdecl SetRecovery()
+// FUNCTION: CARM95 0x004a1d13
 void SetRecovery(void) {
-    LOG_TRACE("()");
-
-    if (gRace_finished
-        || gProgram_state.current_car.knackered
-        || gWait_for_it
-        || gHad_auto_recover
-        || gPalette_fade_time) {
-        return;
-    }
-
-    if (gNet_mode == eNet_mode_none) {
-        gRecover_car = 1;
-        gRecover_timer = 0;
-        return;
-    }
-    if (gProgram_state.current_car.time_to_recover) {
-        if (GetRaceTime() + 600 >= gProgram_state.current_car.time_to_recover) {
-            NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_TOO_LATE_TO_CANCEL), 1);
-            gToo_late = 1;
+    if (!gRace_finished
+        && !gProgram_state.current_car.knackered
+        && !gWait_for_it
+        && !gHad_auto_recover
+        && !gPalette_fade_time) {
+        if (gNet_mode != eNet_mode_none) {
+            if (gProgram_state.current_car.time_to_recover) {
+                if (GetRaceTime() + 600 < gProgram_state.current_car.time_to_recover) {
+                    gProgram_state.current_car.time_to_recover = 0;
+                    NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_RECOVERY_CANCELLED), 0);
+                } else {
+                    NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TOO_LATE_TO_CANCEL), 1);
+                    gToo_late = 1;
+                }
+            } else if (CheckRecoverCost()) {
+                if (gCurrent_net_game->type == eNet_game_type_foxy) {
+                    if (gIt_or_fox == gThis_net_player_index) {
+                        gProgram_state.current_car.time_to_recover = GetRaceTime() + 5000;
+                    } else {
+                        gProgram_state.current_car.time_to_recover = GetRaceTime() + 1000;
+                    }
+                } else if (gCurrent_net_game->type == eNet_game_type_tag) {
+                    if (gIt_or_fox != gThis_net_player_index) {
+                        gProgram_state.current_car.time_to_recover = GetRaceTime() + 5000;
+                    } else {
+                        gProgram_state.current_car.time_to_recover = GetRaceTime() + 1000;
+                    }
+                } else {
+                    gProgram_state.current_car.time_to_recover = GetRaceTime() + 3000;
+                }
+                gRecover_timer = 0;
+                gToo_late = 0;
+            }
         } else {
-            gProgram_state.current_car.time_to_recover = 0;
-            NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_RECOVERY_CANCELLED), 0);
-        }
-        return;
-    }
-    if (!CheckRecoverCost()) {
-        return;
-    }
-    if (gCurrent_net_game->type == eNet_game_type_foxy) {
-        if (gThis_net_player_index == gIt_or_fox) {
-            gProgram_state.current_car.time_to_recover = GetRaceTime() + 5000;
+            gRecover_car = 1;
             gRecover_timer = 0;
-            gToo_late = 0;
-            return;
-        }
-    } else {
-        if (gCurrent_net_game->type != eNet_game_type_tag) {
-            gProgram_state.current_car.time_to_recover = GetRaceTime() + 3000;
-            gRecover_timer = 0;
-            gToo_late = 0;
-            return;
-        }
-        if (gThis_net_player_index != gIt_or_fox) {
-            gProgram_state.current_car.time_to_recover = GetRaceTime() + 5000;
-            gRecover_timer = 0;
-            gToo_late = 0;
-            return;
         }
     }
-    gProgram_state.current_car.time_to_recover = GetRaceTime() + 1000;
-    gRecover_timer = 0;
-    gToo_late = 0;
 }
 
 // IDA: void __cdecl RecoverCar()
+// FUNCTION: CARM95 0x004a20b0
 void RecoverCar(void) {
-    LOG_TRACE("()");
 
     if (gNet_mode == eNet_mode_none || !gPalette_fade_time) {
         gRecover_car = 1;
@@ -1386,17 +1408,18 @@ void RecoverCar(void) {
 }
 
 // IDA: void __cdecl CheckMapRenderMove()
+// FUNCTION: CARM95 0x004a3694
 void CheckMapRenderMove(void) {
     int shift_down;
     int amount;
     float old_x;
     float old_y;
-    LOG_TRACE("()");
 
-    old_y = gMap_render_y;
     old_x = gMap_render_x;
+    old_y = gMap_render_y;
     if (gMap_mode) {
-        amount = gFrame_period * .1f;
+        amount = gFrame_period * .1;
+        shift_down = KeyIsDown(KEYMAP_SHIFT_ANY);
         if (KeyIsDown(KEYMAP_MOVE_UP)) {
             gMap_render_y -= amount;
         } else if (KeyIsDown(KEYMAP_MOVE_DOWN)) {
@@ -1407,68 +1430,68 @@ void CheckMapRenderMove(void) {
         } else if (KeyIsDown(KEYMAP_MOVE_RIGHT)) {
             gMap_render_x += amount;
         }
-        if (gMap_render_x != old_x || gMap_render_y != old_y) {
-            SetIntegerMapRenders();
-            if (gMap_render_x_i < gCurrent_graf_data->map_render_x_marg) {
-                if (gReal_graf_data_index == 0) {
-                    gMap_render_x = (gCurrent_graf_data->map_render_x_marg + 3) & ~3;
-                } else {
-                    gMap_render_x = ((gCurrent_graf_data->map_render_x_marg + 3) & ~3) / 2;
-                }
-            }
-            if (gMap_render_y_i < gCurrent_graf_data->map_render_y_marg) {
-                if (gReal_graf_data_index == 0) {
-                    gMap_render_y = (gCurrent_graf_data->map_render_y_marg + 1) & ~1;
-                } else {
-                    gMap_render_y = (((gCurrent_graf_data->map_render_y_marg + 1) & ~1) - 40) / 2;
-                }
-            }
-            if (gBack_screen->width - gCurrent_graf_data->map_render_x_marg - gMap_render_width_i < gMap_render_x_i) {
-                if (gReal_graf_data_index == 0) {
-                    gMap_render_x = (gBack_screen->width - gCurrent_graf_data->map_render_x_marg - gMap_render_width_i) & ~3;
-                } else {
-                    gMap_render_x = ((gBack_screen->width - gCurrent_graf_data->map_render_x_marg - gMap_render_width_i) & ~3) / 2;
-                }
-            }
-            if (gBack_screen->height - gCurrent_graf_data->map_render_y_marg - gMap_render_height_i < gMap_render_y_i) {
-                if (gReal_graf_data_index == 0) {
-                    gMap_render_y = (gBack_screen->height - gCurrent_graf_data->map_render_y_marg - gMap_render_height_i) & ~1;
-                } else {
-                    gMap_render_y = (((gBack_screen->height - gCurrent_graf_data->map_render_y_marg - gMap_render_height_i) & ~3) - 40) / 2;
-                }
-            }
-            SetIntegerMapRenders();
-            AdjustRenderScreenSize();
+        if (gMap_render_x == old_x && old_y == gMap_render_y) {
+            return;
         }
+        SetIntegerMapRenders();
+        if (gMap_render_x_i < gCurrent_graf_data->map_render_x_marg) {
+            if (gReal_graf_data_index != 0) {
+                gMap_render_x = ((gCurrent_graf_data->map_render_x_marg + 3) & ~3) / 2;
+            } else {
+                gMap_render_x = (gCurrent_graf_data->map_render_x_marg + 3) & ~3;
+            }
+        }
+        if (gMap_render_y_i < gCurrent_graf_data->map_render_y_marg) {
+            if (gReal_graf_data_index != 0) {
+                gMap_render_y = (((gCurrent_graf_data->map_render_y_marg + 1) & ~1) - 40) / 2;
+            } else {
+                gMap_render_y = (gCurrent_graf_data->map_render_y_marg + 1) & ~1;
+            }
+        }
+        if (gBack_screen->width - gCurrent_graf_data->map_render_x_marg - gMap_render_width_i < gMap_render_x_i) {
+            if (gReal_graf_data_index != 0) {
+                gMap_render_x = ((gBack_screen->width - gCurrent_graf_data->map_render_x_marg - gMap_render_width_i) & ~3) / 2;
+            } else {
+                gMap_render_x = (gBack_screen->width - gCurrent_graf_data->map_render_x_marg - gMap_render_width_i) & ~3;
+            }
+        }
+        if (gBack_screen->height - gCurrent_graf_data->map_render_y_marg - gMap_render_height_i < gMap_render_y_i) {
+            if (gReal_graf_data_index != 0) {
+                gMap_render_y = (((gBack_screen->height - gCurrent_graf_data->map_render_y_marg - gMap_render_height_i) & ~1) - 40) / 2;
+            } else {
+                gMap_render_y = (gBack_screen->height - gCurrent_graf_data->map_render_y_marg - gMap_render_height_i) & ~1;
+            }
+        }
+        SetIntegerMapRenders();
+        AdjustRenderScreenSize();
     }
 }
 
 // IDA: void __usercall ExplodeCar(tCar_spec *pCar@<EAX>)
+// FUNCTION: CARM95 0x004a20e9
 void ExplodeCar(tCar_spec* pCar) {
     br_vector3 tv;
     br_vector3 pos;
-    LOG_TRACE("(%p)", pCar);
 
     pCar->last_car_car_collision = 0;
-    pos.v[0] = .1449275f * pCar->cmpos.v[0];
-    pos.v[1] = .1449275f * pCar->cmpos.v[1];
-    pos.v[2] = pCar->bounds[0].min.v[2] + .3f * (pCar->bounds[0].max.v[2] - pCar->bounds[0].min.v[2]);
-    BrMatrix34ApplyP(&tv, &pos, &pCar->car_master_actor->t.t.mat);
-    CreatePuffOfSmoke(&tv, &pCar->v, 1.f, 1.f, 7, pCar);
+    BrVector3Scale(&tv, &pCar->cmpos, .14492753f);
+    tv.v[2] = pCar->bounds[0].min.v[2] + .3 * (pCar->bounds[0].max.v[2] - pCar->bounds[0].min.v[2]);
+    BrMatrix34ApplyP(&pos, &tv, &pCar->car_master_actor->t.t.mat);
+    CreatePuffOfSmoke(&pos, &pCar->v, 1.f, 1.f, 7, pCar);
 
-    pos.v[2] = pCar->bounds[0].min.v[2] + .7f * (pCar->bounds[0].max.v[2] - pCar->bounds[0].min.v[2]);
-    BrMatrix34ApplyP(&tv, &pos, &pCar->car_master_actor->t.t.mat);
-    CreatePuffOfSmoke(&tv, &pCar->v, 1.f, 1.f, 7, pCar);
+    tv.v[2] = pCar->bounds[0].min.v[2] + .7 * (pCar->bounds[0].max.v[2] - pCar->bounds[0].min.v[2]);
+    BrMatrix34ApplyP(&pos, &tv, &pCar->car_master_actor->t.t.mat);
+    CreatePuffOfSmoke(&pos, &pCar->v, 1.f, 1.f, 7, pCar);
 
     DisableCar(pCar);
 }
 
 // IDA: void __usercall CheckRecoveryOfCars(tU32 pEndFrameTime@<EAX>)
+// FUNCTION: CARM95 0x004a1ec9
 void CheckRecoveryOfCars(tU32 pEndFrameTime) {
     int i;
     int time;
     char s[256];
-    LOG_TRACE("(%d)", pEndFrameTime);
 
     if (gProgram_state.current_car.time_to_recover) {
         if (gProgram_state.current_car.knackered) {
@@ -1477,7 +1500,7 @@ void CheckRecoveryOfCars(tU32 pEndFrameTime) {
             time = (gProgram_state.current_car.time_to_recover - pEndFrameTime + 1000) / 1000;
             sprintf(s, "%s %d %s", GetMiscString(kMiscString_RECOVERY_IN), time, time > 1 ? GetMiscString(kMiscString_SECONDS) : GetMiscString(kMiscString_SECOND));
             if (!gToo_late) {
-                NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -4, s, 0);
+                NewTextHeadupSlot2(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, s, 0);
             }
             if (gProgram_state.current_car.time_to_recover <= pEndFrameTime) {
                 RecoverCar();
@@ -1498,9 +1521,9 @@ void CheckRecoveryOfCars(tU32 pEndFrameTime) {
 }
 
 // IDA: void __usercall LoseSomePSPowerups(int pNumber@<EAX>)
+// FUNCTION: CARM95 0x004a39cc
 void LoseSomePSPowerups(int pNumber) {
     int index;
-    LOG_TRACE("(%d)", pNumber);
 
     if (gNet_mode != eNet_mode_none && pNumber > 0) {
         while (pNumber--) {
@@ -1513,6 +1536,7 @@ void LoseSomePSPowerups(int pNumber) {
 }
 
 // IDA: void __cdecl CheckOtherRacingKeys()
+// FUNCTION: CARM95 0x004a2af6
 void CheckOtherRacingKeys(void) {
     int i;
     int j;
@@ -1525,14 +1549,20 @@ void CheckOtherRacingKeys(void) {
     int flip_up_flag;
     tCar_spec* car;
     float bodywork_repair_amount;
+    // GLOBAL: CARM95 0x51cf40
     static tU32 total_repair_cost;
+    // GLOBAL: CARM95 0x51cf44
     static tS3_sound_tag sound_tag;
+    // GLOBAL: CARM95 0x53d640
     static br_scalar amount;
+    // GLOBAL: CARM95 0x51cf48
     static int NeedToExpandBoundingBox;
+    // GLOBAL: CARM95 0x53d600
     static int total_difference;
+    // GLOBAL: CARM95 0x51cf4c
     static int stopped_repairing;
-    LOG_TRACE("()");
 
+    flip_up_flag = 0;
     car = GetCarSpec(eVehicle_self, 0);
     CheckMapRenderMove();
     CheckHorns();
@@ -1550,36 +1580,37 @@ void CheckOtherRacingKeys(void) {
         gLast_repair_time = GetTotalTime();
         gRepair_last_time = 1;
         if (!NeedToExpandBoundingBox) {
-            if (gFree_repairs
-                || gNet_mode == eNet_mode_none
-                || gProgram_state.credits_earned - gProgram_state.credits_lost >= 1) {
+            if (!gFree_repairs
+                && gNet_mode != eNet_mode_none
+                && gProgram_state.credits_earned - gProgram_state.credits_lost < 1) {
+                if (!stopped_repairing) {
+                    NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_CANNOT_AFFORD_TO_REPAIR));
+                }
+                gAuto_repair = 0;
+                stopped_repairing = 1;
+            } else {
                 bodywork_repair_amount = RepairCar(gProgram_state.current_car.car_ID, gFrame_period, &amount);
                 NeedToExpandBoundingBox = bodywork_repair_amount > 0;
                 cost = 0;
-                for (j = 0; j < COUNT_OF(gProgram_state.current_car.damage_units); j++) {
-                    old_level = gProgram_state.current_car.damage_units[j].damage_level;
-                    if (amount == 0.0f) {
+                for (i = 0; i < COUNT_OF(gProgram_state.current_car.damage_units); i++) {
+                    old_level = gProgram_state.current_car.damage_units[i].damage_level;
+                    if (amount != 0.0f) {
+                        new_level = ((double)gProgram_state.current_car.damage_units[i].damage_level
+                            - floor(bodywork_repair_amount / amount * (double)gProgram_state.current_car.damage_units[i].damage_level));
+                    } else {
                         new_level = 0;
-                    } else {
-                        new_level = ((double)gProgram_state.current_car.damage_units[j].damage_level
-                            - floor(bodywork_repair_amount / amount * (double)gProgram_state.current_car.damage_units[j].damage_level));
                     }
-                    if (new_level >= 0) {
-                        if (new_level < 100) {
-                            gProgram_state.current_car.damage_units[j].damage_level = new_level;
-                        } else {
-                            gProgram_state.current_car.damage_units[j].damage_level = 99;
-                        }
+                    if (new_level < 0) {
+                        gProgram_state.current_car.damage_units[i].damage_level = 0;
+                    } else if (new_level >= 100) {
+                        gProgram_state.current_car.damage_units[i].damage_level = 99;
                     } else {
-                        gProgram_state.current_car.damage_units[j].damage_level = 0;
+                        gProgram_state.current_car.damage_units[i].damage_level = new_level;
                     }
-                    gProgram_state.current_car.damage_units[j].smoke_last_level = gProgram_state.current_car.damage_units[j].damage_level;
-                    if (gNet_mode) {
-                        ts = gNet_repair_cost[gCurrent_net_game->type];
-                    } else {
-                        ts = gRepair_cost[gProgram_state.skill_level];
-                    }
-                    cost = (old_level - gProgram_state.current_car.damage_units[j].damage_level) * ts + cost;
+                    gProgram_state.current_car.damage_units[i].smoke_last_level = gProgram_state.current_car.damage_units[i].damage_level;
+                    cost = (old_level - gProgram_state.current_car.damage_units[i].damage_level)
+                            * (gNet_mode ? gNet_repair_cost[gCurrent_net_game->type] : gRepair_cost[gProgram_state.skill_level])
+                        + cost;
                     total_difference += old_level - new_level;
                 }
                 if (!gFree_repairs) {
@@ -1593,7 +1624,7 @@ void CheckOtherRacingKeys(void) {
                 if (gProgram_state.current_car.num_smoke_columns) {
                     StopCarSmoking(&gProgram_state.current_car);
                 }
-                if (!cost && bodywork_repair_amount == 0.0) {
+                if (!cost && bodywork_repair_amount == 0.0f) {
                     gAuto_repair = 0;
                 }
                 if (!gFree_repairs) {
@@ -1602,18 +1633,12 @@ void CheckOtherRacingKeys(void) {
                 total_repair_cost += cost;
                 if (total_repair_cost) {
                     if (gFree_repairs) {
-                        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_RepairingForFree));
+                        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_RepairingForFree));
                     } else {
                         sprintf(s, "%s %d", GetMiscString(kMiscString_RepairCostColon), total_repair_cost);
-                        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, s);
+                        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, s);
                     }
                 }
-            } else {
-                if (!stopped_repairing) {
-                    NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_CANNOT_AFFORD_TO_REPAIR));
-                }
-                gAuto_repair = 0;
-                stopped_repairing = 1;
             }
         }
 
@@ -1623,8 +1648,14 @@ void CheckOtherRacingKeys(void) {
         total_repair_cost = 0;
         total_difference = 0;
         if (sound_tag) {
-            for (i = 0; i < 10 && S3SoundStillPlaying(sound_tag); ++i) {
-                DRS3StopSound(sound_tag);
+            int loop;
+
+            for (loop = 0; loop < 10; loop++) {
+                if (S3SoundStillPlaying(sound_tag)) {
+                    DRS3StopSound(sound_tag);
+                } else {
+                    break;
+                }
             }
             sound_tag = 0;
         }
@@ -1632,74 +1663,66 @@ void CheckOtherRacingKeys(void) {
     if (NeedToExpandBoundingBox) {
         NeedToExpandBoundingBox = ExpandBoundingBox(&gProgram_state.current_car) == 0;
     }
-    if (!gRecover_car || gProgram_state.current_car.knackered) {
+    if (gRecover_car && !gProgram_state.current_car.knackered) {
+        if (CheckRecoverCost()) {
+            gRecover_timer = 0;
+            SetFlipUpCar(car);
+            if (gNet_mode != eNet_mode_none) {
+                NewTextHeadupSlot(eHeadupSlot_misc, 0, 1500, -kFont_MEDIUMHD, " ");
+            }
+            if (gRecovery_voucher_count != 0) {
+                gRecovery_voucher_count--;
+                sprintf(s, "%s", GetMiscString(kMiscString_RecoveringForFree));
+                NewTextHeadupSlot(eHeadupSlot_misc, 0, 1500, -kFont_MEDIUMHD, s);
+            } else {
+                SpendCredits(gNet_mode ? gNet_recovery_cost[gCurrent_net_game->type] : gRecovery_cost[gProgram_state.skill_level]);
+                sprintf(s, "%s %d", GetMiscString(kMiscString_RecoveryCostColon),
+                    (int)(gNet_mode ? gNet_recovery_cost[gCurrent_net_game->type] : gRecovery_cost[gProgram_state.skill_level]));
+                NewTextHeadupSlot(eHeadupSlot_misc, 0, 1500, -kFont_MEDIUMHD, s);
+                LoseSomePSPowerups(2);
+            }
+            CancelPendingCunningStunt();
+            PipeSingleSpecial(ePipe_special_fade);
+        }
+    } else {
         gHad_auto_recover = 0;
-    } else if (CheckRecoverCost()) {
-        gRecover_timer = 0;
-        SetFlipUpCar(car);
-        if (gNet_mode != eNet_mode_none) {
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1500, -4, " ");
-        }
-        if (gRecovery_voucher_count != 0) {
-            gRecovery_voucher_count--;
-            sprintf(s, "%s", GetMiscString(kMiscString_RecoveringForFree));
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1500, -4, s);
-        } else {
-            if (gNet_mode) {
-                cost = gNet_recovery_cost[gCurrent_net_game->type];
-            } else {
-                cost = gRecovery_cost[gProgram_state.skill_level];
-            }
-            SpendCredits(cost);
-            if (gNet_mode) {
-                cost = gNet_recovery_cost[gCurrent_net_game->type];
-            } else {
-                cost = gRecovery_cost[gProgram_state.skill_level];
-            }
-            sprintf(s, "%s %d", GetMiscString(kMiscString_RecoveryCostColon), cost);
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1500, -4, s);
-            LoseSomePSPowerups(2);
-        }
-        CancelPendingCunningStunt();
-        PipeSingleSpecial(ePipe_special_fade);
     }
     gRecover_car = 0;
 }
 
 // IDA: int __cdecl CheckRecoverCost()
+// FUNCTION: CARM95 0x004a2208
 int CheckRecoverCost(void) {
-    LOG_TRACE("()");
 
-    if (gProgram_state.current_car.knackered
-        || gNet_mode == eNet_mode_none
-        || (gProgram_state.credits_earned - gProgram_state.credits_lost) >= gNet_recovery_cost[gCurrent_net_game->type]
-        || gRecovery_voucher_count) {
-        return 1;
+    if (!(gProgram_state.current_car.knackered
+            || gNet_mode == eNet_mode_none
+            || (gProgram_state.credits_earned - gProgram_state.credits_lost) >= (gNet_mode != eNet_mode_none ? gNet_recovery_cost[gCurrent_net_game->type] : gRecovery_cost[gProgram_state.skill_level])
+            || gRecovery_voucher_count)) {
+        gProgram_state.credits_earned = 0;
+        gProgram_state.credits_lost = 0;
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_CANNOT_AFFORD_TO_RECOVER));
+        DoFancyHeadup(kFancyHeadupNetworkRaceNoMoreMoney);
+        KnackerThisCar(&gProgram_state.current_car);
+        SendGameplayToHost(eNet_gameplay_suicide, 0, 0, 0, 0);
+        return 0;
     }
-    gProgram_state.credits_earned = 0;
-    gProgram_state.credits_lost = 0;
-    NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_CANNOT_AFFORD_TO_RECOVER));
-    DoFancyHeadup(kFancyHeadupNetworkRaceNoMoreMoney);
-    KnackerThisCar(&gProgram_state.current_car);
-    SendGameplayToHost(eNet_gameplay_suicide, 0, 0, 0, 0);
-    return 0;
+    return 1;
 }
 
 // IDA: void __usercall SortOutRecover(tCar_spec *pCar@<EAX>)
+// FUNCTION: CARM95 0x004a3a33
 void SortOutRecover(tCar_spec* pCar) {
     int the_time;
     int val;
+    // GLOBAL: CARM95 0x51cf50
     static int old_time;
-    LOG_TRACE("(%p)", pCar);
 
     the_time = GetRaceTime() - gPalette_fade_time;
     if (the_time < 0) {
         gPalette_fade_time = 0;
         old_time = 0;
     }
-    if (the_time < 500) {
-        val = 256 - (the_time * 256) / 500;
-    } else {
+    if (the_time >= 500) {
         if (old_time < 500) {
             FlipUpCar(pCar);
             PipeSingleSpecial(ePipe_special_fade);
@@ -1712,28 +1735,29 @@ void SortOutRecover(tCar_spec* pCar) {
             old_time = 0;
             pCar->doing_nothing_flag = 0;
         }
+    } else {
+        val = 256 - (the_time * 256) / 500;
     }
-    if (val <= 0) {
-        val = 0;
-    }
+    val = val > 0 ? val : 0;
     SetFadedPalette(val);
     old_time = the_time;
 }
 
 // IDA: void __usercall SetFlipUpCar(tCar_spec *pCar@<EAX>)
+// FUNCTION: CARM95 0x004a22f4
 void SetFlipUpCar(tCar_spec* pCar) {
-    LOG_TRACE("(%p)", pCar);
 
-    if (gNet_mode != eNet_mode_none && pCar->driver == eDriver_local_human) {
-        DisableCar(pCar);
-        gPalette_fade_time = GetRaceTime();
-        NetPlayerStatusChanged(ePlayer_status_recovering);
-    } else {
+    if (gNet_mode == eNet_mode_none || pCar->driver != eDriver_local_human) {
         FlipUpCar(pCar);
+        return;
     }
+    DisableCar(pCar);
+    gPalette_fade_time = GetRaceTime();
+    NetPlayerStatusChanged(ePlayer_status_recovering);
 }
 
 // IDA: void __usercall FlipUpCar(tCar_spec *car@<EAX>)
+// FUNCTION: CARM95 0x004a234a
 void FlipUpCar(tCar_spec* car) {
     br_vector3 tv;
     br_vector3 dir;
@@ -1745,7 +1769,6 @@ void FlipUpCar(tCar_spec* car) {
     br_scalar dist;
     br_material* material;
     br_scalar t;
-    LOG_TRACE("(%p)", car);
 
     count = 0;
     if (car->driver == eDriver_local_human && gNet_mode == eNet_mode_none) {
@@ -1757,8 +1780,8 @@ void FlipUpCar(tCar_spec* car) {
     car->doing_nothing_flag = 0;
     EnableCar(car);
     new_pos = 1;
-    for (i = 0; i < 4; ++i) {
-        if (car->susp_height[i >> 1] <= car->oldd[i]) {
+    for (j = 0; j < 4; ++j) {
+        if (car->susp_height[j >> 1] <= car->oldd[j]) {
             new_pos = 0;
         }
     }
@@ -1766,7 +1789,7 @@ void FlipUpCar(tCar_spec* car) {
         tv.v[0] = car->car_master_actor->t.t.mat.m[3][0] - car->last_safe_positions[0].m[3][0];
         tv.v[1] = car->car_master_actor->t.t.mat.m[3][1] - car->last_safe_positions[0].m[3][1];
         tv.v[2] = car->car_master_actor->t.t.mat.m[3][2] - car->last_safe_positions[0].m[3][2];
-        if (BrVector3LengthSquared(&tv) > 8.3015966) {
+        if (BrVector3LengthSquared(&tv) > 8.3015966f) {
             new_pos = 0;
         }
         BrMatrix34Copy(&car->car_master_actor->t.t.mat, &car->last_safe_positions[new_pos]);
@@ -1779,7 +1802,7 @@ void FlipUpCar(tCar_spec* car) {
         dir.v[1] = 0.28985506;
         dir.v[2] = 0.0;
         FindFace(&car->car_master_actor->t.t.euler.t, &dir, &tv, &t, &material);
-        if (t > 1.0) {
+        if (t > 1.0f) {
             car->car_master_actor->t.t.mat.m[3][0] += dir.v[0];
             car->car_master_actor->t.t.mat.m[3][1] += dir.v[1];
             car->car_master_actor->t.t.mat.m[3][2] += dir.v[2];
@@ -1800,13 +1823,15 @@ void FlipUpCar(tCar_spec* car) {
         car->direction.v[0] = -car->oldmat.m[2][0];
         car->direction.v[1] = -car->oldmat.m[2][1];
         car->direction.v[2] = -car->oldmat.m[2][2];
-        for (i = 0; i <= new_pos; i++) {
-            for (j = 0; j < 4; j++) {
-                BrMatrix34Copy(&car->last_safe_positions[j], &car->last_safe_positions[j + 1]);
+        for (j = 0; j <= new_pos; j++) {
+            for (i = 0; i < 4; i++) {
+                BrMatrix34Copy(&car->last_safe_positions[i], &car->last_safe_positions[i + 1]);
             }
         }
-        for (l = 0; l < 10; l++) {
-            BrVector3Scale(&car->old_norm, &car->old_norm, 0.072463766);
+        l = 0;
+        while (!TestForCarInSensiblePlace(car) && l < 10) {
+            dist = 0.072463766f;
+            BrVector3Scale(&car->old_norm, &car->old_norm, dist);
             BrMatrix34ApplyV(&tv, &car->old_norm, &car->car_master_actor->t.t.mat);
             car->car_master_actor->t.t.mat.m[3][0] = car->car_master_actor->t.t.mat.m[3][0] + tv.v[0];
             car->car_master_actor->t.t.mat.m[3][1] = car->car_master_actor->t.t.mat.m[3][1] + tv.v[1];
@@ -1817,9 +1842,7 @@ void FlipUpCar(tCar_spec* car) {
             car->old_frame_mat.m[3][0] = car->car_master_actor->t.t.mat.m[3][0];
             car->old_frame_mat.m[3][1] = car->car_master_actor->t.t.mat.m[3][1];
             car->old_frame_mat.m[3][2] = car->car_master_actor->t.t.mat.m[3][2];
-            if (TestForCarInSensiblePlace(car)) {
-                break;
-            }
+            l++;
         }
         count++;
     } while (l == 10 && count < 3);
@@ -1827,8 +1850,8 @@ void FlipUpCar(tCar_spec* car) {
     car->oldmat.m[3][1] = car->car_master_actor->t.t.mat.m[3][1] * WORLD_SCALE;
     car->oldmat.m[3][2] = car->car_master_actor->t.t.mat.m[3][2] * WORLD_SCALE;
     car->curvature = 0.0;
-    for (j = 0; j < 4; ++j) {
-        car->oldd[j] = car->ride_height;
+    for (i = 0; i < 4; ++i) {
+        car->oldd[i] = car->ride_height;
     }
     car->revs = 0.0;
     car->gear = 0;
@@ -1840,16 +1863,13 @@ void FlipUpCar(tCar_spec* car) {
 }
 
 // IDA: void __usercall GetPowerup(int pNum@<EAX>)
+// FUNCTION: CARM95 0x004a291d
 void GetPowerup(int pNum) {
-    LOG_TRACE("()");
-
-    // FIXME: remove unittest variables from dethrace
-    _unittest_controls_lastGetPowerup = pNum;
-
     GotPowerup(&gProgram_state.current_car, pNum);
 }
 
 // IDA: void __usercall CheckSystemKeys(int pRacing@<EAX>)
+// FUNCTION: CARM95 0x004a293f
 void CheckSystemKeys(int pRacing) {
     tU32 start_menu_time;
     int i;
@@ -1867,6 +1887,7 @@ void CheckSystemKeys(int pRacing) {
 }
 
 // IDA: void __cdecl CheckKevKeys()
+// FUNCTION: CARM95 0x004a3b39
 void CheckKevKeys(void) {
     int i;
     tU32* value;
@@ -1904,13 +1925,13 @@ void CheckKevKeys(void) {
 }
 
 // IDA: void __cdecl BrakeInstantly()
+// FUNCTION: CARM95 0x004a4159
 void BrakeInstantly(void) {
     int i;
-    LOG_TRACE("()");
 
     gProgram_state.current_car.revs = 0.f;
     if (gProgram_state.current_car.number_of_wheels_on_ground != 0 && BrVector3LengthSquared(&gProgram_state.current_car.v) > 0.0001f) {
-        PratcamEvent(41);
+        PratcamEvent(kPratcam_instant_handbrake);
         for (i = 0; i < 5; i++) {
             DRS3StartSound(gCar_outlet, 9000 + i);
         }
@@ -1919,6 +1940,7 @@ void BrakeInstantly(void) {
 }
 
 // IDA: void __usercall PollCarControls(tU32 pTime_difference@<EAX>)
+// FUNCTION: CARM95 0x004a3d80
 void PollCarControls(tU32 pTime_difference) {
     int decay_steering;
     int decay_speed;
@@ -1928,73 +1950,70 @@ void PollCarControls(tU32 pTime_difference) {
     tCar_controls keys;
     tJoystick joystick;
     tCar_spec* c;
-    LOG_TRACE("(%d)", pTime_difference);
 
-    c = &gProgram_state.current_car;
+    decay_steering = 1;
+    decay_speed = 1;
 
     memset(&keys, 0, sizeof(tCar_controls));
     joystick.left = -1;
     joystick.right = -1;
     joystick.acc = -1;
     joystick.dec = -1;
+    c = &gProgram_state.current_car;
     if (gEntering_message) {
-        memset(&c->keys, 0, sizeof(tCar_controls));
-        c->joystick.left = -1;
-        c->joystick.right = -1;
-        c->joystick.acc = -1;
-        c->joystick.dec = -1;
+        c->keys = keys;
+        c->joystick = joystick;
     } else {
-        if (gKey_mapping[46] >= 115 || gKey_mapping[47] >= 115) {
-            joystick.left = gJoy_array[gKey_mapping[46] - 115];
-            joystick.right = gJoy_array[gKey_mapping[47] - 115];
-            if (joystick.left < 0 && joystick.right < 0) {
-                joystick.left = 0;
-            }
-        } else {
+        if (gKey_mapping[46] < 115 && gKey_mapping[47] < 115) {
             if (KeyIsDown(46)) {
                 keys.left = 1;
             }
             if (KeyIsDown(47)) {
                 keys.right = 1;
             }
+        } else {
+            joystick.left = gJoy_array[gKey_mapping[46] - 115];
+            joystick.right = gJoy_array[gKey_mapping[47] - 115];
+            if (joystick.left < 0 && joystick.right < 0) {
+                joystick.left = 0;
+            }
         }
         if (KeyIsDown(12)) {
             keys.holdw = 1;
         }
         if (KeyIsDown(53) || gRace_finished) {
-            if (!gInstant_handbrake || gRace_finished) {
-                keys.brake = 1;
-            } else {
+            if (gInstant_handbrake && !gRace_finished) {
                 BrakeInstantly();
+            } else {
+                keys.brake = 1;
             }
         }
-        if (gKey_mapping[48] < 115) {
-            if (KeyIsDown(48) && !gRace_finished && !c->knackered && !gWait_for_it) {
-                keys.acc = 1;
-            }
-        } else {
+        if (gKey_mapping[48] >= 115) {
             joystick.acc = gJoy_array[gKey_mapping[48] - 115];
             if (joystick.acc > 0xFFFF) {
                 joystick.acc = 0xFFFF;
             }
+        } else if (KeyIsDown(48) && !gRace_finished && !gProgram_state.current_car.knackered && !gWait_for_it) {
+            keys.acc = 1;
         }
-        if (gKey_mapping[49] < 115) {
-            if (KeyIsDown(49) && !gRace_finished && !c->knackered && !gWait_for_it) {
-                keys.dec = 1;
-            }
-        } else {
+        if (gKey_mapping[49] >= 115) {
             joystick.dec = gJoy_array[gKey_mapping[49] - 115];
             if (joystick.dec > 0xFFFF) {
                 joystick.dec = 0xFFFF;
             }
+        } else if (KeyIsDown(49) && !gRace_finished && !gProgram_state.current_car.knackered && !gWait_for_it) {
+            keys.dec = 1;
         }
         if (KeyIsDown(55) && c->gear >= 0) {
             keys.change_down = 1;
             c->just_changed_gear = 1;
-            if (keys.acc || joystick.acc > 32000) {
+            if (!keys.acc && joystick.acc <= 32000) {
+                if (c->gear > 1 && !c->keys.change_down) {
+                    --c->gear;
+                } else {
+                }
+            } else {
                 c->traction_control = 0;
-            } else if (c->gear > 1 && !c->keys.change_down) {
-                --c->gear;
             }
             if (gCountdown && !c->keys.change_down) {
                 JumpTheStart();
@@ -2019,6 +2038,7 @@ void PollCarControls(tU32 pTime_difference) {
 }
 
 // IDA: void __usercall PollCameraControls(tU32 pTime_difference@<EAX>)
+// FUNCTION: CARM95 0x004a4214
 void PollCameraControls(tU32 pTime_difference) {
     int flag;
     int left;
@@ -2026,13 +2046,13 @@ void PollCameraControls(tU32 pTime_difference) {
     int swirl_mode;
     int up_and_down_mode;
     int going_up;
+    // GLOBAL: CARM95 0x51cf54
     static int last_swirl_mode = 0;
-    LOG_TRACE("(%d)", pTime_difference);
 
     flag = 0;
     swirl_mode = gRace_finished && !gAction_replay_mode && (&gProgram_state.current_car == gCar_to_view || gCar_to_view->knackered);
     up_and_down_mode = swirl_mode && !gCamera_has_collided;
-    going_up = gCamera_zoom > 1.0;
+    going_up = gCamera_zoom > 1.0f;
     if (last_swirl_mode != swirl_mode) {
         if (swirl_mode) {
             SaveCameraPosition(0);
@@ -2041,9 +2061,10 @@ void PollCameraControls(tU32 pTime_difference) {
         }
         last_swirl_mode = swirl_mode;
     }
-    if (!gMap_mode && !gProgram_state.cockpit_on && (!gAction_replay_mode || gAction_replay_camera_mode <= eAction_replay_standard)) {
+    if (gMap_mode) {
+    } else if (!gProgram_state.cockpit_on && (!gAction_replay_mode || gAction_replay_camera_mode <= eAction_replay_standard)) {
         if (KeyIsDown(31) || (up_and_down_mode && !going_up)) {
-            gCamera_zoom = (double)pTime_difference * TIME_CONV_THING / (double)(2 * swirl_mode + 1) + gCamera_zoom;
+            gCamera_zoom = pTime_difference * TIME_CONV_THING / (double)(2 * swirl_mode + 1) + gCamera_zoom;
             if (gCamera_zoom > 2.0f) {
                 gCamera_zoom = 2.0f;
             }
@@ -2052,9 +2073,10 @@ void PollCameraControls(tU32 pTime_difference) {
             }
         }
         if (KeyIsDown(30) || (up_and_down_mode && going_up)) {
-            gCamera_zoom = gCamera_zoom - (double)pTime_difference * TIME_CONV_THING / (double)(2 * swirl_mode + 1);
-            if (gCamera_zoom < 0.1) {
-                gCamera_zoom = 0.1;
+            gCamera_zoom = gCamera_zoom - pTime_difference * TIME_CONV_THING / (double)(2 * swirl_mode + 1);
+            if (gCamera_zoom < 0.1f) {
+                gCamera_zoom = 0.1f;
+                going_up = 0;
                 if (up_and_down_mode) {
                     if (gCamera_zoom < 1.0f) {
                         gCamera_zoom = 1.0f;
@@ -2062,7 +2084,7 @@ void PollCameraControls(tU32 pTime_difference) {
                 }
             }
         }
-        if (swirl_mode && gProgram_state.current_car.speedo_speed < 0.001449275362318841) {
+        if (swirl_mode && gProgram_state.current_car.speedo_speed < (1 / WORLD_SCALE_D / 100.0)) {
             left = 1;
             right = 0;
         } else {
@@ -2091,8 +2113,8 @@ void PollCameraControls(tU32 pTime_difference) {
 }
 
 // IDA: void __usercall SetFlag2(int i@<EAX>)
+// FUNCTION: CARM95 0x004a45e8
 void SetFlag2(int i) {
-    LOG_TRACE("(%d)", i);
 
     gAllow_car_flying = 1;
     ToggleFlying();
@@ -2100,116 +2122,117 @@ void SetFlag2(int i) {
 }
 
 // IDA: void __cdecl ToggleFlying()
+// FUNCTION: CARM95 0x004a460c
 void ToggleFlying(void) {
-    LOG_TRACE("()");
 
-    if (gAllow_car_flying && gNet_mode == eNet_mode_none) {
-        gCar_flying = !gCar_flying;
-        if (gCar_flying) {
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -4, "We have lift off!!");
-        } else {
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -4, "Back down to Earth");
-        }
-    } else {
+    if (!gAllow_car_flying || gNet_mode != eNet_mode_none) {
         gCar_flying = 0;
+        return;
+    }
+    gCar_flying = !gCar_flying;
+    if (gCar_flying) {
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -kFont_MEDIUMHD, "We have lift off!!");
+    } else {
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 500, -kFont_MEDIUMHD, "Back down to Earth");
     }
 }
 
 // IDA: void __cdecl ToggleInvulnerability()
+// FUNCTION: CARM95 0x004a46a8
 void ToggleInvulnerability(void) {
-    LOG_TRACE("()");
 
     gProgram_state.current_car.invulnerable = !gProgram_state.current_car.invulnerable;
     if (gProgram_state.current_car.invulnerable) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_Invulnerable));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_Invulnerable));
     } else {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, "Vulnerability returns!");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, "Vulnerability returns!");
     }
 }
 
 // IDA: void __cdecl MoreTime()
+// FUNCTION: CARM95 0x004a4721
 void MoreTime(void) {
-    LOG_TRACE("()");
 
     AwardTime(30);
 }
 
 // IDA: void __cdecl MuchMoreTime()
+// FUNCTION: CARM95 0x004a4736
 void MuchMoreTime(void) {
-    LOG_TRACE("()");
 
     AwardTime(300);
 }
 
 // IDA: void __cdecl ToggleTimerFreeze()
+// FUNCTION: CARM95 0x004a474e
 void ToggleTimerFreeze(void) {
-    LOG_TRACE("()");
 
     gFreeze_timer = !gFreeze_timer;
     if (gFreeze_timer) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_TimerFrozen));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TimerFrozen));
     } else {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, "Timer thawed out");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, "Timer thawed out");
     }
 }
 
 // IDA: void __cdecl EarnDosh()
+// FUNCTION: CARM95 0x004a47c7
 void EarnDosh(void) {
-    LOG_TRACE("()");
 
     EarnCredits(5000);
 }
 
 // IDA: void __cdecl LoseDosh()
+// FUNCTION: CARM95 0x004a47df
 void LoseDosh(void) {
-    LOG_TRACE("()");
 
     EarnCredits(-5000);
 }
 
 // IDA: void __cdecl ToggleMap()
+// FUNCTION: CARM95 0x004a47f7
 void ToggleMap(void) {
+    // GLOBAL: CARM95 0x53d6a0
     static int old_indent;
+    // GLOBAL: CARM95 0x53d634
     static int was_in_cockpit;
-    LOG_TRACE("()");
 
-    if (gMap_mode == 0) {
-        if (!gAction_replay_mode) {
-            if (gNet_mode != eNet_mode_none && gCurrent_net_game->type == eNet_game_type_foxy && gThis_net_player_index == gIt_or_fox) {
-                NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_THE_FOX_CANNOT_DO_THAT));
-            } else if (gNet_mode != eNet_mode_none && gCurrent_net_game->type == eNet_game_type_tag && gThis_net_player_index != gIt_or_fox) {
-                NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_ONLY_IT_CAN_DO_THAT));
-            } else {
-                old_indent = gRender_indent;
-                gRender_indent = 0;
-                was_in_cockpit = gProgram_state.cockpit_on;
-                if (gProgram_state.cockpit_on) {
-                    ToggleCockpit();
-                }
-                gMap_mode = PDGetTotalTime();
-            }
-        }
-    } else {
+    if (gMap_mode != 0) {
         gMap_mode = 0;
         gRender_indent = old_indent;
         if (was_in_cockpit) {
             ToggleCockpit();
+        }
+    } else if (!gAction_replay_mode) {
+        if (gNet_mode != eNet_mode_none && gCurrent_net_game->type == eNet_game_type_foxy && gThis_net_player_index == gIt_or_fox) {
+            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_THE_FOX_CANNOT_DO_THAT));
+        } else if (gNet_mode != eNet_mode_none && gCurrent_net_game->type == eNet_game_type_tag && gThis_net_player_index != gIt_or_fox) {
+            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_ONLY_IT_CAN_DO_THAT));
+        } else {
+            old_indent = gRender_indent;
+            gRender_indent = 0;
+            was_in_cockpit = gProgram_state.cockpit_on;
+            if (was_in_cockpit) {
+                ToggleCockpit();
+            }
+            gMap_mode = PDGetTotalTime();
         }
     }
     AdjustRenderScreenSize();
 }
 
 // IDA: int __cdecl HornBlowing()
+// FUNCTION: CARM95 0x004a492c
 int HornBlowing(void) {
-    LOG_TRACE("()");
 
     return gProgram_state.current_car.keys.horn;
 }
 
 // IDA: void __cdecl ToggleArrow()
+// FUNCTION: CARM95 0x004a4947
 void ToggleArrow(void) {
+    // GLOBAL: CARM95 0x53d630
     static br_actor* old_actor;
-    LOG_TRACE("()");
 
     return;
 
@@ -2234,91 +2257,96 @@ void ToggleArrow(void) {
 }
 
 // IDA: int __cdecl GetRecoverVoucherCount()
+// FUNCTION: CARM95 0x004a4a23
 int GetRecoverVoucherCount(void) {
-    LOG_TRACE("()");
 
     return gRecovery_voucher_count;
 }
 
 // IDA: void __usercall AddVouchers(int pCount@<EAX>)
+// FUNCTION: CARM95 0x004a4a38
 void AddVouchers(int pCount) {
-    LOG_TRACE("(%d)", pCount);
 
     gRecovery_voucher_count += pCount;
 }
 
 // IDA: void __cdecl ResetRecoveryVouchers()
+// FUNCTION: CARM95 0x004a4a4c
 void ResetRecoveryVouchers(void) {
-    LOG_TRACE("()");
 
     gRecovery_voucher_count = 0;
 }
 
 // IDA: void __cdecl CycleCarTexturingLevel()
+// FUNCTION: CARM95 0x004a4a61
 void CycleCarTexturingLevel(void) {
     tCar_texturing_level new_level;
-    LOG_TRACE("()");
 
     new_level = (GetCarTexturingLevel() + 1) % eCTL_count;
     SetCarTexturingLevel(new_level);
     switch (new_level) {
     case eCTL_none:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_NoCarTextures));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NoCarTextures));
         break;
     case eCTL_transparent:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_TransparentCarTexturesOnly));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TransparentCarTexturesOnly));
         break;
     case eCTL_full:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_FullCarTextures));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_FullCarTextures));
         break;
-    case eCTL_count:
-        break;
+
+        DETHRACE_DEFAULT_BREAK
     }
 }
 
 // IDA: void __cdecl CycleWallTexturingLevel()
+// FUNCTION: CARM95 0x004a4b28
 void CycleWallTexturingLevel(void) {
     tWall_texturing_level new_level;
-    LOG_TRACE("()");
 
     new_level = (GetWallTexturingLevel() + 1) % eWTL_count;
     ReallySetWallTexturingLevel(new_level);
     SetWallTexturingLevel(new_level);
     switch (new_level) {
     case eWTL_none:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_NoWallTextures));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NoWallTextures));
         break;
     case eWTL_linear:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_LinearWallTextures));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_LinearWallTextures));
         break;
     case eWTL_full:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_BestWallTextures));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_BestWallTextures));
         break;
-    case eWTL_count:
-        break;
+
+        DETHRACE_DEFAULT_BREAK
     }
 }
 
 // IDA: void __cdecl CycleRoadTexturingLevel()
+// FUNCTION: CARM95 0x004a4bfb
 void CycleRoadTexturingLevel(void) {
     tRoad_texturing_level new_level;
-    LOG_TRACE("()");
 
     new_level = (GetRoadTexturingLevel() + 1) % 3;
     ReallySetRoadTexturingLevel(new_level);
     SetRoadTexturingLevel(new_level);
-    if (new_level == eRTL_none) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_NoRoadTextures));
-    } else if (new_level == eRTL_full) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_RoadTextures));
+    switch (new_level) {
+    case eRTL_none:
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NoRoadTextures));
+        break;
+    case eRTL_full:
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_RoadTextures));
+        break;
+
+        DETHRACE_DEFAULT_BREAK
     }
 }
 
 // IDA: void __cdecl CycleYonFactor()
+// FUNCTION: CARM95 0x004a4ca1
 void CycleYonFactor(void) {
     br_scalar new_factor;
     char factor_str[5];
-    LOG_TRACE("()");
 
     new_factor = GetYonFactor() / 2.f;
     if (new_factor < .1f) {
@@ -2326,26 +2354,26 @@ void CycleYonFactor(void) {
     }
     SetYonFactor(new_factor);
     if (new_factor > .75f) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_TrackAppearsVeryQuickly));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TrackAppearsVeryQuickly));
     } else if (new_factor > .375f) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_TrackAppearsQuiteQuickly));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TrackAppearsQuiteQuickly));
     } else if (new_factor > .187f) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_TrackQppearsQuiteLate));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TrackQppearsQuiteLate));
     } else {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_TrackAppearsVeryLate));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_TrackAppearsVeryLate));
     }
 }
 
 // IDA: void __usercall SetSoundDetailLevel(int pLevel@<EAX>)
+// FUNCTION: CARM95 0x004a4da4
 void SetSoundDetailLevel(int pLevel) {
-    LOG_TRACE("(%d)", pLevel);
 
     gSound_detail_level = pLevel;
 }
 
 // IDA: void __usercall ReallySetSoundDetailLevel(int pLevel@<EAX>)
+// FUNCTION: CARM95 0x004a4db7
 void ReallySetSoundDetailLevel(int pLevel) {
-    LOG_TRACE("(%d)", pLevel);
 
     DRS3StopAllOutletSounds();
     DisposeSoundSources();
@@ -2355,77 +2383,78 @@ void ReallySetSoundDetailLevel(int pLevel) {
 }
 
 // IDA: int __cdecl GetSoundDetailLevel()
+// FUNCTION: CARM95 0x004a4dde
 int GetSoundDetailLevel(void) {
-    LOG_TRACE("()");
 
     return gSound_detail_level;
 }
 
 // IDA: void __cdecl CycleSoundDetailLevel()
+// FUNCTION: CARM95 0x004a4df3
 void CycleSoundDetailLevel(void) {
     int new_level;
-    LOG_TRACE("()");
 
     new_level = (gSound_detail_level + 1) % 3;
     ReallySetSoundDetailLevel(new_level);
     SetSoundDetailLevel(new_level);
-    switch (new_level) {
+    switch (gSound_detail_level) {
     case 0:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_FewestSounds));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_FewestSounds));
         break;
     case 1:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_PartialSound));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_PartialSound));
         break;
     case 2:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_AllSounds));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_AllSounds));
         break;
     }
 }
 
 // IDA: void __cdecl CycleCarSimplificationLevel()
+// FUNCTION: CARM95 0x004a4ec8
 void CycleCarSimplificationLevel(void) {
     char* src;
     char* dst;
-    LOG_TRACE("()");
 
-    gCar_simplification_level = (gCar_simplification_level + 1) % 5;
+    gCar_simplification_level++;
+    gCar_simplification_level = gCar_simplification_level % 5u;
     src = GetMiscString(kMiscString_CarSimplificationLevel_D);
-    dst = BrMemAllocate(strlen(src), kMem_simp_level);
+    dst = BrMemAllocate(strlen(src) + 21, kMem_simp_level);
     sprintf(dst, src, gCar_simplification_level);
-    NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, dst);
+    NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, dst);
     BrMemFree(dst);
 }
 
 // IDA: void __cdecl ToggleAccessoryRendering()
+// FUNCTION: CARM95 0x004a4f58
 void ToggleAccessoryRendering(void) {
     int on;
-    LOG_TRACE("()");
 
     if (gNet_mode == eNet_mode_none) {
         on = !GetAccessoryRendering();
         SetAccessoryRendering(on);
         if (on) {
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_AccessoriesOn));
+            NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_AccessoriesOn));
         } else {
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_AccessoriesOff));
+            NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_AccessoriesOff));
         }
     } else {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_NetGamesAlwaysAccessorized));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_NetGamesAlwaysAccessorized));
     }
 }
 
 // IDA: void __cdecl ToggleSmoke()
+// FUNCTION: CARM95 0x004a500d
 void ToggleSmoke(void) {
     int on;
-    LOG_TRACE("()");
 
     on = !GetSmokeOn();
     ReallySetSmokeOn(on);
     SetSmokeOn(on);
     if (on) {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_SmokeOn));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_SmokeOn));
     } else {
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -4, GetMiscString(kMiscString_SmokeOff));
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_MEDIUMHD, GetMiscString(kMiscString_SmokeOff));
     }
 }
 
@@ -2463,7 +2492,10 @@ void DrawSomeText2(tDR_font* pFont) {
 }
 
 // IDA: void __cdecl DrawSomeText()
+// FUNCTION: CARM95 0x00485d80
 void DrawSomeText(void) {
+#ifdef DETHRACE_FIX_BUGS
+    // Font test present in DOS version, but disabled by default
     DrawSomeText2(&gFonts[kFont_ORANGHED]);
     DrawSomeText2(&gFonts[kFont_BLUEHEAD]);
     DrawSomeText2(&gFonts[kFont_GREENHED]);
@@ -2471,17 +2503,17 @@ void DrawSomeText(void) {
     DrawSomeText2(&gFonts[kFont_NEWHITE]);
     DrawSomeText2(&gFonts[kFont_NEWRED]);
     DrawSomeText2(&gFonts[kFont_NEWBIGGR]);
+#endif
 }
 
 // IDA: void __cdecl SaySorryYouLittleBastard()
 void SaySorryYouLittleBastard(void) {
-    LOG_TRACE("()");
     NOT_IMPLEMENTED();
 }
 
 // IDA: void __cdecl UserSendMessage()
+// FUNCTION: CARM95 0x004a509e
 void UserSendMessage(void) {
-    LOG_TRACE("()");
 
     if (gNet_mode != eNet_mode_none && gCurrent_net_game->options.enable_text_messages) {
         gEntering_message = 1;
@@ -2489,42 +2521,40 @@ void UserSendMessage(void) {
 }
 
 // IDA: void __cdecl EnterUserMessage()
+// FUNCTION: CARM95 0x004a50cf
 void EnterUserMessage(void) {
-    static int last_key;
+    // GLOBAL: CARM95 0x51cf58
+    static int last_key = -1;
+    // GLOBAL: CARM95 0x51cf5c
     static int about_to_die;
+    // GLOBAL: CARM95 0x53d69c
     static tU32 next_time;
     char* the_message;
     char* p;
     int len;
     int the_key;
     int abuse_num;
-    LOG_TRACE("()");
 
-    if (!gEntering_message) {
-        return;
-    }
-    if (gNet_mode == eNet_mode_none) {
-        return;
-    }
-    if (!gCurrent_net_game->options.enable_text_messages) {
+    the_message = &gString[20];
+    if (!gEntering_message || gNet_mode == eNet_mode_none || !gCurrent_net_game->options.enable_text_messages) {
         return;
     }
     the_key = PDAnyKeyDown();
     if (gEntering_message == 1) {
-        if (the_key != -1) {
+        if (the_key == -1) {
+            gEntering_message = 2;
+        } else {
             return;
         }
-        gEntering_message = 2;
     }
     if (about_to_die) {
-        if (the_key != -1) {
-            return;
+        if (the_key == -1) {
+            about_to_die = 0;
+            gEntering_message = 0;
         }
-        gEntering_message = 0;
-        about_to_die = 0;
         return;
     }
-    if (the_key == last_key) {
+    if (the_key + 0 == last_key) {
         if (next_time < PDGetTotalTime()) {
             next_time += 100;
         } else {
@@ -2538,6 +2568,22 @@ void EnterUserMessage(void) {
     case -1:
     case KEY_SHIFT_ANY:
         break;
+    case KEY_RETURN:
+    case KEY_KP_ENTER:
+        len = strlen(gNet_players[gThis_net_player_index].player_name);
+        if (len > 18) {
+            break;
+        }
+        p = the_message - len - 2;
+        strcpy(p, gNet_players[gThis_net_player_index].player_name);
+        p[len + 0] = ':';
+        p[len + 1] = ' ';
+        gString[COUNT_OF(gString) - 1] = '\0';
+        NetSendHeadupToAllPlayers(p);
+        the_message[0] = '\0';
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -kFont_MEDIUMHD, GetMiscString(kMiscString_MESSAGE_SENT));
+        about_to_die = 1;
+        break;
     case KEY_CTRL_ANY:
     case KEY_CTRL_ANY_2:
     case KEY_TAB:
@@ -2547,62 +2593,53 @@ void EnterUserMessage(void) {
     case KEY_BACKSPACE:
     case KEY_DELETE:
     case KEY_LEFT:
-        len = strlen(&gString[20]);
+        len = strlen(the_message);
         if (len > 0) {
-            gString[20 + len - 1] = '\0';
-        }
-        break;
-    case KEY_RETURN:
-    case KEY_KP_ENTER:
-        len = strlen(gNet_players[gThis_net_player_index].player_name);
-        if (len <= 18) {
-            the_message = gString + 18 - len;
-            strcpy(the_message, gNet_players[gThis_net_player_index].player_name);
-            the_message[len + 0] = ':';
-            the_message[len + 1] = ' ';
-            gString[COUNT_OF(gString) - 1] = '\0';
-            NetSendHeadupToAllPlayers(the_message);
-            gString[20] = '\0';
-            NewTextHeadupSlot(eHeadupSlot_misc, 0, 1000, -4, GetMiscString(kMiscString_MESSAGE_SENT));
-            about_to_die = 1;
+            the_message[len - 1] = '\0';
         }
         break;
     default:
         if (gKey_mapping[KEYMAP_SEND_MESSAGE] == the_key) {
             about_to_die = 1;
-        } else if (the_key <= KEY_KP_NUMLOCK || the_key >= KEY_SPACE) {
-            len = strlen(&gString[20]);
-            if (len < 64 - 1) {
-                gString[20 + len] = PDGetASCIIFromKey(the_key);
-                if (gString[20 + len] < gFonts[4].offset || gString[20 + len] >= gFonts[4].offset + gFonts[4].num_entries) {
-                    gString[20 + len] = '\0';
+            break;
+        }
+        if (the_key >= KEY_KP_NUMLOCK + 1 && the_key <= KEY_SPACE - 1) {
+            if (the_key >= KEY_KP_0 && the_key <= KEY_KP_9) {
+                if (the_key == KEY_KP_0) {
+                    abuse_num = 9;
+                } else {
+                    abuse_num = the_key - KEY_KP_1;
                 }
-                gString[20 + len + 1] = '\0';
-            }
-        } else if (the_key < KEY_KP_0 || the_key >  KEY_KP_9) {
-            gEntering_message = 0;
-        } else {
-            if (the_key == KEY_KP_0) {
-                abuse_num = 9;
+                if (gAbuse_text[abuse_num] != NULL) {
+                    strcpy(the_message, gAbuse_text[abuse_num]);
+                }
+                break;
             } else {
-                abuse_num = the_key - KEY_KP_1;
-            }
-            if (gAbuse_text[abuse_num] != NULL) {
-                strcpy(&gString[20], gAbuse_text[abuse_num]);
+                gEntering_message = 0;
+                break;
             }
         }
+        len = strlen(the_message);
+        if (len < 64 - 1) {
+            the_message[len] = PDGetASCIIFromKey(the_key);
+            if (the_message[len] < gFonts[4].offset || the_message[len] >= gFonts[4].offset + gFonts[4].num_entries) {
+                the_message[len] = '\0';
+            }
+            the_message[len + 1] = '\0';
+        }
+        break;
     }
 }
 
 // IDA: void __cdecl DisplayUserMessage()
+// FUNCTION: CARM95 0x004a54a9
 void DisplayUserMessage(void) {
     char* the_message;
     int len;
     tDR_font* font;
-    LOG_TRACE("()");
 
-    font = &gFonts[FONT_NEWHITE];
     the_message = &gString[20];
+    font = &gFonts[FONT_NEWHITE];
     if (!gEntering_message || gNet_mode == eNet_mode_none) {
         return;
     }
@@ -2619,7 +2656,7 @@ void DisplayUserMessage(void) {
         gCurrent_graf_data->net_message_enter_y + 6 * font->height,
         1);
 
-    TransDRPixelmapText(gBack_screen, 20 * gBack_screen->width / 100, gCurrent_graf_data->net_message_enter_y, font, GetMiscString(kMiscString_ENTER_MESSAGE), 100);
+    TransDRPixelmapText(gBack_screen, 20 * gBack_screen->width / 100, gCurrent_graf_data->net_message_enter_y, &gFonts[FONT_NEWHITE], GetMiscString(kMiscString_ENTER_MESSAGE), 100);
     OoerrIveGotTextInMeBoxMissus(
         FONT_NEWHITE,
         the_message,
@@ -2633,13 +2670,13 @@ void DisplayUserMessage(void) {
 }
 
 // IDA: void __cdecl InitAbuseomatic()
+// FUNCTION: CARM95 0x004a567a
 void InitAbuseomatic(void) {
     char path[256];
     char s[256];
     FILE* f;
     int i;
     int len;
-    LOG_TRACE("()");
 
     gString[20] = '\0';
     PDBuildAppPath(path);
@@ -2655,14 +2692,13 @@ void InitAbuseomatic(void) {
         if (fgets(s, COUNT_OF(s) - 1, f) == NULL) {
             break;
         }
-        len = strlen(s);
-        if (len > 63) {
+        if (strlen(s) > 63) {
             s[63] = '\0';
         }
         len = strlen(s);
         while (len != 0 && s[len - 1] < ' ') {
-            s[len - 1] = '\0';
             len--;
+            s[len] = '\0';
         }
         gAbuse_text[i] = BrMemAllocate(strlen(s) + 1, kMem_abuse_text);
         strcpy(gAbuse_text[i], s);
@@ -2671,9 +2707,9 @@ void InitAbuseomatic(void) {
 }
 
 // IDA: void __cdecl DisposeAbuseomatic()
+// FUNCTION: CARM95 0x004a5868
 void DisposeAbuseomatic(void) {
     int i;
-    LOG_TRACE("()");
 
     for (i = 0; i < COUNT_OF(gAbuse_text); i++) {
         if (gAbuse_text[i] != NULL) {

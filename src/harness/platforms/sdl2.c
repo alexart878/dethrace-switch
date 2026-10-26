@@ -8,215 +8,159 @@
 #include "harness/config.h"
 #include "harness/hooks.h"
 #include "harness/trace.h"
-#include "sdl2_scancode_to_dinput.h"
+#include "sdl2_scancode_map.h"
+#include "sdl2_syms.h"
 
-SDL_Window* window;
-SDL_Renderer* renderer;
-SDL_Texture* screen_texture;
-uint32_t converted_palette[256];
-br_pixelmap* last_screen_src;
+SDL_COMPILE_TIME_ASSERT(sdl2_platform_requires_SDL2, SDL_MAJOR_VERSION == 2);
 
-SDL_GLContext* gl_context;
+static SDL_Window* window;
+static SDL_Renderer* renderer;
+static SDL_Texture* screen_texture;
+static br_uint_32 converted_palette[256];
+static br_pixelmap* last_screen_src;
 
-int render_width, render_height;
+static SDL_GLContext* gl_context;
 
-Uint32 last_frame_time;
+static int render_width, render_height;
 
-uint8_t directinput_key_state[SDL_NUM_SCANCODES];
+static Uint32 last_frame_time;
 
-struct {
+static void (*gKeyHandler_func)(void);
+
+// 32 bytes, 1 bit per key. Matches dos executable behavior
+static br_uint_32 key_state[8];
+
+static struct {
     int x, y;
     float scale_x, scale_y;
 } viewport;
 
 // Callbacks back into original game code
 extern void QuitGame(void);
-extern uint32_t gKeyboard_bits[8];
 extern br_pixelmap* gBack_screen;
+
+#ifdef DETHRACE_SDL_DYNAMIC
+#ifdef _WIN32
+static const char* const possible_locations[] = {
+    "SDL2.dll",
+};
+#elif defined(__APPLE__)
+#define SHARED_OBJECT_NAME "libSDL2"
+#define SDL2_LIBNAME "libSDL2.dylib"
+#define SDL2_FRAMEWORK "SDL2.framework/Versions/A/SDL2"
+static const char* const possible_locations[] = {
+    "@loader_path/" SDL2_LIBNAME,                     /* MyApp.app/Contents/MacOS/libSDL2_dylib */
+    "@loader_path/../Frameworks/" SDL2_FRAMEWORK,     /* MyApp.app/Contents/Frameworks/SDL2_framework */
+    "@executable_path/" SDL2_LIBNAME,                 /* MyApp.app/Contents/MacOS/libSDL2_dylib */
+    "@executable_path/../Frameworks/" SDL2_FRAMEWORK, /* MyApp.app/Contents/Frameworks/SDL2_framework */
+    "/Library/Frameworks/" SDL2_FRAMEWORK,            /* /Library/Frameworks/SDL2_framework */
+    SDL2_LIBNAME                                      /* oh well, anywhere the system can see the .dylib (/usr/local/lib or whatever) */
+};
+#else
+#include "elfdlopennote.h"
+#ifdef ELF_NOTE_DLOPEN
+ELF_NOTE_DLOPEN(
+    "SDL2",
+    "Platform-specific operations such as creating windows and handling events",
+    ELF_NOTE_DLOPEN_PRIORITY_SUGGESTED,
+    "libSDL2-2.0.so.0",
+    "libSDL2-2.0.so");
+#endif
+static const char* const possible_locations[] = {
+    "libSDL2-2.0.so.0",
+    "libSDL2-2.0.so",
+};
+#endif
+
+static void* sdl2_so;
+#endif
+
+#define SDL_NAME "SDL2"
+#define OBJECT_NAME sdl2_so
+#define SYMBOL_PREFIX SDL2_
+#define FOREACH_SDLX_SYM FOREACH_SDL2_SYM
+
+#include "sdl_dyn_common.h"
 
 #ifdef __SWITCH__
 
-PadState pad;
+static PadState pad;
 
-uint32_t switch_buttons[] = {
-	HidNpadButton_A,
-    HidNpadButton_B,
-    HidNpadButton_X,
-    HidNpadButton_Y,
-    HidNpadButton_StickL,
-    HidNpadButton_StickR,
-    HidNpadButton_L,
-    HidNpadButton_R,
-    HidNpadButton_ZL,
-    HidNpadButton_ZR,
-    HidNpadButton_Plus,
-    HidNpadButton_Minus,
-    HidNpadButton_Left,
-    HidNpadButton_Up,
-    HidNpadButton_Right,
-    HidNpadButton_Down,
+// Joy-Con / Pro Controller buttons mapped onto the keyboard keys the game already understands.
+static const struct {
+    uint64_t button;
+    SDL_Scancode scancode;
+} switch_button_map[] = {
+    { HidNpadButton_A, SDL_SCANCODE_SPACE },
+    { HidNpadButton_B, SDL_SCANCODE_B },
+    { HidNpadButton_X, SDL_SCANCODE_X },
+    { HidNpadButton_Y, SDL_SCANCODE_Y },
+    { HidNpadButton_L, SDL_SCANCODE_L },
+    { HidNpadButton_R, SDL_SCANCODE_R },
+    { HidNpadButton_ZL, SDL_SCANCODE_KP_2 },
+    { HidNpadButton_ZR, SDL_SCANCODE_KP_8 },
+    { HidNpadButton_Plus, SDL_SCANCODE_RETURN },
+    { HidNpadButton_Minus, SDL_SCANCODE_ESCAPE },
+    { HidNpadButton_Left, SDL_SCANCODE_MINUS },
+    { HidNpadButton_Up, SDL_SCANCODE_KP_8 },
+    { HidNpadButton_Right, SDL_SCANCODE_EQUALS },
+    { HidNpadButton_Down, SDL_SCANCODE_KP_2 },
 };
 
-static int map_switch_key_to_sdl_scancode(uint32_t key) 
-{
-    switch (key) 
-    {
-        case HidNpadButton_A:       return SDL_SCANCODE_SPACE;
-        case HidNpadButton_B:       return SDL_SCANCODE_B;
-        case HidNpadButton_X:       return SDL_SCANCODE_X;
-        case HidNpadButton_Y:       return SDL_SCANCODE_Y;
-        case HidNpadButton_StickL:  return -1;
-        case HidNpadButton_StickR:  return -1;
-        case HidNpadButton_L:       return SDL_SCANCODE_L;
-        case HidNpadButton_R:       return SDL_SCANCODE_R;
-        case HidNpadButton_ZL:      return SDL_SCANCODE_KP_2;
-        case HidNpadButton_ZR:      return SDL_SCANCODE_KP_8;
-        case HidNpadButton_Plus:    return SDL_SCANCODE_RETURN;
-        case HidNpadButton_Minus:   return SDL_SCANCODE_ESCAPE;
-        case HidNpadButton_Left:    return SDL_SCANCODE_MINUS;
-        case HidNpadButton_Up:      return SDL_SCANCODE_KP_8;
-        case HidNpadButton_Right:   return SDL_SCANCODE_EQUALS;
-        case HidNpadButton_Down:    return SDL_SCANCODE_KP_2;
+#define SWITCH_STICK_DEADZONE 0x3000
 
-        default: return -1;
+static int switch_keys_changed;
+
+static void switch_set_key(SDL_Scancode scancode, int down) {
+    int dethrace_scancode = sdl_scancode_map[scancode];
+    br_uint_32 old_state;
+
+    if (dethrace_scancode == 0) {
+        return;
+    }
+    old_state = key_state[dethrace_scancode >> 5];
+    if (down) {
+        key_state[dethrace_scancode >> 5] |= (1 << (dethrace_scancode & 0x1F));
+    } else {
+        key_state[dethrace_scancode >> 5] &= ~(1 << (dethrace_scancode & 0x1F));
+    }
+    if (key_state[dethrace_scancode >> 5] != old_state) {
+        switch_keys_changed = 1;
     }
 }
 
-void process_switch_input(int* dinput_key)
-{
+static void switch_stick_axis(int value, SDL_Scancode negative, SDL_Scancode positive) {
+    switch_set_key(negative, value < -SWITCH_STICK_DEADZONE);
+    switch_set_key(positive, value > SWITCH_STICK_DEADZONE);
+}
+
+static void switch_process_input(void) {
+    uint64_t down, up;
+    size_t i;
+    HidAnalogStickState left, right;
+
+    switch_keys_changed = 0;
     padUpdate(&pad);
+    down = padGetButtonsDown(&pad);
+    up = padGetButtonsUp(&pad);
 
-    u64 kDown = padGetButtonsDown(&pad);
-    u64 kUp = padGetButtonsUp(&pad);
-
-    for (int i = 0; i < 16; ++i)
-    {
-        if (kDown & BIT(i)) 
-        {
-            int sdl_scancode = map_switch_key_to_sdl_scancode(switch_buttons[i]);
-            
-            if (sdl_scancode >= 0) 
-            {
-                *dinput_key = sdlScanCodeToDirectInputKeyNum[sdl_scancode];
-                
-                if (*dinput_key == 0) 
-                {
-                    LOG_WARN("unexpected scan code %s (%d)", SDL_GetScancodeName(sdl_scancode), sdl_scancode);
-                    continue;
-                }
-                
-                directinput_key_state[*dinput_key] = 0x80;
-                gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-            }
-        } 
-        else if (kUp & BIT(i))
-        {
-            int sdl_scancode = map_switch_key_to_sdl_scancode(switch_buttons[i]);
-            
-            if (sdl_scancode >= 0) 
-            {
-                *dinput_key = sdlScanCodeToDirectInputKeyNum[sdl_scancode];
-                
-                if (*dinput_key != 0)
-                {
-                    directinput_key_state[*dinput_key] = 0x00;
-                    gKeyboard_bits[*dinput_key >> 5] &= ~(1 << (*dinput_key & 0x1F));
-                }
-            }
+    for (i = 0; i < sizeof(switch_button_map) / sizeof(switch_button_map[0]); i++) {
+        if (down & switch_button_map[i].button) {
+            switch_set_key(switch_button_map[i].scancode, 1);
+        } else if (up & switch_button_map[i].button) {
+            switch_set_key(switch_button_map[i].scancode, 0);
         }
     }
 
-    HidAnalogStickState analog_stick_l = padGetStickPos(&pad, 0);
-    HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
+    left = padGetStickPos(&pad, 0);
+    right = padGetStickPos(&pad, 1);
+    switch_stick_axis(left.x, SDL_SCANCODE_KP_4, SDL_SCANCODE_KP_6);
+    switch_stick_axis(right.x, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT);
+    switch_stick_axis(right.y, SDL_SCANCODE_DOWN, SDL_SCANCODE_UP);
 
-    // Left stick X
-
-    if (analog_stick_l.x > 0x3000)
-    {
-        // Right 
-        *dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_6];
-        directinput_key_state[*dinput_key] = 0x80;
-        gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-    }
-    else if (analog_stick_l.x < -0x3000)
-    {
-        // Left
-        *dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_4];
-        directinput_key_state[*dinput_key] = 0x80;
-        gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-    }
-    else
-    {
-        // Neutral
-        
-        int dinput_key_kp_4 = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_4];
-        int dinput_key_kp_6 = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_KP_6];
-
-        directinput_key_state[dinput_key_kp_4] = 0x00;
-        directinput_key_state[dinput_key_kp_6] = 0x00;
-
-        gKeyboard_bits[dinput_key_kp_4 >> 5] &= ~(1 << (dinput_key_kp_4 & 0x1F));
-        gKeyboard_bits[dinput_key_kp_6 >> 5] &= ~(1 << (dinput_key_kp_6 & 0x1F));
-    }
-
-    // Right stick X
-
-    if (analog_stick_r.x > 0x3000) 
-    {
-        // Right
-        *dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_RIGHT];
-        directinput_key_state[*dinput_key] = 0x80;
-        gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-    } 
-    else if (analog_stick_r.x < -0x3000) 
-    {
-        // Left
-        *dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_LEFT];
-        directinput_key_state[*dinput_key] = 0x80;
-        gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-    } 
-    else 
-    {
-        // Neutral
-
-        int dinput_key_right = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_RIGHT];
-        int dinput_key_left = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_LEFT];
-
-        directinput_key_state[dinput_key_right] = 0x00;
-        directinput_key_state[dinput_key_left] = 0x00;
-
-        gKeyboard_bits[dinput_key_right >> 5] &= ~(1 << (dinput_key_right & 0x1F));
-        gKeyboard_bits[dinput_key_left >> 5] &= ~(1 << (dinput_key_left & 0x1F));
-    }
-
-    // Right stick Y
-
-    if (analog_stick_r.y > 0x3000) 
-    {
-        // Up
-        *dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_UP];
-        directinput_key_state[*dinput_key] = 0x80;
-        gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-    } 
-    else if (analog_stick_r.y < -0x3000) 
-    {
-        // Down
-        *dinput_key = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_DOWN];
-        directinput_key_state[*dinput_key] = 0x80;
-        gKeyboard_bits[*dinput_key >> 5] |= (1 << (*dinput_key & 0x1F));
-    } 
-    else 
-    {
-        // Neutral
-
-        int dinput_key_up = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_UP];
-        int dinput_key_down = sdlScanCodeToDirectInputKeyNum[SDL_SCANCODE_DOWN];
-
-        directinput_key_state[dinput_key_up] = 0x00;
-        directinput_key_state[dinput_key_down] = 0x00;
-        
-        gKeyboard_bits[dinput_key_up >> 5] &= ~(1 << (dinput_key_up & 0x1F));
-        gKeyboard_bits[dinput_key_down >> 5] &= ~(1 << (dinput_key_down & 0x1F));
+    // the game only sees keys after the handler copies key_state into gKeyboard_bits
+    if (switch_keys_changed && gKeyHandler_func != NULL) {
+        gKeyHandler_func();
     }
 }
 
@@ -245,20 +189,22 @@ static void calculate_viewport(int window_width, int window_height) {
     viewport.scale_y = (float)vp_height / gBack_screen->height;
 }
 
-static int set_window_pos(void* hWnd, int x, int y, int nWidth, int nHeight) {
+static int SDL2_Harness_SetWindowPos(void* hWnd, int x, int y, int nWidth, int nHeight) {
     // SDL_SetWindowPosition(hWnd, x, y);
     if (nWidth == 320 && nHeight == 200) {
         nWidth = 640;
         nHeight = 400;
     }
-    SDL_SetWindowSize(hWnd, nWidth, nHeight);
+    SDL2_SetWindowSize(hWnd, nWidth, nHeight);
     return 0;
 }
 
-static void destroy_window(void* hWnd) {
-    // SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+static void SDL2_Harness_DestroyWindow(void) {
+    // SDL2_GL_DeleteContext(context);
+    if (window != NULL) {
+        SDL2_DestroyWindow(window);
+    }
+    SDL2_Quit();
     window = NULL;
 }
 
@@ -268,24 +214,18 @@ static int is_only_key_modifier(int modifier_flags, int flag_check) {
     return (modifier_flags & flag_check) && (modifier_flags & (KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI)) == (modifier_flags & flag_check);
 }
 
-static void get_and_handle_message(MSG_* msg) {
+static void SDL2_Harness_ProcessWindowMessages(void) {
     SDL_Event event;
-    int dinput_key;
 
 #ifdef __SWITCH__
-
-    process_switch_input(&dinput_key);
-
+    switch_process_input();
 #endif
 
-    while (SDL_PollEvent(&event)) {
+    while (SDL2_PollEvent(&event)) {
         switch (event.type) {
-        
-#ifndef __SWITCH__
-        
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            if (event.key.windowID != SDL_GetWindowID(window)) {
+            if (event.key.windowID != SDL2_GetWindowID(window)) {
                 continue;
             }
             if (event.key.keysym.sym == SDLK_RETURN) {
@@ -296,29 +236,25 @@ static void get_and_handle_message(MSG_* msg) {
                     }
                 } else if (event.key.type == SDL_KEYUP) {
                     if (is_only_key_modifier(event.key.keysym.mod, KMOD_ALT)) {
-                        SDL_SetWindowFullscreen(window, (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+                        SDL2_SetWindowFullscreen(window, (SDL2_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                     }
                 }
             }
 
-            // Map incoming SDL scancode to DirectInput DIK_* key code.
-            // https://github.com/DanielGibson/Snippets/blob/master/sdl2_scancode_to_dinput.h
-            dinput_key = sdlScanCodeToDirectInputKeyNum[event.key.keysym.scancode];
-            if (dinput_key == 0) {
-                LOG_WARN("unexpected scan code %s (%d)", SDL_GetScancodeName(event.key.keysym.scancode), event.key.keysym.scancode);
+            // Map incoming SDL scancode to PC scan code as used by game code
+            int dethrace_scancode = sdl_scancode_map[event.key.keysym.scancode];
+            if (dethrace_scancode == 0) {
+                LOG_WARN3("unexpected scan code %s (%d)", SDL2_GetScancodeName(event.key.keysym.scancode), event.key.keysym.scancode);
                 return;
             }
-            // DInput expects high bit to be set if key is down
-            // https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee418261(v=vs.85)
-            directinput_key_state[dinput_key] = (event.type == SDL_KEYDOWN ? 0x80 : 0);
-            if (event.type == SDL_KEYDOWN) {
-                gKeyboard_bits[dinput_key >> 5] |= (1 << (dinput_key & 0x1F));
-            } else {
-                gKeyboard_bits[dinput_key >> 5] &= ~(1 << (dinput_key & 0x1F));
-            }
-            break;
 
-#endif
+            if (event.type == SDL_KEYDOWN) {
+                key_state[dethrace_scancode >> 5] |= (1 << (dethrace_scancode & 0x1F));
+            } else {
+                key_state[dethrace_scancode >> 5] &= ~(1 << (dethrace_scancode & 0x1F));
+            }
+            gKeyHandler_func();
+            break;
 
         case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -332,35 +268,39 @@ static void get_and_handle_message(MSG_* msg) {
     }
 }
 
-static void get_keyboard_state(unsigned int count, uint8_t* buffer) {
-    memcpy(buffer, directinput_key_state, count);
+static void SDL2_Harness_SetKeyHandler(void (*handler_func)(void)) {
+    gKeyHandler_func = handler_func;
 }
 
-static int get_mouse_buttons(int* pButton1, int* pButton2) {
-    if (SDL_GetMouseFocus() != window) {
+static void SDL2_Harness_GetKeyboardState(br_uint_32* buffer) {
+    memcpy(buffer, key_state, sizeof(key_state));
+}
+
+static int SDL2_Harness_GetMouseButtons(int* pButton1, int* pButton2) {
+    if (SDL2_GetMouseFocus() != window) {
         *pButton1 = 0;
         *pButton2 = 0;
         return 0;
     }
-    int state = SDL_GetMouseState(NULL, NULL);
+    int state = SDL2_GetMouseState(NULL, NULL);
     *pButton1 = state & SDL_BUTTON_LMASK;
     *pButton2 = state & SDL_BUTTON_RMASK;
     return 0;
 }
 
-static int get_mouse_position(int* pX, int* pY) {
+static int SDL2_Harness_GetMousePosition(int* pX, int* pY) {
     int window_width, window_height;
     float lX, lY;
 
-    if (SDL_GetMouseFocus() != window) {
+    if (SDL2_GetMouseFocus() != window) {
         return 0;
     }
-    SDL_GetWindowSize(window, &window_width, &window_height);
+    SDL2_GetWindowSize(window, &window_width, &window_height);
 
-    SDL_GetMouseState(pX, pY);
+    SDL2_GetMouseState(pX, pY);
     if (renderer != NULL) {
         // software renderer
-        SDL_RenderWindowToLogical(renderer, *pX, *pY, &lX, &lY);
+        SDL2_RenderWindowToLogical(renderer, *pX, *pY, &lX, &lY);
     } else {
         // hardware renderer
         // handle case where window is stretched larger than the pixel size
@@ -373,7 +313,7 @@ static int get_mouse_position(int* pX, int* pY) {
 }
 
 static void limit_fps(void) {
-    Uint32 now = SDL_GetTicks();
+    Uint32 now = SDL2_GetTicks();
     if (last_frame_time != 0) {
         unsigned int frame_time = now - last_frame_time;
         last_frame_time = now;
@@ -384,24 +324,18 @@ static void limit_fps(void) {
             }
         }
     }
-    last_frame_time = SDL_GetTicks();
+    last_frame_time = SDL2_GetTicks();
 }
 
-int show_error_message(void* window, char* text, char* caption) {
-    fprintf(stderr, "%s", text);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, caption, text, window);
+static int SDL2_Harness_ShowErrorMessage(char* title, char* message) {
+    fprintf(stderr, "%s", message);
+    SDL2_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, message, window);
     return 0;
 }
 
-static void create_window(char* title, int width, int height, tHarness_window_type window_type) {
-    
-#ifdef __SWITCH__
-
-    padInitializeDefault(&pad);
-
-#endif
-    
+static void SDL2_Harness_CreateWindow(const char* title, int width, int height, tHarness_window_type window_type) {
     int window_width, window_height;
+    Uint32 extra_window_flags;
 
     render_width = width;
     render_height = height;
@@ -415,125 +349,128 @@ static void create_window(char* title, int width, int height, tHarness_window_ty
         window_height = 480;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        LOG_PANIC("SDL_INIT_VIDEO error: %s", SDL_GetError());
+    if (SDL2_Init(SDL_INIT_VIDEO) != 0) {
+        LOG_PANIC2("SDL_INIT_VIDEO error: %s", SDL2_GetError());
     }
+
+    extra_window_flags = SDL_WINDOW_RESIZABLE;
+    if (harness_game_config.start_full_screen) {
+        extra_window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    }
+#ifdef __SWITCH__
+    padInitializeDefault(&pad);
+    extra_window_flags = SDL_WINDOW_FULLSCREEN;
+#endif
 
     if (window_type == eWindow_type_opengl) {
 
-#ifndef __SWITCH__
-    
-        window = SDL_CreateWindow(title,
+        window = SDL2_CreateWindow(title,
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
             window_width, window_height,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-
-#else
-
-        window = SDL_CreateWindow(title,
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
-            window_width, window_height,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
-
-#endif
+            extra_window_flags | SDL_WINDOW_OPENGL);
 
         if (window == NULL) {
-            LOG_PANIC("Failed to create window: %s", SDL_GetError());
+            LOG_PANIC2("Failed to create window: %s", SDL2_GetError());
         }
 
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-        gl_context = SDL_GL_CreateContext(window);
+        SDL2_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL2_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL2_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+        gl_context = SDL2_GL_CreateContext(window);
 
         if (gl_context == NULL) {
-            LOG_WARN("Failed to create OpenGL core profile: %s. Trying OpenGLES...", SDL_GetError());
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-            gl_context = SDL_GL_CreateContext(window);
+            LOG_WARN2("Failed to create OpenGL core profile: %s. Trying OpenGLES...", SDL2_GetError());
+            SDL2_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+            SDL2_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+            SDL2_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+            gl_context = SDL2_GL_CreateContext(window);
         }
         if (gl_context == NULL) {
-            LOG_PANIC("Failed to create OpenGL context: %s", SDL_GetError());
+            LOG_PANIC2("Failed to create OpenGL context: %s", SDL2_GetError());
         }
-        SDL_GL_SetSwapInterval(1);
+        SDL2_GL_SetSwapInterval(1);
 
     } else {
-
-#ifndef __SWITCH__
-
-        window = SDL_CreateWindow(title,
+        window = SDL2_CreateWindow(title,
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
             window_width, window_height,
-            SDL_WINDOW_RESIZABLE);
-
-#else
-
-        window = SDL_CreateWindow(title,
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
-            window_width, window_height,
-            SDL_WINDOW_FULLSCREEN);
-
-#endif
-
+            extra_window_flags);
         if (window == NULL) {
-            LOG_PANIC("Failed to create window: %s", SDL_GetError());
+            LOG_PANIC2("Failed to create window: %s", SDL2_GetError());
         }
 
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+        renderer = SDL2_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
         if (renderer == NULL) {
-            LOG_PANIC("Failed to create renderer: %s", SDL_GetError());
+            LOG_PANIC2("Failed to create renderer: %s", SDL2_GetError());
         }
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-        SDL_RenderSetLogicalSize(renderer, render_width, render_height);
+        SDL2_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        SDL2_RenderSetLogicalSize(renderer, render_width, render_height);
 
-        screen_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+        screen_texture = SDL2_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
         if (screen_texture == NULL) {
             SDL_RendererInfo info;
-            SDL_GetRendererInfo(renderer, &info);
+            SDL2_GetRendererInfo(renderer, &info);
             for (Uint32 i = 0; i < info.num_texture_formats; i++) {
-                LOG_INFO("%s\n", SDL_GetPixelFormatName(info.texture_formats[i]));
+                LOG_INFO2("%s\n", SDL2_GetPixelFormatName(info.texture_formats[i]));
             }
-            LOG_PANIC("Failed to create screen_texture: %s", SDL_GetError());
+            LOG_PANIC2("Failed to create screen_texture: %s", SDL2_GetError());
         }
     }
 
-    SDL_ShowCursor(SDL_DISABLE);
+    SDL2_ShowCursor(SDL_DISABLE);
 
     viewport.x = 0;
     viewport.y = 0;
     viewport.scale_x = 1;
     viewport.scale_y = 1;
 
-    if (harness_game_config.start_full_screen) {
-        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+#ifdef __SWITCH__
+    {
+        // The fullscreen window never gets a resize event, so fit the render area to it here
+        // or the GL output stays at its native size in the corner.
+        int win_w, win_h, vp_w, vp_h;
+
+        SDL2_GetWindowSize(window, &win_w, &win_h);
+        vp_w = win_w;
+        vp_h = win_h;
+        if ((float)win_w / win_h > (float)render_width / render_height) {
+            vp_w = win_h * render_width / render_height;
+        } else {
+            vp_h = win_w * render_height / render_width;
+        }
+        viewport.x = (win_w - vp_w) / 2;
+        viewport.y = (win_h - vp_h) / 2;
+        viewport.scale_x = (float)vp_w / render_width;
+        viewport.scale_y = (float)vp_h / render_height;
     }
+#endif
 }
 
-static void swap(br_pixelmap* back_buffer) {
-    uint8_t* src_pixels = back_buffer->pixels;
-    uint32_t* dest_pixels;
+static void SDL2_Harness_Swap(br_pixelmap* back_buffer) {
+    int i;
     int dest_pitch;
+    uint8_t* src_pixels;
+    br_uint_32* dest_pixels;
 
-    get_and_handle_message(NULL);
+    SDL2_Harness_ProcessWindowMessages();
 
     if (gl_context != NULL) {
-        SDL_GL_SwapWindow(window);
+        SDL2_GL_SwapWindow(window);
     } else {
-        SDL_LockTexture(screen_texture, NULL, (void**)&dest_pixels, &dest_pitch);
-        for (int i = 0; i < back_buffer->height * back_buffer->width; i++) {
+        src_pixels = back_buffer->pixels;
+
+        SDL2_LockTexture(screen_texture, NULL, (void**)&dest_pixels, &dest_pitch);
+        for (i = 0; i < back_buffer->height * back_buffer->width; i++) {
             *dest_pixels = converted_palette[*src_pixels];
             dest_pixels++;
             src_pixels++;
         }
-        SDL_UnlockTexture(screen_texture);
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
-        SDL_RenderPresent(renderer);
+        SDL2_UnlockTexture(screen_texture);
+        SDL2_RenderClear(renderer);
+        SDL2_RenderCopy(renderer, screen_texture, NULL, NULL);
+        SDL2_RenderPresent(renderer);
         last_screen_src = back_buffer;
     }
 
@@ -542,37 +479,50 @@ static void swap(br_pixelmap* back_buffer) {
     }
 }
 
-static void palette_changed(br_colour entries[256]) {
-    for (int i = 0; i < 256; i++) {
-        converted_palette[i] = (0xff << 24 | BR_RED(entries[i]) << 16 | BR_GRN(entries[i]) << 8 | BR_BLU(entries[i]));
+static void SDL2_Harness_PaletteChanged(br_colour entries[256]) {
+    int i;
+    for (i = 0; i < 256; i++) {
+        converted_palette[i] = (0xffu << 24 | BR_RED(entries[i]) << 16 | BR_GRN(entries[i]) << 8 | BR_BLU(entries[i]));
     }
     if (last_screen_src != NULL) {
-        swap(last_screen_src);
+        SDL2_Harness_Swap(last_screen_src);
     }
 }
 
-static void get_viewport(int* x, int* y, float* width_multipler, float* height_multiplier) {
+static void SDL2_Harness_GetViewport(int* x, int* y, float* width_multipler, float* height_multiplier) {
     *x = viewport.x;
     *y = viewport.y;
     *width_multipler = viewport.scale_x;
     *height_multiplier = viewport.scale_y;
 }
 
-void Harness_Platform_Init(tHarness_platform* platform) {
-    platform->ProcessWindowMessages = get_and_handle_message;
-    platform->Sleep = SDL_Delay;
-    platform->GetTicks = SDL_GetTicks;
-    platform->ShowCursor = SDL_ShowCursor;
-    platform->SetWindowPos = set_window_pos;
-    platform->DestroyWindow = destroy_window;
-    platform->GetKeyboardState = get_keyboard_state;
-    platform->GetMousePosition = get_mouse_position;
-    platform->GetMouseButtons = get_mouse_buttons;
-    platform->ShowErrorMessage = show_error_message;
+static int SDL2_Harness_Platform_Init(tHarness_platform* platform) {
+    if (SDL2_LoadSymbols() != 0) {
+        return 1;
+    }
+    platform->ProcessWindowMessages = SDL2_Harness_ProcessWindowMessages;
+    platform->Sleep = SDL2_Delay;
+    platform->GetTicks = SDL2_GetTicks;
+    platform->ShowCursor = SDL2_ShowCursor;
+    platform->SetWindowPos = SDL2_Harness_SetWindowPos;
+    platform->DestroyWindow = SDL2_Harness_DestroyWindow;
+    platform->SetKeyHandler = SDL2_Harness_SetKeyHandler;
+    platform->GetKeyboardState = SDL2_Harness_GetKeyboardState;
+    platform->GetMousePosition = SDL2_Harness_GetMousePosition;
+    platform->GetMouseButtons = SDL2_Harness_GetMouseButtons;
+    platform->ShowErrorMessage = SDL2_Harness_ShowErrorMessage;
 
-    platform->CreateWindow_ = create_window;
-    platform->Swap = swap;
-    platform->PaletteChanged = palette_changed;
-    platform->GL_GetProcAddress = SDL_GL_GetProcAddress;
-    platform->GetViewport = get_viewport;
-}
+    platform->CreateWindow_ = SDL2_Harness_CreateWindow;
+    platform->Swap = SDL2_Harness_Swap;
+    platform->PaletteChanged = SDL2_Harness_PaletteChanged;
+    platform->GL_GetProcAddress = SDL2_GL_GetProcAddress;
+    platform->GetViewport = SDL2_Harness_GetViewport;
+    return 0;
+};
+
+const tPlatform_bootstrap SDL2_bootstrap = {
+    "sdl2",
+    "SDL2 video backend (libsdl.org)",
+    ePlatform_cap_software | ePlatform_cap_opengl,
+    SDL2_Harness_Platform_Init,
+};

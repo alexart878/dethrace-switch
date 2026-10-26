@@ -11,11 +11,17 @@
 #define MAX_PATH_LENGTH 1024
 extern void dr_dprintf(char* fmt_string, ...);
 
+// GLOBAL: CARM95 0x00544e0c
 int gS3_sample_filter_funcs_registered;
 long gS3_last_file_length;
+
+// GLOBAL: CARM95 0x00544e14
 tS3_sample_filter* gS3_sample_filter_func;
+
+// GLOBAL: CARM95 0x00544e18
 tS3_sample_filter* gS3_sample_filter_disable_func;
 
+// FUNCTION: CARM95 0x004993A7
 int S3LoadSample(tS3_sound_id id) {
     // changed by dethrace for compatibility
     // char filename[80]; // [esp+10h] [ebp-5Ch] BYREF
@@ -85,6 +91,7 @@ int S3LoadSample(tS3_sound_id id) {
     return eS3_error_none;
 }
 
+// FUNCTION: CARM95 0x0049CC7B
 int S3ReadWavHeader_Win95(char* buf, tWAVEFORMATEX_** pWav_format, char** data_ptr, int* pData_size) {
     int riff_len;
     char* file_eof;         // [esp+10h] [ebp-14h]
@@ -146,6 +153,7 @@ int S3ReadWavHeader_Win95(char* buf, tWAVEFORMATEX_** pWav_format, char** data_p
     return 0;
 }
 
+// FUNCTION: CARM95 0x0049CE68
 void* S3LoadWavFile_DOS(char* pFile_name) {
     FILE* f;
     long file_len;
@@ -179,6 +187,7 @@ void* S3LoadWavFile_DOS(char* pFile_name) {
     return 0;
 }
 
+// xFUNCTION: CARM95 0x0049CE68
 void* S3LoadWavFile_Win95(char* pFile_name, tS3_sample* pSample) {
     FILE* f;           // [esp+Ch] [ebp-C8h]
     size_t bytes_read; // [esp+14h] [ebp-C0h] BYREF
@@ -257,6 +266,7 @@ void* S3LoadWavFile_Win95(char* pFile_name, tS3_sample* pSample) {
     return NULL;
 }
 
+// FUNCTION: CARM95 0x0049D69C
 int S3StopSample(tS3_channel* chan) {
     if (chan->tag == 0) {
         return 1;
@@ -275,6 +285,7 @@ int S3StopSample(tS3_channel* chan) {
     return 1;
 }
 
+// FUNCTION: CARM95 0x004C94EE
 int S3ExecuteSampleFilterFuncs(tS3_channel* chan) {
     if (((chan->descriptor->special_fx == 0) & gS3_sample_filter_funcs_registered) != 0) {
         gS3_sample_filter_func(1, chan->tag);
@@ -286,6 +297,21 @@ int S3ExecuteSampleFilterFuncs(tS3_channel* chan) {
     return 0;
 }
 
+// FUNCTION: CARM95 0x004C9577
+int S3GetSampleLength(tS3_sound_tag tag) {
+    tS3_descriptor* descriptor;
+    tS3_sample* sound_data;
+
+    sound_data = (tS3_sample*)S3GetDescriptorByID(tag);
+    if (!sound_data) {
+        return 0;
+    }
+
+    descriptor = (tS3_descriptor*)((tS3_descriptor*)sound_data)->sound_data;
+    return 1000 * ((tS3_sample*)descriptor)->size / ((tS3_sample*)descriptor)->rate;
+}
+
+// FUNCTION: CARM95 0x0049D71C
 int S3PlaySample(tS3_channel* chan) {
     tS3_sample* sound_data;
 
@@ -352,6 +378,7 @@ int S3ReleaseTypeStructs(tS3_channel* chan) {
     return 1;
 }
 
+// FUNCTION: CARM95 0x0049D22D
 int S3SyncSampleVolumeAndPan(tS3_channel* chan) {
 
     float pan_ratio; // [esp+38h] [ebp-8h]
@@ -395,6 +422,7 @@ int S3SyncSampleVolumeAndPan(tS3_channel* chan) {
     return 1;
 }
 
+// FUNCTION: CARM95 0x0049D468
 int S3SyncSampleRate(tS3_channel* chan) {
     int new_rate;
     tS3_sample* sound_data;
@@ -416,7 +444,20 @@ int S3SyncSampleRate(tS3_channel* chan) {
     return 1;
 }
 
-int S3SetEffects(tS3_sample_filter* filter1, tS3_sample_filter* filter2) {
-    STUB_ONCE();
+// FUNCTION: CARM95 0x004C946D
+int S3RegisterSampleFilters(tS3_sample_filter* filter1, tS3_sample_filter* filter2) {
+    if (filter1 != NULL) {
+        gS3_sample_filter_func = filter1;
+    }
+    if (filter2 != NULL) {
+        gS3_sample_filter_disable_func = filter2;
+    } else if (filter2 == NULL) {
+        gS3_sample_filter_disable_func = gS3_sample_filter_func;
+    }
+    if (filter1 == NULL || (filter1 == NULL && filter2 == NULL)) {
+        gS3_sample_filter_funcs_registered = 0;
+    } else {
+        gS3_sample_filter_funcs_registered = 1;
+    }
     return 0;
 }

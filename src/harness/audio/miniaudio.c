@@ -6,19 +6,6 @@
 #include "harness/os.h"
 #include "harness/trace.h"
 
-#ifdef __SWITCH__
-
-#define MA_NO_PTHREAD_IN_HEADER
-#define MA_NO_RUNTIME_LINKING
-#define SAMPLES_NUM 512
-#define SAMPLE_RATE 44100
-#define CHANNELS_NUM 2
-
-#include <SDL.h>
-#include <SDL_mixer.h>
-
-#endif
-
 // Must come before miniaudio.h
 #define STB_VORBIS_HEADER_ONLY
 #include "stb/stb_vorbis.c"
@@ -29,6 +16,10 @@
 // Must come after miniaudio.h
 #undef STB_VORBIS_HEADER_ONLY
 #include "stb/stb_vorbis.c"
+
+#ifdef __SWITCH__
+#include <SDL.h>
+#endif
 
 #include <assert.h>
 #include <stdio.h>
@@ -59,22 +50,46 @@ typedef struct tMiniaudio_stream {
 ma_engine engine;
 ma_sound cda_sound;
 int cda_sound_initialized;
+int ma_engine_initialized;
 
 #ifdef __SWITCH__
+// libnx has no usable miniaudio backend: the engine runs deviceless and an SDL audio
+// callback pulls PCM out of it.
+#define NX_SAMPLE_RATE 48000
+#define NX_CHANNELS 2
+#define NX_CHUNK_FRAMES 1024
 
-void data_callback(void* pUserData, ma_uint8* pBuffer, int bufferSizeInBytes) 
-{
-    float bufferF32[SAMPLES_NUM * CHANNELS_NUM];
-    ma_uint32 bufferSizeInFrames = (ma_uint32)(bufferSizeInBytes * 2) / ma_get_bytes_per_frame(ma_format_f32, ma_engine_get_channels(&engine));
-    ma_engine_read_pcm_frames(&engine, bufferF32, bufferSizeInFrames, NULL);
-    int16_t *pBufferS16 = (int16_t *)pBuffer;
-    
-    for (int i = 0; i < bufferSizeInBytes / 2; i++) 
-    {
-        pBufferS16[i] = (int16_t)(bufferF32[i] * 32767.0f - 1.0f);
+static SDL_AudioDeviceID nx_audio_device;
+
+static void nx_audio_callback(void* userdata, Uint8* stream, int len) {
+    float mix[NX_CHUNK_FRAMES * NX_CHANNELS];
+    Sint16* out = (Sint16*)stream;
+    int total_frames = len / (int)(sizeof(Sint16) * NX_CHANNELS);
+
+    (void)userdata;
+    while (total_frames > 0) {
+        ma_uint32 want = total_frames < NX_CHUNK_FRAMES ? (ma_uint32)total_frames : NX_CHUNK_FRAMES;
+        ma_uint64 got = 0;
+        ma_uint32 i;
+
+        ma_engine_read_pcm_frames(&engine, mix, want, &got);
+        // the engine may hand back less than asked for: pad with silence rather than stale data
+        for (i = (ma_uint32)got * NX_CHANNELS; i < want * NX_CHANNELS; i++) {
+            mix[i] = 0.0f;
+        }
+        for (i = 0; i < want * NX_CHANNELS; i++) {
+            // overlapping samples sum above 1.0; wrapping on the int16 cast is what crackled
+            float v = mix[i] * 32767.0f;
+            if (v > 32767.0f) {
+                v = 32767.0f;
+            } else if (v < -32768.0f) {
+                v = -32768.0f;
+            }
+            *out++ = (Sint16)v;
+        }
+        total_frames -= (int)want;
     }
 }
-
 #endif
 
 tAudioBackend_error_code AudioBackend_Init(void) {
@@ -82,59 +97,42 @@ tAudioBackend_error_code AudioBackend_Init(void) {
     ma_engine_config config;
 
     config = ma_engine_config_init();
-
 #ifdef __SWITCH__
-
     config.noDevice = MA_TRUE;
-    config.channels = CHANNELS_NUM;
-    config.sampleRate = SAMPLE_RATE;
-
+    config.channels = NX_CHANNELS;
+    config.sampleRate = NX_SAMPLE_RATE;
 #endif
-
     result = ma_engine_init(&config, &engine);
     if (result != MA_SUCCESS) {
         printf("Failed to initialize audio engine.");
-        LOG_PANIC("Failed to initialize audio engine.");
         return eAB_error;
     }
-
 #ifdef __SWITCH__
-
-    SDL_AudioSpec desiredSpec;
-    SDL_AudioSpec obtainedSpec;
-    SDL_AudioDeviceID deviceID;
-
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) 
     {
-        printf("Failed to initialize SDL sub-system.\n");
-        LOG_PANIC("Failed to initialize SDL sub-system.");
-        return eAB_error;
+        SDL_AudioSpec desired, obtained;
+
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+            LOG_WARN2("Failed to initialize SDL audio: %s", SDL_GetError());
+            return eAB_error;
+        }
+        SDL_zero(desired);
+        desired.freq = NX_SAMPLE_RATE;
+        desired.format = AUDIO_S16SYS;
+        desired.channels = NX_CHANNELS;
+        desired.samples = 1024;
+        desired.callback = nx_audio_callback;
+        nx_audio_device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+        if (nx_audio_device == 0) {
+            LOG_WARN2("Failed to open SDL audio device: %s", SDL_GetError());
+            return eAB_error;
+        }
+        SDL_PauseAudioDevice(nx_audio_device, 0);
     }
-
-    MA_ZERO_OBJECT(&desiredSpec);
-    
-    desiredSpec.freq     = SAMPLE_RATE;
-    desiredSpec.format   = AUDIO_S16SYS;
-    desiredSpec.channels = CHANNELS_NUM;
-    desiredSpec.samples  = SAMPLES_NUM;
-    desiredSpec.callback = data_callback;
-    desiredSpec.userdata = NULL;
-    
-    deviceID = SDL_OpenAudioDevice(NULL, 0, &desiredSpec, &obtainedSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
-
-    if (deviceID == 0)
-    {
-        printf("Failed to open SDL audio device.\n");
-        LOG_PANIC("Failed to open SDL audio device.");
-        return eAB_error;
-    }
-
-    // printf("Obtained: srate: %d chns: %d, samples: %d, format: %x\n", obtainedSpec.freq, obtainedSpec.channels, obtainedSpec.samples, obtainedSpec.format);
-    SDL_PauseAudioDevice(deviceID, 0);
-
+#else
+    LOG_INFO2("Playback device: '%s'", engine.pDevice->playback.name);
 #endif
-
     ma_engine_set_volume(&engine, harness_game_config.volume_multiplier);
+    ma_engine_initialized = 1;
 
     return eAB_success;
 }
@@ -148,7 +146,14 @@ tAudioBackend_error_code AudioBackend_InitCDA(void) {
 }
 
 void AudioBackend_UnInit(void) {
+#ifdef __SWITCH__
+    if (nx_audio_device != 0) {
+        SDL_CloseAudioDevice(nx_audio_device);
+        nx_audio_device = 0;
+    }
+#endif
     ma_engine_uninit(&engine);
+    ma_engine_initialized = 0;
 }
 
 void AudioBackend_UnInitCDA(void) {
@@ -253,6 +258,10 @@ int AudioBackend_SoundIsPlaying(void* type_struct_sample) {
 
     miniaudio = (tMiniaudio_sample*)type_struct_sample;
     assert(miniaudio != NULL);
+
+    if (!miniaudio->initialized) {
+        return 0;
+    }
 
     if (ma_sound_is_playing(&miniaudio->sound)) {
         return 1;

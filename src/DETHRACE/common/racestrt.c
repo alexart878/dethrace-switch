@@ -26,40 +26,104 @@
 #include "world.h"
 #include <stdlib.h>
 
+// GLOBAL: CARM95 0x0050f198
 int gGrid_number_colour[4] = { 49u, 201u, 1u, 201u };
+
+// GLOBAL: CARM95 0x0050f1a8
 int gJust_bought_part;
+
+// GLOBAL: CARM95 0x0050f1ac
 tU32 gLast_host_query;
+
+// GLOBAL: CARM95 0x00550acc
 br_pixelmap* gDead_car;
+
+// GLOBAL: CARM95 0x00536408
 int gFade_away_parts_shop;
+
+// GLOBAL: CARM95 0x0053635c
 tU32 gDare_start_time;
+
+// GLOBAL: CARM95 0x00536418
 int gRefund_rate;
+
+// GLOBAL: CARM95 0x0053640c
 int gSwap_grid_2;
+
+// GLOBAL: CARM95 0x00536410
 int gSwap_grid_1;
+
+// GLOBAL: CARM95 0x005363f0
 int gChange_race_net_mode;
+
+// GLOBAL: CARM95 0x0053641c
 tParts_category gPart_category;
+
+// GLOBAL: CARM95 0x00536348
 tU32 gNet_synch_start;
+
+// GLOBAL: CARM95 0x0053634c
 tNet_game_details* gChoose_car_net_game;
+
+// GLOBAL: CARM95 0x00536404
 int gPart_index;
+
+// GLOBAL: CARM95 0x0053636c
 int gChallenger_index__racestrt; // suffix added to avoid duplicate symbol
+
+// GLOBAL: CARM95 0x00536360
 tGrid_draw gDraw_grid_status;
+
+// GLOBAL: CARM95 0x005363ec
 tNet_sequence_type gNet_race_sequence__racestrt; // suffix added to avoid duplicate symbol
+
+// GLOBAL: CARM95 0x0053642c
 br_pixelmap* gTaken_image;
+
+// GLOBAL: CARM95 0x00536370
 int gGrid_number_x_coords[31];
+
+// GLOBAL: CARM95 0x005363f4
 int gGrid_transition_stage;
+
+// GLOBAL: CARM95 0x00536428
 int gGrid_y_adjust;
+
+// GLOBAL: CARM95 0x00536400
 br_pixelmap* gBullet_image;
+
+// GLOBAL: CARM95 0x005363f8
 br_pixelmap* gDeceased_image;
+
+// GLOBAL: CARM95 0x00536364
 int gBest_pos_available;
+
+// GLOBAL: CARM95 0x00536358
 int gChallenger_position;
+
+// GLOBAL: CARM95 0x00536414
 int gOpponent_index;
+
+// GLOBAL: CARM95 0x005363fc
 int gChallenge_time;
+
+// GLOBAL: CARM95 0x00536354
 int gOriginal_position;
+
+// GLOBAL: CARM95 0x00536420
 int gCurrent_race_index;
+
+// GLOBAL: CARM95 0x00536350
 tInterface_spec* gStart_interface_spec;
+
+// GLOBAL: CARM95 0x00536424
 int gCurrent_car_index;
+
+// GLOBAL: CARM95 0x00536368
 int gOur_starting_position;
 
 // IDA: void __usercall DrawRaceList(int pOffset@<EAX>)
+// FUNCTION: CARM95 0x0044e944
 void DrawRaceList(int pOffset) {
     int i;
     int font_height;
@@ -73,7 +137,6 @@ void DrawRaceList(int pOffset) {
     int text_width;
     int text_x;
     char rank_str[256];
-    LOG_TRACE("(%d)", pOffset);
 
     left_most = (gCurrent_graf_data->choose_race_rank_right - 2 * gBig_font->width[48] + gCurrent_graf_data->choose_race_left) / 2;
     right_most = gCurrent_graf_data->choose_race_right - (left_most - gCurrent_graf_data->choose_race_left);
@@ -84,18 +147,21 @@ void DrawRaceList(int pOffset) {
         gCurrent_graf_data->choose_race_y_bottom - gCurrent_graf_data->choose_race_y_top,
         0);
     pitch = gCurrent_graf_data->choose_race_y_pitch;
+    font_height = gBig_font->glyph_y;
     for (i = 0; i < gNumber_of_races; i++) {
         y = pitch * i + gCurrent_graf_data->choose_race_curr_y - pOffset;
-        if (gCurrent_graf_data->choose_race_y_top <= (y - (TranslationMode() ? 2 : 0)) && (y + gBig_font->glyph_y) < gCurrent_graf_data->choose_race_line_y) {
-            if ((gProgram_state.rank > gRace_list[i].rank_required || gProgram_state.rank < gRace_list[i].best_rank) && !gProgram_state.game_completed && !gChange_race_net_mode) {
+        if (gCurrent_graf_data->choose_race_y_top <= (y - (TranslationMode() ? 2 : 0)) && (y + font_height) < gCurrent_graf_data->choose_race_line_y) {
+            if (!((gProgram_state.rank > gRace_list[i].rank_required || gProgram_state.rank < gRace_list[i].best_rank) && !gProgram_state.game_completed && !gChange_race_net_mode)) {
+                if (gCurrent_graf_data->choose_race_curr_y == y) {
+                    rank_colour = 5;
+                    text_colour = 1;
+                } else {
+                    rank_colour = 198;
+                    text_colour = 201;
+                }
+            } else {
                 rank_colour = 44;
                 text_colour = 49;
-            } else if (gCurrent_graf_data->choose_race_curr_y == y) {
-                rank_colour = 5;
-                text_colour = 1;
-            } else {
-                rank_colour = 198;
-                text_colour = 201;
             }
             if (!gChange_race_net_mode) {
                 sprintf(rank_str, "%2d", gRace_list[i].rank_required);
@@ -120,7 +186,7 @@ void DrawRaceList(int pOffset) {
 #endif
                     gBack_screen,
                     gCurrent_graf_data->choose_race_bullet_left,
-                    y + (gBig_font->glyph_y - gBullet_image->height) / 2,
+                    y + (font_height - gBullet_image->height) / 2,
                     gBullet_image,
                     0,
                     0,
@@ -129,17 +195,10 @@ void DrawRaceList(int pOffset) {
             }
         }
     }
-    if (gChange_race_net_mode) {
-        strcpy(rank_str, GetMiscString(gNet_race_sequence__racestrt == 1 ? kMiscString_SUBSEQUENT_RACES_WILL_BE_RANDOM : kMiscString_RACES_WILL_CONTINUE_DOWN_THIS_LIST));
-        TransBrPixelmapText(gBack_screen,
-            (right_most + left_most - BrPixelmapTextWidth(gBack_screen, gBig_font, rank_str)) / 2,
-            gCurrent_graf_data->choose_race_current_text_y,
-            5,
-            gBig_font,
-            rank_str);
-    } else {
+    if (!gChange_race_net_mode) {
         sprintf(rank_str, "%s%d", GetMiscString(kMiscString_YourCurrentRankIs), gProgram_state.rank);
-        text_x = (gCurrent_graf_data->choose_race_left + gCurrent_graf_data->choose_race_right) / 2 - BrPixelmapTextWidth(gBack_screen, gBig_font, rank_str) / 2;
+        text_width = BrPixelmapTextWidth(gBack_screen, gBig_font, rank_str);
+        text_x = (gCurrent_graf_data->choose_race_left + gCurrent_graf_data->choose_race_right) / 2 - text_width / 2;
         TransBrPixelmapText(gBack_screen,
             text_x,
             gCurrent_graf_data->choose_race_current_text_y,
@@ -147,8 +206,17 @@ void DrawRaceList(int pOffset) {
             gBig_font,
             GetMiscString(kMiscString_YourCurrentRankIs));
         sprintf(rank_str, "%d", gProgram_state.rank);
+        text_width = BrPixelmapTextWidth(gBack_screen, gBig_font, GetMiscString(kMiscString_YourCurrentRankIs));
         TransBrPixelmapText(gBack_screen,
-            text_x + BrPixelmapTextWidth(gBack_screen, gBig_font, GetMiscString(kMiscString_YourCurrentRankIs)),
+            text_x + text_width,
+            gCurrent_graf_data->choose_race_current_text_y,
+            5,
+            gBig_font,
+            rank_str);
+    } else {
+        strcpy(rank_str, GetMiscString(gNet_race_sequence__racestrt == 1 ? kMiscString_SUBSEQUENT_RACES_WILL_BE_RANDOM : kMiscString_RACES_WILL_CONTINUE_DOWN_THIS_LIST));
+        TransBrPixelmapText(gBack_screen,
+            (right_most + left_most - BrPixelmapTextWidth(gBack_screen, gBig_font, rank_str)) / 2,
             gCurrent_graf_data->choose_race_current_text_y,
             5,
             gBig_font,
@@ -164,57 +232,62 @@ void DrawRaceList(int pOffset) {
         left_most,
         gCurrent_graf_data->choose_race_box_top - 1,
         right_most,
-        2 * gCurrent_graf_data->choose_race_curr_y - gCurrent_graf_data->choose_race_box_top + gBig_font->glyph_y,
+        box_bot = 2 * gCurrent_graf_data->choose_race_curr_y - gCurrent_graf_data->choose_race_box_top + font_height,
         3);
     PDScreenBufferSwap(0);
 }
 
 // IDA: void __usercall MoveRaceList(int pFrom@<EAX>, int pTo@<EDX>, tS32 pTime_to_move@<EBX>)
+// FUNCTION: CARM95 0x0044e8c7
 void MoveRaceList(int pFrom, int pTo, tS32 pTime_to_move) {
     tS32 start_time;
     tS32 the_time;
     int move_distance;
     int pitch;
-    LOG_TRACE("(%d, %d, %d)", pFrom, pTo, pTime_to_move);
 
     pitch = gCurrent_graf_data->choose_race_y_pitch;
+    move_distance = (pTo - pFrom) * pitch;
     start_time = PDGetTotalTime();
-    while (1) {
-        the_time = PDGetTotalTime();
-        if (start_time + pTime_to_move <= the_time)
-            break;
-        DrawRaceList((the_time - start_time) * (pTo - pFrom) * pitch / pTime_to_move + pitch * pFrom);
+    while (start_time + pTime_to_move > (the_time = PDGetTotalTime())) {
+        DrawRaceList((the_time - start_time) * move_distance / pTime_to_move + pitch * pFrom);
     }
     DrawRaceList(pitch * pTo);
 }
 
 // IDA: int __usercall UpRace@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044e7f0
 int UpRace(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     AddToFlicQueue(gStart_interface_spec->pushed_flics[2].flic_index,
         gStart_interface_spec->pushed_flics[2].x[gGraf_data_index],
         gStart_interface_spec->pushed_flics[2].y[gGraf_data_index],
         1);
     DRS3StartSound(gEffects_outlet, 3000);
-    if (gCurrent_race_index != 0 && (gRace_list[gCurrent_race_index - 1].best_rank <= gProgram_state.rank || gProgram_state.game_completed || gChange_race_net_mode)) {
-        RemoveTransientBitmaps(1);
-        MoveRaceList(gCurrent_race_index, gCurrent_race_index - 1, 150);
-        gCurrent_race_index--;
+#ifdef DETHRACE_FIX_BUGS
+    if (gCurrent_race_index <= 0) {
+        return 0;
+    }
+#endif
+    if (gRace_list[gCurrent_race_index - 1].best_rank <= gProgram_state.rank || gProgram_state.game_completed || gChange_race_net_mode) {
+        if (gCurrent_race_index != 0) {
+            RemoveTransientBitmaps(1);
+            MoveRaceList(gCurrent_race_index, gCurrent_race_index - 1, 150);
+            gCurrent_race_index--;
+        }
     }
     return 0;
 }
 
 // IDA: int __usercall DownRace@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044ef24
 int DownRace(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     AddToFlicQueue(gStart_interface_spec->pushed_flics[3].flic_index,
         gStart_interface_spec->pushed_flics[3].x[gGraf_data_index],
         gStart_interface_spec->pushed_flics[3].y[gGraf_data_index],
         1);
     DRS3StartSound(gEffects_outlet, 3000);
-    if (gCurrent_race_index < gNumber_of_races - 1 && (gProgram_state.rank <= gRace_list[gCurrent_race_index + 1].rank_required || gProgram_state.game_completed || gChange_race_net_mode)) {
+    if ((gProgram_state.rank <= gRace_list[gCurrent_race_index + 1].rank_required || gProgram_state.game_completed || gChange_race_net_mode) && gCurrent_race_index < gNumber_of_races - 1) {
         RemoveTransientBitmaps(1);
         MoveRaceList(gCurrent_race_index, gCurrent_race_index + 1, 150);
         gCurrent_race_index++;
@@ -223,71 +296,74 @@ int DownRace(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall ClickOnRace@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0044f000
 int ClickOnRace(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
     int x_coord;
     int y_coord;
     int race_delta;
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     GetMousePosition(&x_coord, &y_coord);
     race_delta = (y_coord - (gCurrent_graf_data->choose_race_curr_y - 5 * (gCurrent_graf_data->choose_race_y_pitch / 2) + gBig_font->glyph_y / 2)) / gCurrent_graf_data->choose_race_y_pitch - 2;
-    if (race_delta >= -2 && race_delta <= -1) {
+    if (race_delta > -3 && race_delta < 0) {
         do {
             UpRace(pCurrent_choice, pCurrent_mode);
-            race_delta++;
-        } while (race_delta != 0);
-    } else if (race_delta > 0 && race_delta < 3) {
+        } while (++race_delta);
+    } else if (race_delta < 3 && race_delta > 0) {
         do {
             DownRace(pCurrent_choice, pCurrent_mode);
-            race_delta--;
-        } while (race_delta != 0);
+        } while (--race_delta);
     }
     return 0;
 }
 
 // IDA: int __usercall UpClickRace@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0044f0cd
 int UpClickRace(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     UpRace(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall DownClickRace@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0044f0ef
 int DownClickRace(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     DownRace(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: void __cdecl StartChangeRace()
+// FUNCTION: CARM95 0x0044f111
 void StartChangeRace(void) {
-    LOG_TRACE("()");
 
     MoveRaceList(-3, gCurrent_race_index, 400);
 }
 
 // IDA: int __usercall ChangeRace@<EAX>(int *pRace_index@<EAX>, int pNet_mode@<EDX>, tNet_sequence_type pNet_race_sequence@<EBX>)
+// FUNCTION: CARM95 0x0044f131
 int ChangeRace(int* pRace_index, int pNet_mode, tNet_sequence_type pNet_race_sequence) {
+    // GLOBAL: CARM95 0x0050f1b0
     static tFlicette flicker_on[4] = {
         { 43, { 60, 120 }, { 154, 370 } },
         { 43, { 221, 442 }, { 154, 370 } },
         { 221, { 30, 60 }, { 78, 187 } },
         { 221, { 30, 60 }, { 78, 187 } },
     };
+    // GLOBAL: CARM95 0x0050f200
     static tFlicette flicker_off[4] = {
         { 42, { 60, 120 }, { 154, 370 } },
         { 42, { 221, 442 }, { 154, 370 } },
         { 220, { 30, 60 }, { 78, 187 } },
         { 220, { 30, 60 }, { 78, 187 } },
     };
+    // GLOBAL: CARM95 0x0050f250
     static tFlicette push[4] = {
         { 154, { 60, 120 }, { 154, 370 } },
         { 45, { 221, 442 }, { 154, 370 } },
         { 222, { 30, 60 }, { 78, 187 } },
         { 225, { 30, 60 }, { 118, 283 } },
     };
+    // GLOBAL: CARM95 0x0050f2a0
     static tMouse_area mouse_areas[5] = {
         { { 60, 120 }, { 154, 370 }, { 125, 250 }, { 174, 418 }, 0, 0, 0, NULL },
         { { 221, 442 }, { 154, 370 }, { 286, 572 }, { 174, 418 }, 1, 0, 0, NULL },
@@ -295,6 +371,7 @@ int ChangeRace(int* pRace_index, int pNet_mode, tNet_sequence_type pNet_race_seq
         { { 30, 60 }, { 118, 283 }, { 45, 90 }, { 145, 348 }, -1, 0, 0, DownClickRace },
         { { 66, 132 }, { 33, 79 }, { 278, 556 }, { 144, 346 }, -1, 0, 0, ClickOnRace },
     };
+    // GLOBAL: CARM95 0x0050f390
     static tInterface_spec interface_spec = {
         0, 230, 60, 231, 231, 231, 6,
         { -1, 0 }, { -1, 0 }, { 0, 0 }, { 1, 0 }, { NULL, NULL },
@@ -307,16 +384,15 @@ int ChangeRace(int* pRace_index, int pNet_mode, tNet_sequence_type pNet_race_seq
         COUNT_OF(mouse_areas), mouse_areas, 0, NULL
     };
     int result;
-    LOG_TRACE("(%p, %d, %d)", pRace_index, pNet_mode, pNet_race_sequence);
 
     gNet_race_sequence__racestrt = pNet_race_sequence;
     gChange_race_net_mode = pNet_mode;
     gStart_interface_spec = &interface_spec;
     gCurrent_race_index = *pRace_index;
-    if (pNet_mode == 0) {
-        gBullet_image = LoadPixelmap("BULLET.PIX");
-    } else {
+    if (pNet_mode) {
         gBullet_image = NULL;
+    } else {
+        gBullet_image = LoadPixelmap("BULLET.PIX");
     }
     result = DoInterfaceScreen(&interface_spec, pNet_mode != 0, 0);
     if (result == 0) {
@@ -329,8 +405,8 @@ int ChangeRace(int* pRace_index, int pNet_mode, tNet_sequence_type pNet_race_seq
 }
 
 // IDA: void __cdecl DoChangeRace()
+// FUNCTION: CARM95 0x00451fe5
 void DoChangeRace(void) {
-    LOG_TRACE("()");
 
     if (ChangeRace(&gProgram_state.current_race_index, 0, eNet_sequence_sequential) != 0) {
         gProgram_state.current_race_index = gCurrent_race_index;
@@ -338,29 +414,31 @@ void DoChangeRace(void) {
 }
 
 // IDA: void __usercall DrawCar(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044f1f2
 void DrawCar(int pCurrent_choice, int pCurrent_mode) {
     char s[64];
     int text_x;
     int text_width;
-    LOG_TRACE("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
 // Added by dethrace to ignore warnings about using sprintf without a literal format string
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
 
     PollCarDetails(gChoose_car_net_game);
-    if (gChange_race_net_mode == 0) {
+    if (gChange_race_net_mode) {
+        if (gCar_details[gProgram_state.cars_available[gCurrent_car_index]].ownership == eCar_owner_someone) {
+            sprintf(s, "%s %s", GetMiscString(kMiscString_THIS_CAR_ALREADY_TAKEN_BY), gCar_details[gProgram_state.cars_available[gCurrent_car_index]].name);
+        } else {
+            sprintf(s, GetMiscString(kMiscString_AVAILABLE));
+        }
+    } else {
         if (gProgram_state.number_of_cars == 1) {
             sprintf(s, GetMiscString(kMiscString_NoOtherCarsToChooseFromYet));
-        } else if (gProgram_state.cars_available[gCurrent_car_index] == gProgram_state.frank_or_anniness) {
-            sprintf(s, GetMiscString(kMiscString_YourOriginalCar));
-        } else {
+        } else if (gProgram_state.cars_available[gCurrent_car_index] != gProgram_state.frank_or_anniness) {
             sprintf(s, "%s %s", GetMiscString(kMiscString_OriginalDriverWas), gOpponents[gProgram_state.cars_available[gCurrent_car_index]].name);
+        } else {
+            sprintf(s, GetMiscString(kMiscString_YourOriginalCar));
         }
-    } else if (gCar_details[gProgram_state.cars_available[gCurrent_car_index]].ownership == eCar_owner_someone) {
-        sprintf(s, "%s %s", GetMiscString(kMiscString_THIS_CAR_ALREADY_TAKEN_BY), gCar_details[gProgram_state.cars_available[gCurrent_car_index]].name);
-    } else {
-        sprintf(s, GetMiscString(kMiscString_AVAILABLE));
     }
 
 #pragma GCC diagnostic pop
@@ -389,7 +467,7 @@ void DrawCar(int pCurrent_choice, int pCurrent_mode) {
         DRPixelmapRectangleMaskedCopy(
             gBack_screen,
             (gCurrent_graf_data->change_car_panel_left + gCurrent_graf_data->change_car_panel_right - gTaken_image->width) / 2,
-            (gCurrent_graf_data->change_car_panel_bottom + gCurrent_graf_data->change_car_panel_bottom - gTaken_image->height) / 2,
+            (gCurrent_graf_data->change_car_panel_top + gCurrent_graf_data->change_car_panel_bottom - gTaken_image->height) / 2,
             gTaken_image,
             0,
             0,
@@ -399,8 +477,8 @@ void DrawCar(int pCurrent_choice, int pCurrent_mode) {
 }
 
 // IDA: void __cdecl SetCarFlic()
+// FUNCTION: CARM95 0x0044f5de
 void SetCarFlic(void) {
-    LOG_TRACE("()");
 
     ChangePanelFlic(0,
         gOpponents[gProgram_state.cars_available[gCurrent_car_index]].stolen_car_image_data,
@@ -408,8 +486,8 @@ void SetCarFlic(void) {
 }
 
 // IDA: int __usercall UpCar@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044f4cc
 int UpCar(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     AddToFlicQueue(gStart_interface_spec->pushed_flics[2].flic_index,
         gStart_interface_spec->pushed_flics[2].x[gGraf_data_index],
@@ -435,8 +513,8 @@ int UpCar(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall DownCar@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044f62d
 int DownCar(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     AddToFlicQueue(gStart_interface_spec->pushed_flics[3].flic_index,
         gStart_interface_spec->pushed_flics[3].x[gGraf_data_index],
@@ -462,24 +540,24 @@ int DownCar(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall UpClickCar@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0044f744
 int UpClickCar(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     UpCar(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall DownClickCar@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0044f766
 int DownClickCar(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     DownCar(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall ChangeCarGoAhead@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044f788
 int ChangeCarGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (gChange_race_net_mode == 0 || gCar_details[gProgram_state.cars_available[gCurrent_car_index]].ownership != eCar_owner_someone) {
         return 1;
@@ -490,31 +568,38 @@ int ChangeCarGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall ChangeCar@<EAX>(int pNet_mode@<EAX>, int *pCar_index@<EDX>, tNet_game_details *pNet_game@<EBX>)
+// FUNCTION: CARM95 0x0044f7e6
 int ChangeCar(int pNet_mode, int* pCar_index, tNet_game_details* pNet_game) {
+    // GLOBAL: CARM95 0x0050f4c0
     static tFlicette flicker_on[4] = {
         { 43, { 60, 120 }, { 154, 370 } },
         { 43, { 221, 442 }, { 154, 370 } },
         { 221, { 30, 60 }, { 78, 187 } },
         { 221, { 30, 60 }, { 78, 187 } },
     };
+    // GLOBAL: CARM95 0x0050f510
     static tFlicette flicker_off[4] = {
         { 42, { 60, 120 }, { 154, 370 } },
         { 42, { 221, 442 }, { 154, 370 } },
         { 220, { 30, 60 }, { 78, 187 } },
         { 220, { 30, 60 }, { 78, 187 } },
     };
+    // GLOBAL: CARM95 0x0050f560
     static tFlicette push[4] = {
         { 154, { 60, 120 }, { 154, 370 } },
         { 45, { 221, 442 }, { 154, 370 } },
         { 222, { 30, 60 }, { 78, 187 } },
         { 225, { 30, 60 }, { 118, 283 } },
     };
+    // GLOBAL: CARM95 0x0050f5b0
     static tMouse_area mouse_areas[4] = {
         { { 60, 120 }, { 154, 370 }, { 125, 250 }, { 174, 418 }, 0, 0, 0, NULL },
         { { 221, 442 }, { 154, 370 }, { 286, 572 }, { 174, 418 }, 1, 0, 0, NULL },
         { { 30, 60 }, { 78, 187 }, { 45, 90 }, { 104, 250 }, -1, 0, 0, UpClickCar },
         { { 30, 60 }, { 118, 283 }, { 45, 90 }, { 145, 348 }, -1, 0, 0, DownClickCar },
     };
+
+    // GLOBAL: CARM95 0x0050F670
     static tInterface_spec interface_spec = {
         0,
         236,
@@ -570,7 +655,6 @@ int ChangeCar(int pNet_mode, int* pCar_index, tNet_game_details* pNet_game) {
     int i;
     int result;
     int power_up_levels[3];
-    LOG_TRACE("(%d, %p, %p)", pNet_mode, pCar_index, pNet_game);
 
     gChoose_car_net_game = pNet_game;
     gChange_race_net_mode = pNet_mode;
@@ -619,9 +703,7 @@ int ChangeCar(int pNet_mode, int* pCar_index, tNet_game_details* pNet_game) {
         BrPixelmapFree(gTaken_image);
     }
     if (result == 0) {
-        if (pNet_mode) {
-            *pCar_index = gProgram_state.cars_available[gCurrent_car_index];
-        } else {
+        if (pNet_mode == eNet_mode_none) {
             AboutToLoadFirstCar();
             SwitchToRealResolution();
             for (i = 0; i < COUNT_OF(power_up_levels); i++) {
@@ -641,6 +723,8 @@ int ChangeCar(int pNet_mode, int* pCar_index, tNet_game_details* pNet_game) {
             DisposeRaceInfo(&gCurrent_race);
             SelectOpponents(&gCurrent_race);
             LoadRaceInfo(gProgram_state.current_race_index, &gCurrent_race);
+        } else {
+            *pCar_index = gProgram_state.cars_available[gCurrent_car_index];
         }
         return 1;
     } else {
@@ -649,19 +733,19 @@ int ChangeCar(int pNet_mode, int* pCar_index, tNet_game_details* pNet_game) {
 }
 
 // IDA: void __cdecl DoChangeCar()
+// FUNCTION: CARM95 0x00452017
 void DoChangeCar(void) {
-    LOG_TRACE("()");
 
     ChangeCar(0, &gProgram_state.current_car.index, NULL);
 }
 
 // IDA: int __cdecl PartsShopRecommended()
+// FUNCTION: CARM95 0x00450cf3
 int PartsShopRecommended(void) {
     int running_cost;
     int i;
     int current_index;
     int counter;
-    LOG_TRACE("()");
 
     running_cost = 0;
     counter = 0;
@@ -676,9 +760,9 @@ int PartsShopRecommended(void) {
 }
 
 // IDA: void __usercall CalcPartPrice(int pCategory@<EAX>, int pIndex@<EDX>, int *pPrice@<EBX>, int *pCost@<ECX>)
+// FUNCTION: CARM95 0x004502ec
 void CalcPartPrice(int pCategory, int pIndex, int* pPrice, int* pCost) {
     int current_value;
-    LOG_TRACE("(%d, %d, %p, %p)", pCategory, pIndex, pPrice, pCost);
 
     *pPrice = gProgram_state.current_car.power_ups[pCategory].info[pIndex].prices[gProgram_state.skill_level];
     if (gProgram_state.current_car.power_up_levels[pCategory] == pIndex) {
@@ -689,27 +773,30 @@ void CalcPartPrice(int pCategory, int pIndex, int* pPrice, int* pCost) {
 }
 
 // IDA: int __usercall BuyPart@<EAX>(int pCategory@<EAX>, int pIndex@<EDX>)
+// FUNCTION: CARM95 0x004504c4
 int BuyPart(int pCategory, int pIndex) {
     int price;
     int cost;
-    LOG_TRACE("(%d, %d)", pCategory, pIndex);
 
     CalcPartPrice(pCategory, pIndex, &price, &cost);
-    if (cost == 0) {
-        return 1;
-    } else if (gProgram_state.credits < cost) {
-        return 0;
-    } else {
-        gProgram_state.credits -= cost;
-        if (gProgram_state.credits > 999999) {
-            gProgram_state.credits = 999999;
+    if (cost != 0) {
+        if (gProgram_state.credits >= cost) {
+            gProgram_state.credits -= cost;
+            if (gProgram_state.credits > 999999) {
+                gProgram_state.credits = 999999;
+            }
+            gProgram_state.current_car.power_up_levels[pCategory] = pIndex;
+            return 1;
+        } else {
+            return 0;
         }
-        gProgram_state.current_car.power_up_levels[pCategory] = pIndex;
+    } else {
         return 1;
     }
 }
 
 // IDA: void __cdecl DoAutoParts()
+// FUNCTION: CARM95 0x00450bc8
 void DoAutoParts(void) {
     int i;
     int lowest_yet;
@@ -717,35 +804,32 @@ void DoAutoParts(void) {
     int price;
     int cost;
     int current_level;
-    LOG_TRACE("()");
 
-    while (1) {
-        if (!PartsShopRecommended()) {
-            return;
-        }
+    while (PartsShopRecommended()) {
         lowest_yet = COUNT_OF(((tParts_spec*)NULL)->info);
         for (i = 0; i < eParts_count; i++) {
             current_level = gProgram_state.current_car.power_up_levels[i];
-            if (current_level + 1 < gProgram_state.current_car.power_ups[i].number_of_parts && (gProgram_state.rank <= gProgram_state.current_car.power_ups[i].info[current_level + 1].rank_required || gProgram_state.game_completed)) {
+            if (current_level < gProgram_state.current_car.power_ups[i].number_of_parts - 1 && (gProgram_state.rank <= gProgram_state.current_car.power_ups[i].info[current_level + 1].rank_required || gProgram_state.game_completed)) {
                 CalcPartPrice(i, current_level + 1, &price, &cost);
                 if (cost != 0 && cost <= gProgram_state.credits && current_level < lowest_yet) {
+                    lowest_yet = gProgram_state.current_car.power_up_levels[i] + 1;
                     lowest_one = i;
-                    lowest_yet = current_level + 1;
                 }
             }
         }
-        if (lowest_yet == COUNT_OF(((tParts_spec*)NULL)->info)) {
+        if (lowest_yet != COUNT_OF(((tParts_spec*)NULL)->info)) {
+            if (!BuyPart(lowest_one, lowest_yet)) {
+                break;
+            }
+        } else {
             break;
-        }
-        if (!BuyPart(lowest_one, lowest_yet)) {
-            return;
         }
     }
 }
 
 // IDA: void __cdecl DrawPartsLabel()
+// FUNCTION: CARM95 0x0044fdd1
 void DrawPartsLabel(void) {
-    LOG_TRACE("()");
 
     switch (gPart_category) {
     case eParts_armour:
@@ -756,15 +840,14 @@ void DrawPartsLabel(void) {
         break;
     case eParts_offensive:
         RunFlicAt(264, gCurrent_graf_data->parts_label_x, gCurrent_graf_data->parts_label_y);
-        break;
     default:
         break;
     }
 }
 
 // IDA: void __usercall ErasePartsText(int pTotal_as_well@<EAX>)
+// FUNCTION: CARM95 0x0044fe92
 void ErasePartsText(int pTotal_as_well) {
-    LOG_TRACE("(%d)", pTotal_as_well);
 
     BrPixelmapRectangleFill(gBack_screen,
         gCurrent_graf_data->parts_cost_x,
@@ -783,10 +866,10 @@ void ErasePartsText(int pTotal_as_well) {
 }
 
 // IDA: void __cdecl DrawPartsText()
+// FUNCTION: CARM95 0x0044fffc
 void DrawPartsText(void) {
     int price;
     int cost;
-    LOG_TRACE("()");
 
     CalcPartPrice(gPart_category, gPart_index, &price, &cost);
     TransBrPixelmapText(gBack_screen, gCurrent_graf_data->parts_cost_x, gCurrent_graf_data->parts_cost_y, 5, gFont_7, GetMiscString(kMiscString_RetailColon));
@@ -807,8 +890,8 @@ void DrawPartsText(void) {
 }
 
 // IDA: void __cdecl SetPartsImage()
+// FUNCTION: CARM95 0x0044ff71
 void SetPartsImage(void) {
-    LOG_TRACE("()");
 
     ChangePanelFlic(0,
         gProgram_state.current_car.power_ups[gPart_category].info[gPart_index].data_ptr,
@@ -818,15 +901,12 @@ void SetPartsImage(void) {
 }
 
 // IDA: int __cdecl GetPartsMax()
+// FUNCTION: CARM95 0x004506e4
 int GetPartsMax(void) {
     int i;
-    LOG_TRACE("()");
 
     for (i = gProgram_state.current_car.power_ups[gPart_category].number_of_parts - 1; i >= 0; i--) {
-        if (gProgram_state.rank <= gProgram_state.current_car.power_ups[gPart_category].info[i].rank_required) {
-            return i;
-        }
-        if (gProgram_state.game_completed) {
+        if (gProgram_state.rank <= gProgram_state.current_car.power_ups[gPart_category].info[i].rank_required || gProgram_state.game_completed) {
             return i;
         }
     }
@@ -834,45 +914,50 @@ int GetPartsMax(void) {
 }
 
 // IDA: void __cdecl CalcPartsIndex()
+// FUNCTION: CARM95 0x0045039b
 void CalcPartsIndex(void) {
     int current_index;
-    LOG_TRACE("()");
 
-    gPart_index = gProgram_state.current_car.power_up_levels[gPart_category];
-    if (gPart_index + 1 < gProgram_state.current_car.power_ups[gPart_category].number_of_parts && (gProgram_state.rank <= gProgram_state.current_car.power_ups[gPart_category].info[gPart_index + 1].rank_required || gProgram_state.game_completed)) {
-        gPart_index += 1;
+    current_index = gProgram_state.current_car.power_up_levels[gPart_category];
+    if (current_index < gProgram_state.current_car.power_ups[gPart_category].number_of_parts - 1) {
+        if (gProgram_state.rank <= gProgram_state.current_car.power_ups[gPart_category].info[current_index + 1].rank_required || gProgram_state.game_completed) {
+            gPart_index = current_index + 1;
+            return;
+        }
     }
+    gPart_index = current_index;
 }
 
 // IDA: void __cdecl DoExchangePart()
+// FUNCTION: CARM95 0x00450429
 void DoExchangePart(void) {
     int price;
     int cost;
-    LOG_TRACE("()");
 
     CalcPartPrice(gPart_category, gPart_index, &price, &cost);
-    if (cost == 0 || gProgram_state.credits < cost) {
-        DRS3StartSound(gEffects_outlet, 3100);
-    } else {
+    if (cost != 0 && gProgram_state.credits >= cost) {
         gJust_bought_part = 1;
         DRS3StartSound(gEffects_outlet, 3101);
         BuyPart(gPart_category, gPart_index);
         ErasePartsText(1);
         DrawPartsText();
+    } else {
+        DRS3StartSound(gEffects_outlet, 3100);
     }
 }
 
 // IDA: int __usercall PartsShopGoAhead@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0044fbb7
 int PartsShopGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
     int flic_index;
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (*pCurrent_choice < 3 && *pCurrent_mode == 0) {
         RemoveTransientBitmaps(1);
         DontLetFlicFuckWithPalettes();
         TurnFlicTransparencyOn();
+        flic_index = gStart_interface_spec->pushed_flics[*pCurrent_choice].flic_index;
         RunFlicAt(
-            gStart_interface_spec->pushed_flics[*pCurrent_choice].flic_index,
+            flic_index,
             gStart_interface_spec->pushed_flics[*pCurrent_choice].x[gGraf_data_index],
             gStart_interface_spec->pushed_flics[*pCurrent_choice].y[gGraf_data_index]);
         TurnFlicTransparencyOff();
@@ -896,9 +981,9 @@ int PartsShopGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
         return 0;
     } else if (*pCurrent_mode == 1) {
         AddToFlicQueue(
-            gStart_interface_spec->flicker_on_flics[4].flic_index,
-            gStart_interface_spec->flicker_on_flics[4].x[gGraf_data_index],
-            gStart_interface_spec->flicker_on_flics[4].y[gGraf_data_index],
+            gStart_interface_spec->pushed_flics[4].flic_index,
+            gStart_interface_spec->pushed_flics[4].x[gGraf_data_index],
+            gStart_interface_spec->pushed_flics[4].y[gGraf_data_index],
             1);
         DoExchangePart();
         return 0;
@@ -908,8 +993,8 @@ int PartsShopGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall UpPart@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0045055c
 int UpPart(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     gJust_bought_part = 0;
     AddToFlicQueue(
@@ -943,8 +1028,8 @@ int UpPart(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall DownPart@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0045076c
 int DownPart(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     gJust_bought_part = 0;
     AddToFlicQueue(
@@ -978,40 +1063,40 @@ int DownPart(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall UpClickPart@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x004508fb
 int UpClickPart(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     UpPart(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall DownClickPart@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x0045091d
 int DownClickPart(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     DownPart(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall PartsArrowsOn@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0045093f
 int PartsArrowsOn(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     AddToFlicQueue(
         gStart_interface_spec->flicker_on_flics[5].flic_index,
-        gStart_interface_spec->flicker_on_flics[5].x[gGraf_data_index],
-        gStart_interface_spec->flicker_on_flics[5].y[gGraf_data_index],
+        gStart_interface_spec->flicker_on_flics[5].x[gGraf_data_index * 1],
+        gStart_interface_spec->flicker_on_flics[5].y[gGraf_data_index * 1],
         1);
     AddToFlicQueue(gStart_interface_spec->flicker_on_flics[6].flic_index,
-        gStart_interface_spec->flicker_on_flics[6].x[gGraf_data_index],
-        gStart_interface_spec->flicker_on_flics[6].y[gGraf_data_index],
+        gStart_interface_spec->flicker_on_flics[6].x[gGraf_data_index * 1],
+        gStart_interface_spec->flicker_on_flics[6].y[gGraf_data_index * 1],
         1);
     return 0;
 }
 
 // IDA: int __usercall PartsArrowsOff@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x004509de
 int PartsArrowsOff(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     AddToFlicQueue(gStart_interface_spec->flicker_off_flics[5].flic_index,
         gStart_interface_spec->flicker_off_flics[5].x[gGraf_data_index],
@@ -1025,34 +1110,36 @@ int PartsArrowsOff(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: void __cdecl StartPartsShop()
+// FUNCTION: CARM95 0x00450a7d
 void StartPartsShop(void) {
-    LOG_TRACE("()");
 
     DrawPartsLabel();
     SetPartsImage();
 }
 
 // IDA: int __usercall DonePartsShop@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x00450a92
 int DonePartsShop(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
     if (gFade_away_parts_shop) {
         FadePaletteDown();
     } else {
         RunFlic(251);
     }
-    return pGo_ahead;
+    return pCurrent_choice;
 }
 
 // IDA: void __usercall DrawPartsShop(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00450ac9
 void DrawPartsShop(int pCurrent_choice, int pCurrent_mode) {
-    LOG_TRACE("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
     DrawPartsText();
 }
 
 // IDA: void __usercall DoPartsShop(int pFade_away@<EAX>)
+// FUNCTION: CARM95 0x00450e06
 void DoPartsShop(int pFade_away) {
+    // GLOBAL: CARM95 0x0050f7a0
     static tFlicette flicker_on[7] = {
         { 43, { 225, 450 }, { 30, 72 } },
         { 43, { 225, 450 }, { 60, 144 } },
@@ -1062,6 +1149,7 @@ void DoPartsShop(int pFade_away) {
         { 221, { 30, 60 }, { 79, 190 } },
         { 221, { 30, 60 }, { 79, 190 } },
     };
+    // GLOBAL: CARM95 0x0050f830
     static tFlicette flicker_off[7] = {
         { 42, { 225, 450 }, { 30, 72 } },
         { 42, { 225, 450 }, { 60, 144 } },
@@ -1071,6 +1159,7 @@ void DoPartsShop(int pFade_away) {
         { 220, { 30, 60 }, { 79, 190 } },
         { 220, { 30, 60 }, { 79, 190 } },
     };
+    // GLOBAL: CARM95 0x0050f8c0
     static tFlicette push[7] = {
         { 254, { 225, 450 }, { 30, 72 } },
         { 255, { 225, 450 }, { 60, 144 } },
@@ -1080,6 +1169,7 @@ void DoPartsShop(int pFade_away) {
         { 222, { 30, 60 }, { 79, 190 } },
         { 225, { 30, 60 }, { 120, 288 } },
     };
+    // GLOBAL: CARM95 0x0050f950
     static tMouse_area mouse_areas[7] = {
         { { 225, 450 }, { 30, 72 }, { 288, 576 }, { 50, 120 }, 0, 0, 0, NULL },
         { { 225, 450 }, { 60, 144 }, { 288, 576 }, { 80, 192 }, 1, 0, 0, NULL },
@@ -1089,6 +1179,7 @@ void DoPartsShop(int pFade_away) {
         { { 30, 60 }, { 79, 190 }, { 45, 90 }, { 106, 254 }, -1, 1, 0, UpClickPart },
         { { 30, 60 }, { 120, 288 }, { 45, 90 }, { 147, 353 }, -1, 1, 0, DownClickPart },
     };
+    // GLOBAL: CARM95 0x0050faa0
     static tInterface_spec interface_spec = {
         0, 250, 190, 0, 0, 0, 6,
         { 1, 0 }, { 4, -1 }, { 4, 0 }, { 4, 3 }, { PartsArrowsOn, PartsArrowsOff },
@@ -1109,7 +1200,6 @@ void DoPartsShop(int pFade_away) {
         NULL
     };
     int result;
-    LOG_TRACE("(%d)", pFade_away);
 
     LoadParts();
     gFade_away_parts_shop = pFade_away;
@@ -1123,44 +1213,51 @@ void DoPartsShop(int pFade_away) {
     gJust_bought_part = 0;
     gRefund_rate = 75;
     CalcPartsIndex();
-    DoInterfaceScreen(&interface_spec, gFaded_palette, 3);
+    result = DoInterfaceScreen(&interface_spec, gFaded_palette, 3);
     DisposeFlicPanel(0);
     UnlockParts();
     gProgram_state.parts_shop_visited = 1;
 }
 
 // IDA: int __usercall AutoPartsDone@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x00450ad9
 int AutoPartsDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
     if (pEscaped) {
-        pCurrent_choice = -1;
+        return -1;
+    } else {
+        return pCurrent_choice;
     }
-    return pCurrent_choice;
 }
 
 // IDA: tSO_result __cdecl DoAutoPartsShop()
+// FUNCTION: CARM95 0x00450b05
 tSO_result DoAutoPartsShop(void) {
+    // GLOBAL: CARM95 0x0050fbd0
     static tFlicette flicker_on[3] = {
         { 43, { 84, 168 }, { 67, 161 } },
         { 43, { 84, 168 }, { 95, 228 } },
         { 43, { 84, 168 }, { 124, 298 } },
     };
+    // GLOBAL: CARM95 0x0050fc10
     static tFlicette flicker_off[3] = {
         { 42, { 84, 168 }, { 67, 161 } },
         { 42, { 84, 168 }, { 95, 228 } },
         { 42, { 84, 168 }, { 124, 298 } },
     };
+    // GLOBAL: CARM95 0x0050fc50
     static tFlicette push[3] = {
         { 284, { 84, 168 }, { 67, 161 } },
         { 284, { 84, 168 }, { 95, 228 } },
         { 284, { 84, 168 }, { 124, 298 } },
     };
+    // GLOBAL: CARM95 0x0050fc90
     static tMouse_area mouse_areas[3] = {
         { { 84, 168 }, { 32, 77 }, { 147, 294 }, { 87, 209 }, 0, 0, 0, NULL },
         { { 84, 168 }, { 95, 228 }, { 147, 294 }, { 115, 276 }, 1, 0, 0, NULL },
         { { 84, 168 }, { 124, 298 }, { 147, 294 }, { 144, 346 }, 2, 0, 0, NULL },
     };
+    // GLOBAL: CARM95 0x0050FD20
     static tInterface_spec interface_spec = {
         0, 280, 0, 0, 0, 0, 6,
         { -1, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { NULL, NULL },
@@ -1176,7 +1273,6 @@ tSO_result DoAutoPartsShop(void) {
         0, NULL
     };
     int result;
-    LOG_TRACE("()");
 
     gProgram_state.dont_load = 1;
     result = DoInterfaceScreen(&interface_spec, 0, gProgram_state.auto_parts_reply);
@@ -1201,91 +1297,98 @@ tSO_result DoAutoPartsShop(void) {
 }
 
 // IDA: void __cdecl SetOpponentFlic()
+// FUNCTION: CARM95 0x004510ba
 void SetOpponentFlic(void) {
-    LOG_TRACE("()");
     ChangePanelFlic(0,
         gOpponents[gCurrent_race.opponent_list[gOpponent_index].index].mug_shot_image_data,
         gOpponents[gCurrent_race.opponent_list[gOpponent_index].index].mug_shot_image_data_length);
 }
 
 // IDA: void __cdecl DrawSceneyMappyInfoVieweyThing()
+// FUNCTION: CARM95 0x00451002
 void DrawSceneyMappyInfoVieweyThing(void) {
-    LOG_TRACE("()");
 
     RemoveTransientBitmaps(1);
-    if (gProgram_state.view_type) {
-        if (gProgram_state.view_type == eVT_Info) {
-            ChangePanelFlic(0, gCurrent_race.info_image_data, gCurrent_race.info_image_data_length);
-        } else if (gProgram_state.view_type == eVT_Opponents) {
-            SetOpponentFlic();
-        }
-    } else {
+    switch (gProgram_state.view_type) {
+    case eVT_Scene:
         ChangePanelFlic(0, gCurrent_race.scene_image_data, gCurrent_race.scene_image_data_length);
+        break;
+    case eVT_Info:
+        ChangePanelFlic(0, gCurrent_race.info_image_data, gCurrent_race.info_image_data_length);
+        break;
+    case eVT_Opponents:
+        SetOpponentFlic();
+        break;
     }
     TellyInImage(GetPanelPixelmap(0), gCurrent_graf_data->start_race_panel_left, gCurrent_graf_data->start_race_panel_top);
 }
 
 // IDA: void __cdecl DismissSceneyMappyInfoVieweyThing()
+// FUNCTION: CARM95 0x00450eea
 void DismissSceneyMappyInfoVieweyThing(void) {
-    LOG_TRACE("()");
 
     RemoveTransientBitmaps(1);
     TellyOutImage(GetPanelPixelmap(0), gCurrent_graf_data->start_race_panel_left, gCurrent_graf_data->start_race_panel_top);
 }
 
 // IDA: int __usercall SelectRaceDone@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x00450eb9
 int SelectRaceDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
     DismissSceneyMappyInfoVieweyThing();
     if (pEscaped) {
         return -1;
+    } else {
+        return pCurrent_choice;
     }
-    return pCurrent_choice;
 }
 
 // IDA: int __usercall StartRaceGoAhead@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00450f2a
 int StartRaceGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
-    if (*pCurrent_choice != 1 || *pCurrent_mode) {
+    if (*pCurrent_choice == 1 && *pCurrent_mode == 0) {
+        RemoveTransientBitmaps(1);
+        DismissSceneyMappyInfoVieweyThing();
+        gProgram_state.view_type++;
+        if (gProgram_state.view_type > eVT_Opponents) {
+            gProgram_state.view_type = eVT_Scene;
+        }
+        switch (gProgram_state.view_type) {
+        case eVT_Scene:
+            RunFlic(213);
+            break;
+        case eVT_Info:
+            RunFlic(210);
+            break;
+        case eVT_Opponents:
+            RunFlic(212);
+            break;
+        }
+        DrawSceneyMappyInfoVieweyThing();
+        return 0;
+    } else {
         return 1;
     }
-    RemoveTransientBitmaps(1);
-    DismissSceneyMappyInfoVieweyThing();
-    gProgram_state.view_type++;
-    if (gProgram_state.view_type > eVT_Opponents) {
-        gProgram_state.view_type = eVT_Scene;
-    }
-    if (gProgram_state.view_type) {
-        if (gProgram_state.view_type == eVT_Info) {
-            RunFlic(210);
-        } else if (gProgram_state.view_type == eVT_Opponents) {
-            RunFlic(212);
-        }
-    } else {
-        RunFlic(213);
-    }
-    DrawSceneyMappyInfoVieweyThing();
-    return 0;
 }
 
 // IDA: int __usercall TryToMoveToArrows@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0045110d
 int TryToMoveToArrows(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
-    if (gProgram_state.view_type != eVT_Opponents) {
+    if (gProgram_state.view_type == eVT_Opponents) {
+        *pCurrent_choice = 5;
+        *pCurrent_mode = 1;
+        DRS3StartSound(gEffects_outlet, 3000);
+        return 1;
+    } else {
         return 0;
     }
-    *pCurrent_choice = 5;
-    *pCurrent_mode = 1;
-    DRS3StartSound(gEffects_outlet, 3000);
-    return 1;
 }
 
 // IDA: int __usercall UpOpponent@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00451160
 int UpOpponent(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
 #if defined(DETHRACE_FIX_BUGS)
     // fixes bug where racers could be scrolled in other race menu modes
@@ -1304,10 +1407,9 @@ int UpOpponent(int* pCurrent_choice, int* pCurrent_mode) {
         gCurrent_graf_data->start_race_panel_top,
         gCurrent_graf_data->start_race_panel_top_clip,
         gCurrent_graf_data->start_race_panel_bottom_clip);
-    if (gOpponent_index == 0) {
-        gOpponent_index = gCurrent_race.number_of_racers;
+    if (gOpponent_index-- == 0) {
+        gOpponent_index = gCurrent_race.number_of_racers - 1;
     }
-    gOpponent_index--;
     SetOpponentFlic();
     DropInImageFromTop(GetPanelPixelmap(0),
         gCurrent_graf_data->start_race_panel_left,
@@ -1318,8 +1420,8 @@ int UpOpponent(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall DownOpponent@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00451285
 int DownOpponent(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
 #if defined(DETHRACE_FIX_BUGS)
     // fixes bug where racers could be scrolled in other race menu modes
@@ -1352,30 +1454,31 @@ int DownOpponent(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall UpClickOpp@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x004513a8
 int UpClickOpp(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     UpOpponent(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall DownClickOpp@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x004513ca
 int DownClickOpp(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     DownOpponent(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: void __cdecl SelectRaceStart()
+// FUNCTION: CARM95 0x004513ec
 void SelectRaceStart(void) {
-    LOG_TRACE("()");
 
     DrawSceneyMappyInfoVieweyThing();
     PrintMemoryDump(0, "INSIDE START RACE");
 }
 
 // IDA: int __cdecl SuggestRace()
+// FUNCTION: CARM95 0x0045140b
 int SuggestRace(void) {
     int i;
     int least_done;
@@ -1383,10 +1486,10 @@ int SuggestRace(void) {
     int suggested_race;
     int new_suggestion;
     int number_of_visits;
-    LOG_TRACE("()");
 
     suggested_so_far = 32767;
     suggested_race = 0;
+    number_of_visits = 1000;
     if (gProgram_state.game_completed) {
         return IRandomBetween(0, gNumber_of_races - 1);
     }
@@ -1399,33 +1502,28 @@ int SuggestRace(void) {
             suggested_race = i;
         }
     }
-    number_of_visits = gRace_list[suggested_race].been_there_done_that;
+    least_done = gRace_list[suggested_race].been_there_done_that;
     new_suggestion = suggested_race;
 
-    if (number_of_visits) {
+    if (least_done) {
         // Jeff: if we have already completed the suggested race, look backwards for a race that we haven't completed as many times
         for (i = suggested_race - 1; i >= 0 && i >= suggested_race - 5; i--) {
-            if (gRace_list[i].rank_required < gProgram_state.rank || gRace_list[i].best_rank > gProgram_state.rank) {
-                continue;
-            }
-            least_done = gRace_list[i].been_there_done_that < number_of_visits;
-            if (!gRace_list[i].been_there_done_that
-                || (least_done && suggested_race - 3 <= i)) {
-                new_suggestion = i;
-                number_of_visits = gRace_list[i].been_there_done_that;
+            if (gRace_list[i].rank_required >= gProgram_state.rank && gRace_list[i].best_rank <= gProgram_state.rank) {
+                if (!gRace_list[i].been_there_done_that
+                    || (gRace_list[i].been_there_done_that < least_done && suggested_race - 3 <= i)) {
+                    new_suggestion = i;
+                    least_done = gRace_list[i].been_there_done_that;
+                }
             }
         }
         // Jeff: look forwards for a race that we haven't completed as many times as the previous suggestion
-        for (i = suggested_race + 1; i < gNumber_of_races; i++) {
-            least_done = gRace_list[i].been_there_done_that < number_of_visits;
-            if (!least_done) {
-                continue;
-            }
-
-            if ((gRace_list[i].rank_required >= gProgram_state.rank && gRace_list[i].best_rank <= gProgram_state.rank)
-                || gProgram_state.game_completed) {
-                new_suggestion = i;
-                number_of_visits = gRace_list[i].been_there_done_that;
+        for (i = suggested_race + 1; gNumber_of_races > i; i++) {
+            if (gRace_list[i].been_there_done_that < least_done) {
+                if ((gRace_list[i].rank_required >= gProgram_state.rank && gRace_list[i].best_rank <= gProgram_state.rank)
+                    || gProgram_state.game_completed) {
+                    new_suggestion = i;
+                    least_done = gRace_list[i].been_there_done_that;
+                }
             }
         }
     }
@@ -1433,6 +1531,7 @@ int SuggestRace(void) {
 }
 
 // IDA: void __usercall SelectRaceDraw(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00451634
 void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
     tOpponent* the_opponent;
     tText_chunk* the_chunk;
@@ -1444,20 +1543,19 @@ void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
     char* sub_pt;
     char sub_str[16];
     tU32* test;
+    // GLOBAL: CARM95 0x536430
     static tU32 test2;
-    LOG_TRACE8("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
     if (gProgram_state.view_type == eVT_Opponents) {
         the_opponent = &gOpponents[gCurrent_race.opponent_list[gOpponent_index].index];
-        for (j = 0; j < the_opponent->text_chunk_count; j++) {
-            the_chunk = &the_opponent->text_chunks[j];
+        for (j = 0, the_chunk = the_opponent->text_chunks; j < the_opponent->text_chunk_count; j++, the_chunk++) {
             if (GetPanelFlicFrameIndex(0) >= the_chunk->frame_cue && GetPanelFlicFrameIndex(0) < the_chunk->frame_end) {
-                y_coord = the_chunk->y_coord * gGraf_specs[gGraf_spec_index].total_height / 200
+                y_coord = the_chunk->y_coord * gGraf_specs[gGraf_spec_index].total_height / 200u
                     + gCurrent_graf_data->start_race_panel_top;
                 for (k = 0; k < the_chunk->line_count; k++) {
                     TransBrPixelmapText(
                         gBack_screen,
-                        the_chunk->x_coord * gGraf_specs[gGraf_spec_index].total_width / 320
+                        the_chunk->x_coord * gGraf_specs[gGraf_spec_index].total_width / 320u
                             + gCurrent_graf_data->start_race_panel_left,
                         y_coord,
                         201,
@@ -1468,15 +1566,14 @@ void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
             }
         }
     } else if (gProgram_state.view_type == eVT_Info) {
-        for (j = 0; j < gCurrent_race.text_chunk_count; j++) {
-            the_chunk = &gCurrent_race.text_chunks[j];
+        for (j = 0, the_chunk = gCurrent_race.text_chunks; j < gCurrent_race.text_chunk_count; j++, the_chunk++) {
             if (GetPanelFlicFrameIndex(0) >= the_chunk->frame_cue && GetPanelFlicFrameIndex(0) < the_chunk->frame_end) {
-                y_coord = the_chunk->y_coord * gGraf_specs[gGraf_spec_index].total_height / 200
+                y_coord = the_chunk->y_coord * gGraf_specs[gGraf_spec_index].total_height / 200u
                     + gCurrent_graf_data->start_race_panel_top;
                 for (k = 0; k < the_chunk->line_count; k++) {
                     TransBrPixelmapText(
                         gBack_screen,
-                        the_chunk->x_coord * gGraf_specs[gGraf_spec_index].total_width / 320
+                        the_chunk->x_coord * gGraf_specs[gGraf_spec_index].total_width / 320u
                             + gCurrent_graf_data->start_race_panel_left,
                         y_coord,
                         201,
@@ -1491,11 +1588,19 @@ void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
     if (*test) {
         test2 = *test;
     }
+#ifdef DETHRACE_FIX_BUGS
+    // The demos only have a single race and menud ata for a single car.
+#define ENABLE_KEVWOZEAR !(harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo)
+#else
+#define ENABLE_KEVWOZEAR 1
+#endif
     if (test[0] == 0x27645433 && test[1] == 0x758f0015) {
-        // cheat code: "KEVWOZEAR"
-        gProgram_state.game_completed = 1;
-        DRS3StartSound(gEffects_outlet, 3202);
-        DRS3StartSound(gEffects_outlet, 3202);
+        if (ENABLE_KEVWOZEAR) {
+            // cheat code: "KEVWOZEAR"
+            gProgram_state.game_completed = 1;
+            DRS3StartSound(gEffects_outlet, 3202);
+            DRS3StartSound(gEffects_outlet, 3202);
+        }
     }
     if (test[0] == 0x33f75455 && test[1] == 0xC10AAAF2) {
         // cheat code: "IWANTTOFIDDLE"
@@ -1503,9 +1608,6 @@ void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
         char s[128];
         FILE* f;
         int i;
-
-        // Jeff
-        assert(strlen(gApplication_path) < 120);
 
         PathCat(s, gApplication_path, "ACTORS");
         PathCat(s, s, "PROG.ACT");
@@ -1526,7 +1628,7 @@ void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
                     fputs("*************", f);
                 }
             }
-            gDecode_thing ^= 0x40u;
+            gDecode_thing ^= '@';
             fclose(f);
             EncodeAllFilesInDirectory("");
             EncodeAllFilesInDirectory("CARS");
@@ -1548,7 +1650,9 @@ void SelectRaceDraw(int pCurrent_choice, int pCurrent_mode) {
 }
 
 // IDA: tSO_result __usercall DoSelectRace@<EAX>(int *pSecond_time_around@<EAX>)
+// FUNCTION: CARM95 0x00451c8e
 tSO_result DoSelectRace(int* pSecond_time_around) {
+    // GLOBAL: CARM95 0x0050fe50
     static tFlicette flicker_on[7] = {
         { 43, { 224, 448 }, { 28, 67 } },
         { 43, { 224, 448 }, { 56, 134 } },
@@ -1559,6 +1663,7 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
         { 221, { 30, 60 }, { 79, 190 } }
     };
 
+    // GLOBAL: CARM95 0x0050fee0
     static tFlicette flicker_off[7] = {
         { 42, { 224, 448 }, { 28, 67 } },
         { 42, { 224, 448 }, { 56, 134 } },
@@ -1569,6 +1674,7 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
         { 220, { 30, 60 }, { 79, 190 } }
     };
 
+    // GLOBAL: CARM95 0x0050ff70
     static tFlicette push[7] = {
         { 195, { 224, 448 }, { 28, 67 } },
         { -1, { 224, 448 }, { 56, 134 } },
@@ -1579,6 +1685,7 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
         { 225, { 30, 60 }, { 119, 286 } }
     };
 
+    // GLOBAL: CARM95 0x00510000
     static tMouse_area mouse_areas[7] = {
         { { 224, 448 }, { 28, 67 }, { 287, 574 }, { 48, 115 }, 0, 0, 0, NULL },
         { { 224, 448 }, { 56, 134 }, { 287, 574 }, { 76, 182 }, 1, 0, 0, NULL },
@@ -1603,6 +1710,7 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
             &DownClickOpp }
     };
 
+    // GLOBAL: CARM95 0x00510150
     static tInterface_spec interface_spec = {
         0,                            // initial_imode
         191,                          // first_opening_flic
@@ -1660,7 +1768,6 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
     int default_choice;
     int suggested;
     int old_current_race;
-    LOG_TRACE("(%p)", pSecond_time_around);
 
     suggested = SuggestRace();
     if (!*pSecond_time_around) {
@@ -1669,6 +1776,7 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
     }
     gProgram_state.parts_shop_visited = 0;
     gProgram_state.dont_load = 1;
+    default_choice = 4;
     gDeceased_image = LoadPixelmap("DECEASED.PIX");
     InitialiseFlicPanel(
         0,
@@ -1681,26 +1789,14 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
         gProgram_state.view_type = 0;
         gOpponent_index = 0;
         gStart_interface_spec = &interface_spec;
-        if (gFaded_palette || gCurrent_splash) {
-            result = DoInterfaceScreen(&interface_spec, 1, 4);
-        } else {
-            result = DoInterfaceScreen(&interface_spec, 0, 4);
-        }
+        result = DoInterfaceScreen(&interface_spec, gFaded_palette || gCurrent_splash, default_choice);
+        default_choice = 4;
 
         if (result == 0 || result == 2 || result == 3) {
             DisposeFlicPanel(0);
 
-            if (result == 2) {
-                if (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo) {
-                    DoFeatureUnavailableInDemo();
-                } else {
-                    RunFlic(192);
-                    DoPartsShop(0);
-                }
-            } else if (result == 3) {
-                RunFlic(192);
-                DoChangeCar();
-            } else if (result == 0) {
+            switch (result) {
+            case 0:
                 RunFlic(192);
                 old_current_race = gProgram_state.current_race_index;
                 DoChangeRace();
@@ -1709,6 +1805,23 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
                     SelectOpponents(&gCurrent_race);
                     LoadRaceInfo(gProgram_state.current_race_index, &gCurrent_race);
                 }
+                default_choice = 4;
+                break;
+            case 2:
+#ifdef DETHRACE_FIX_BUGS
+                if (harness_game_info.mode == eGame_carmageddon_demo || harness_game_info.mode == eGame_splatpack_demo || harness_game_info.mode == eGame_splatpack_xmas_demo) {
+                    DoFeatureUnavailableInDemo();
+                }
+#endif
+                RunFlic(192);
+                DoPartsShop(0);
+                default_choice = 4;
+                break;
+            case 3:
+                RunFlic(192);
+                DoChangeCar();
+                default_choice = 4;
+                break;
             }
             InitialiseFlicPanel(
                 0,
@@ -1724,25 +1837,25 @@ tSO_result DoSelectRace(int* pSecond_time_around) {
     DisposeFlicPanel(0);
     *pSecond_time_around = 1;
     gProgram_state.dont_load = 0;
-    if (result >= 0) {
-        *pSecond_time_around = 1;
-        if (gProgram_state.parts_shop_visited || !PartsShopRecommended()) {
-            FadePaletteDown();
-            return eSO_continue;
-        } else {
-            RunFlic(192);
-            return DoAutoPartsShop();
-        }
-    } else {
+    if (result < 0) {
         RunFlic(192);
         gDisallow_abandon_race = 1;
         return eSO_main_menu_invoked;
+    } else {
+        *pSecond_time_around = 1;
+        if (!gProgram_state.parts_shop_visited && PartsShopRecommended()) {
+            RunFlic(192);
+            return DoAutoPartsShop();
+        } else {
+            FadePaletteDown();
+            return eSO_continue;
+        }
     }
 }
 
 // IDA: void __usercall DrawGridCar(int pX@<EAX>, int pY@<EDX>, br_pixelmap *pImage@<EBX>)
+// FUNCTION: CARM95 0x00452b89
 void DrawGridCar(int pX, int pY, br_pixelmap* pImage) {
-    LOG_TRACE("(%d, %d, %p)", pX, pY, pImage);
 
     if (gCurrent_graf_data->grid_left_clip <= pX && pX + pImage->width < gCurrent_graf_data->grid_right_clip) {
         DRPixelmapRectangleMaskedCopy(gBack_screen, pX, pY, pImage, 0, 0, pImage->width, pImage->height);
@@ -1750,6 +1863,7 @@ void DrawGridCar(int pX, int pY, br_pixelmap* pImage) {
 }
 
 // IDA: void __usercall DrawGrid(int pOffset@<EAX>, int pDraw_it@<EDX>)
+// FUNCTION: CARM95 0x00452077
 void DrawGrid(int pOffset, int pDraw_it) {
     int i;
     int j;
@@ -1757,25 +1871,27 @@ void DrawGrid(int pOffset, int pDraw_it) {
     int x;
     int str_x;
     int width_job;
-    int done_highest;
-    int str_index;
-    int swap_1_x = 0;
-    int swap_1_y = 0;
-    int swap_2_x = 0;
-    int swap_2_y = 0;
-    br_pixelmap* the_image = NULL;
-    br_pixelmap* swap_1_image = NULL;
-    br_pixelmap* swap_2_image = NULL;
-    char numbers_str[4][100];
-    char total_str[256];
+    int done_highest = 0;
+    int str_index = 0;
+    int swap_1_x;
+    int swap_1_y;
+    int swap_2_x;
+    int swap_2_y;
+    br_pixelmap* the_image;
+    br_pixelmap* swap_1_image;
+    br_pixelmap* swap_2_image;
+    char numbers_str[4][100] = { "", "", "", "" };
+    char total_str[256] = "";
     tU32 the_time;
-    LOG_TRACE("(%d, %d)", pOffset, pDraw_it);
 
-    done_highest = 0;
-    str_index = 0;
-
-    memset(numbers_str, 0, sizeof(numbers_str));
-    memset(total_str, 0, sizeof(total_str));
+#ifdef DETHRACE_FIX_BUGS
+    swap_1_x = 0;
+    swap_1_y = 0;
+    swap_2_x = 0;
+    swap_2_y = 0;
+    swap_1_image = NULL;
+    swap_2_image = NULL;
+#endif
 
     the_time = PDGetTotalTime();
     BrPixelmapRectangleFill(
@@ -1792,11 +1908,11 @@ void DrawGrid(int pOffset, int pDraw_it) {
             the_image = gCurrent_race.opponent_list[i].car_spec->grid_icon_image;
         }
         y = gCurrent_graf_data->grid_top_y
-            + i % 2 * gCurrent_graf_data->grid_y_pitch
+            + i % -2 * gCurrent_graf_data->grid_y_pitch
             - the_image->height / 2
             - gGrid_y_adjust;
         x = gCurrent_graf_data->grid_left_x
-            + i % 2 * gCurrent_graf_data->grid_x_stagger
+            + i % -2 * gCurrent_graf_data->grid_x_stagger
             + i / 2 * gCurrent_graf_data->grid_x_pitch
             - pOffset;
         if (i == gSwap_grid_1) {
@@ -1840,29 +1956,27 @@ void DrawGrid(int pOffset, int pDraw_it) {
         if (gCurrent_race.opponent_list[i].index < 0) {
             str_index = 2;
         } else if (gProgram_state.rank <= gCurrent_race.opponent_list[i].ranking) {
-            if (str_index >= 2) {
-                str_index = 3;
-            } else {
+            if (str_index < 2) {
                 str_index = 1;
+            } else {
+                str_index = 3;
             }
         }
-        if (gCurrent_race.opponent_list[i].index >= 0) {
-            if (gOpponents[gCurrent_race.opponent_list[i].index].car_number <= 0
-                || gOpponents[gCurrent_race.opponent_list[i].index].car_number >= 100) {
-                if (gOpponents[gCurrent_race.opponent_list[i].index].car_number < 0) {
-                    sprintf(&numbers_str[str_index][strlen(numbers_str[str_index])], "%c ", ':');
-                }
+        if (gCurrent_race.opponent_list[i].index < 0) {
+            if (!gProgram_state.frank_or_anniness) {
+                sprintf(&numbers_str[str_index][strlen(numbers_str[str_index])], "%c ", ';');
             } else {
+                sprintf(&numbers_str[str_index][strlen(numbers_str[str_index])], "%c ", '<');
+            }
+        } else {
+            if (gOpponents[gCurrent_race.opponent_list[i].index].car_number > 0
+                && gOpponents[gCurrent_race.opponent_list[i].index].car_number < 100) {
                 sprintf(
                     &numbers_str[str_index][strlen(numbers_str[str_index])],
                     "%d ",
                     gOpponents[gCurrent_race.opponent_list[i].index].car_number);
-            }
-        } else {
-            if (gProgram_state.frank_or_anniness == eAnnie) {
-                sprintf(&numbers_str[str_index][strlen(numbers_str[str_index])], "%c ", '<');
-            } else {
-                sprintf(&numbers_str[str_index][strlen(numbers_str[str_index])], "%c ", ';');
+            } else if (gOpponents[gCurrent_race.opponent_list[i].index].car_number < 0) {
+                sprintf(&numbers_str[str_index][strlen(numbers_str[str_index])], "%c ", ':');
             }
         }
     }
@@ -1883,11 +1997,12 @@ void DrawGrid(int pOffset, int pDraw_it) {
             numbers_str[2][strlen(numbers_str[2]) - 1] = '\0';
         }
         strcpy(total_str, numbers_str[0]);
-        for (i = 1; i < COUNT_OF(numbers_str); i++) {
+        for (i = 1; i <= COUNT_OF(numbers_str) - 1; i++) {
             strcat(total_str, numbers_str[i]);
         }
-        str_x = (gCurrent_graf_data->grid_numbers_left + gCurrent_graf_data->grid_numbers_right) / 2
-            - (BrPixelmapTextWidth(gBack_screen, gBig_font, total_str) / 2);
+        width_job = BrPixelmapTextWidth(gBack_screen, gBig_font, total_str);
+        str_x = (gCurrent_graf_data[0].grid_numbers_right + gCurrent_graf_data->grid_numbers_left) / 2
+            - width_job / 2;
         BrPixelmapRectangleFill(
             gBack_screen,
             gCurrent_graf_data->grid_numbers_left,
@@ -1924,35 +2039,32 @@ void DrawGrid(int pOffset, int pDraw_it) {
 }
 
 // IDA: void __usercall MoveGrid(int pFrom@<EAX>, int pTo@<EDX>, tS32 pTime_to_move@<EBX>)
+// FUNCTION: CARM95 0x004531d4
 void MoveGrid(int pFrom, int pTo, tS32 pTime_to_move) {
     tS32 start_time;
     tS32 the_time;
     int move_distance;
     int pitch;
-    LOG_TRACE("(%d, %d, %d)", pFrom, pTo, pTime_to_move);
 
     pitch = gCurrent_graf_data->grid_x_pitch;
+    move_distance = (pTo - pFrom) * pitch;
     start_time = PDGetTotalTime();
-    while (1) {
-        the_time = PDGetTotalTime();
-        if (start_time + pTime_to_move <= the_time) {
-            break;
-        }
-        DrawGrid(pitch * pFrom + pitch * (pTo - pFrom) * (the_time - start_time) / pTime_to_move, 1);
+    while (pTime_to_move + start_time > (the_time = PDGetTotalTime())) {
+        DrawGrid(move_distance * (the_time - start_time) / pTime_to_move + pFrom * pitch, 1);
     }
-    DrawGrid(pitch * pTo, 1);
+    DrawGrid(pTo * pitch, 1);
 }
 
 // IDA: int __usercall CalcGridOffset@<EAX>(int pPosition@<EAX>)
+// FUNCTION: CARM95 0x00452bf3
 int CalcGridOffset(int pPosition) {
-    LOG_TRACE("(%d)", pPosition);
 
     return pPosition / 2 - 1;
 }
 
 // IDA: void __usercall GridDraw(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00452039
 void GridDraw(int pCurrent_choice, int pCurrent_mode) {
-    LOG_TRACE8("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
     if (gDraw_grid_status > eGrid_draw_none) {
         DrawGrid(gCurrent_graf_data->grid_x_pitch * CalcGridOffset(gOur_starting_position), 0);
@@ -1960,9 +2072,9 @@ void GridDraw(int pCurrent_choice, int pCurrent_mode) {
 }
 
 // IDA: void __usercall ActuallySwapOrder(int pFirst_index@<EAX>, int pSecond_index@<EDX>)
+// FUNCTION: CARM95 0x00453255
 void ActuallySwapOrder(int pFirst_index, int pSecond_index) {
     tOpp_spec temp_opp;
-    LOG_TRACE("(%d, %d)", pFirst_index, pSecond_index);
 
     temp_opp = gCurrent_race.opponent_list[pFirst_index];
     gCurrent_race.opponent_list[pFirst_index] = gCurrent_race.opponent_list[pSecond_index];
@@ -1973,20 +2085,17 @@ void ActuallySwapOrder(int pFirst_index, int pSecond_index) {
 }
 
 // IDA: void __usercall DoGridTransition(int pFirst_index@<EAX>, int pSecond_index@<EDX>)
+// FUNCTION: CARM95 0x004530ca
 void DoGridTransition(int pFirst_index, int pSecond_index) {
     tU32 start_time;
     tU32 the_time;
-    LOG_TRACE("(%d, %d)", pFirst_index, pSecond_index);
 
-    if (pFirst_index != pSecond_index) {
+    if (pFirst_index == pSecond_index) {
+    } else {
         start_time = PDGetTotalTime();
         gSwap_grid_1 = pFirst_index;
         gSwap_grid_2 = pSecond_index;
-        while (1) {
-            the_time = PDGetTotalTime();
-            if (start_time + 150 <= the_time) {
-                break;
-            }
+        while ((the_time = PDGetTotalTime()) < start_time + 150) {
             RemoveTransientBitmaps(1);
             gGrid_transition_stage = 100 * (the_time - start_time) / 150;
             DrawGrid(gCurrent_graf_data->grid_x_pitch * CalcGridOffset(gOur_starting_position), 0);
@@ -2002,6 +2111,7 @@ void DoGridTransition(int pFirst_index, int pSecond_index) {
 }
 
 // IDA: void __cdecl ChallengeStart()
+// FUNCTION: CARM95 0x00452c0c
 void ChallengeStart(void) {
     br_pixelmap* the_map;
     int i;
@@ -2011,7 +2121,6 @@ void ChallengeStart(void) {
     FILE* f;
     tPath_name the_path;
     char s[256];
-    LOG_TRACE("()");
 
     InitialiseFlicPanel(
         0,
@@ -2024,7 +2133,7 @@ void ChallengeStart(void) {
         gOpponents[gChallenger_index__racestrt].mug_shot_image_data,
         gOpponents[gChallenger_index__racestrt].mug_shot_image_data_length);
     if (gScreen->row_bytes < 0) {
-        BrFatal("C:\\Msdev\\Projects\\DethRace\\Racestrt.c", 2610, "Bruce bug at line %d, file C:\\Msdev\\Projects\\DethRace\\Racestrt.c", 50);
+        BrFatal("C:\\Msdev\\Projects\\DethRace\\Racestrt.c", 2610, "Bruce bug at line %d, file C:\\Msdev\\Projects\\DethRace\\Racestrt.c", 2610);
     }
     the_map = DRPixelmapAllocate(
 #ifdef DETHRACE_3DFX_PATCH
@@ -2080,8 +2189,8 @@ void ChallengeStart(void) {
 }
 
 // IDA: int __usercall CheckNextStage@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00453021
 int CheckNextStage(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (gDare_start_time && (unsigned int)(PDGetTotalTime() - gDare_start_time) >= 7500) {
         BrPixelmapRectangleFill(
@@ -2099,18 +2208,16 @@ int CheckNextStage(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall ChallengeDone@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x004532f7
 int ChallengeDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
-    if (!pEscaped || gDare_start_time) {
-        if (!pEscaped && gDare_start_time) {
-            ActuallySwapOrder(gOur_starting_position, gChallenger_position);
-            ChallengeOccurred(gChallenger_index__racestrt, 1);
-        }
-    } else {
+    if (pEscaped && !gDare_start_time) {
         DoGridTransition(gOur_starting_position, gOriginal_position);
         ActuallySwapOrder(gOur_starting_position, gOriginal_position);
         ChallengeOccurred(gChallenger_index__racestrt, 0);
+    } else if (!pEscaped && gDare_start_time) {
+        ActuallySwapOrder(gOur_starting_position, gChallenger_position);
+        ChallengeOccurred(gChallenger_index__racestrt, 1);
     }
     ChallengeOccurred(gChallenger_index__racestrt, pEscaped == 0);
     if (pTimed_out) {
@@ -2121,14 +2228,20 @@ int ChallengeDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEs
 }
 
 // IDA: void __cdecl DoChallengeScreen()
+// FUNCTION: CARM95 0x00453952
 void DoChallengeScreen(void) {
+    // GLOBAL: CARM95 0x00510280
     static tFlicette flicker_on[2] = { { 43, { 54, 108 }, { 157, 377 } }, { 43, { 218, 436 }, { 157, 377 } } };
+    // GLOBAL: CARM95 0x005102a8
     static tFlicette flicker_off[2] = { { 42, { 54, 108 }, { 157, 377 } }, { 42, { 218, 436 }, { 157, 377 } } };
+    // GLOBAL: CARM95 0x005102d0
     static tFlicette push[2] = { { 304, { 54, 108 }, { 157, 377 } }, { 305, { 218, 436 }, { 157, 377 } } };
+    // GLOBAL: CARM95 0x005102f8
     static tMouse_area mouse_areas[2] = {
         { { 54, 108 }, { 157, 377 }, { 117, 234 }, { 178, 427 }, 0, 0, 0, NULL },
         { { 218, 436 }, { 157, 377 }, { 281, 562 }, { 178, 427 }, 1, 0, 0, NULL }
     };
+    // GLOBAL: CARM95 0x00510358
     static tInterface_spec interface_spec = {
         0,               // initial_imode
         301,             // first_opening_flic
@@ -2183,7 +2296,6 @@ void DoChallengeScreen(void) {
     };
 
     int result;
-    LOG_TRACE("()");
 
     gOriginal_position = gOur_starting_position;
     gChallenger_position = IRandomBetween(0, 1);
@@ -2198,29 +2310,29 @@ void DoChallengeScreen(void) {
 }
 
 // IDA: int __usercall GridDone@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x004533c6
 int GridDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
     if (pTimed_out) {
         return 0;
-    }
-    if (pEscaped) {
+    } else if (pEscaped) {
         return -1;
+    } else {
+        return pCurrent_choice;
     }
-    return pCurrent_choice;
 }
 
 // IDA: void __cdecl GridStart()
+// FUNCTION: CARM95 0x00453408
 void GridStart(void) {
-    LOG_TRACE("()");
 
     MoveGrid(-2, CalcGridOffset(gOur_starting_position), 400);
     PrintMemoryDump(0, "IN GRID SCREEN");
 }
 
 // IDA: int __usercall GridMoveLeft@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00453440
 int GridMoveLeft(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (gOur_starting_position
         && gCurrent_race.opponent_list[gOur_starting_position - 1].ranking >= gProgram_state.rank) {
@@ -2236,8 +2348,8 @@ int GridMoveLeft(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall GridMoveRight@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x004534e7
 int GridMoveRight(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (gOur_starting_position < gCurrent_race.number_of_racers - 1) {
         AddToFlicQueue(
@@ -2252,23 +2364,27 @@ int GridMoveRight(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall GridClickCar@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x00453578
 int GridClickCar(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
     int rel_pos;
     int new_pos;
     int base_pos;
     int x_coord;
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
-    rel_pos = ((gCurrent_graf_data->grid_bottom_clip - gCurrent_graf_data->grid_top_clip) / 2) < pY_offset;
-    if (rel_pos) {
+    if (((gCurrent_graf_data->grid_bottom_clip - gCurrent_graf_data->grid_top_clip) / 2) < pY_offset) {
+        rel_pos = 1;
         pX_offset -= gCurrent_graf_data->grid_x_stagger;
+    } else {
+        rel_pos = 0;
     }
     x_coord = pX_offset / gCurrent_graf_data->grid_x_pitch;
     if (x_coord > 2) {
         x_coord = 2;
     }
-    new_pos = 2 * x_coord + rel_pos + (gOur_starting_position & ~1) - 2;
-    if (new_pos >= 0 && new_pos < gCurrent_race.number_of_racers && gProgram_state.rank < gCurrent_race.opponent_list[new_pos].ranking) {
+    rel_pos += 2 * x_coord;
+    base_pos = (gOur_starting_position & ~1) - 2;
+    new_pos = rel_pos + base_pos;
+    if (new_pos >= 0 && new_pos < gCurrent_race.number_of_racers && gProgram_state.rank <= gCurrent_race.opponent_list[new_pos].ranking) {
         DRS3StartSound(gEffects_outlet, 3000);
         DoGridTransition(gOur_starting_position, new_pos);
     }
@@ -2276,10 +2392,10 @@ int GridClickCar(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY
 }
 
 // IDA: int __usercall GridClickNumbers@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x00453671
 int GridClickNumbers(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
     int new_pos;
     int i;
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     new_pos = -1;
     for (i = 0; i < gCurrent_race.number_of_racers; i++) {
@@ -2296,24 +2412,24 @@ int GridClickNumbers(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, in
 }
 
 // IDA: int __usercall GridClickLeft@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x00453746
 int GridClickLeft(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     GridMoveLeft(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall GridClickRight@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>, int pX_offset@<EBX>, int pY_offset@<ECX>)
+// FUNCTION: CARM95 0x00453768
 int GridClickRight(int* pCurrent_choice, int* pCurrent_mode, int pX_offset, int pY_offset) {
-    LOG_TRACE("(%p, %p, %d, %d)", pCurrent_choice, pCurrent_mode, pX_offset, pY_offset);
 
     GridMoveRight(pCurrent_choice, pCurrent_mode);
     return 0;
 }
 
 // IDA: int __usercall CheckChallenge@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0045378a
 int CheckChallenge(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE8("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (!gChallenge_time || PDGetTotalTime() < gChallenge_time) {
         return 0;
@@ -2323,9 +2439,9 @@ int CheckChallenge(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall FindBestPos@<EAX>(int pOur_rank@<EAX>)
+// FUNCTION: CARM95 0x00453b41
 int FindBestPos(int pOur_rank) {
     int i;
-    LOG_TRACE("(%d)", pOur_rank);
 
     for (i = gCurrent_race.number_of_racers - 1; i >= 0; i--) {
         if (gCurrent_race.opponent_list[i].ranking < pOur_rank) {
@@ -2336,16 +2452,16 @@ int FindBestPos(int pOur_rank) {
 }
 
 // IDA: int __usercall SortGridFunction@<EAX>(void *pFirst_one@<EAX>, void *pSecond_one@<EDX>)
+// FUNCTION: CARM95 0x004537d2
 int SortGridFunction(const void* pFirst_one, const void* pSecond_one) {
-    LOG_TRACE("(%p, %p)", pFirst_one, pSecond_one);
 
     return ((tOpp_spec*)pFirst_one)->ranking - ((tOpp_spec*)pSecond_one)->ranking;
 }
 
 // IDA: void __cdecl SortOpponents()
+// FUNCTION: CARM95 0x004539f6
 void SortOpponents(void) {
     int i;
-    LOG_TRACE("()");
 
     for (i = 0; gCurrent_race.number_of_racers > i; ++i) {
         if (gCurrent_race.opponent_list[i].index < 0) {
@@ -2365,24 +2481,29 @@ void SortOpponents(void) {
 }
 
 // IDA: tSO_result __cdecl DoGridPosition()
+// FUNCTION: CARM95 0x004537ee
 tSO_result DoGridPosition(void) {
+    // GLOBAL: CARM95 0x00510488
     static tFlicette flicker_on[3] = {
         { 43, { 240, 480 }, { 158, 379 } },
         { 293, { 56, 112 }, { 151, 362 } },
         { 296, { 136, 272 }, { 151, 362 } }
     };
 
+    // GLOBAL: CARM95 0x005104c8
     static tFlicette flicker_off[3] = {
         { 42, { 240, 480 }, { 158, 379 } },
         { 292, { 56, 112 }, { 151, 362 } },
         { 295, { 136, 272 }, { 151, 362 } }
     };
 
+    // GLOBAL: CARM95 0x00510508
     static tFlicette push[3] = {
         { 154, { 240, 480 }, { 158, 379 } },
         { 294, { 56, 112 }, { 151, 362 } },
         { 297, { 136, 272 }, { 151, 362 } }
     };
+    // GLOBAL: CARM95 0x00510548
     static tMouse_area mouse_areas[5] = {
         { { 240, 480 }, { 158, 379 }, { 305, 610 }, { 178, 427 }, 0, 0, 0, NULL },
         { { 56, 112 },
@@ -2419,6 +2540,7 @@ tSO_result DoGridPosition(void) {
             GridClickNumbers }
     };
 
+    // GLOBAL: CARM95 0x00510638
     static tInterface_spec interface_spec = {
         0,                       // initial_imode
         290,                     // first_opening_flic
@@ -2473,7 +2595,6 @@ tSO_result DoGridPosition(void) {
     };
 
     int result;
-    LOG_TRACE("()");
 
     gStart_interface_spec = &interface_spec;
     if (!gAusterity_mode) {
@@ -2494,15 +2615,14 @@ tSO_result DoGridPosition(void) {
             gChallenge_time = 0;
         }
         result = DoInterfaceScreen(&interface_spec, 0, 0);
-        if (result >= 0) {
-            FadePaletteDown();
-        } else {
+        if (result < 0) {
             RunFlic(291);
+        } else {
+            FadePaletteDown();
         }
         if (result == -1) {
             return eSO_main_menu_invoked;
-        }
-        if (result == -2) {
+        } else if (result == -2) {
             DoChallengeScreen();
         }
         DisposeGridIcons(&gCurrent_race);
@@ -2511,11 +2631,11 @@ tSO_result DoGridPosition(void) {
 }
 
 // IDA: void __cdecl CheckPlayersAreResponding()
+// FUNCTION: CARM95 0x00453ba4
 void CheckPlayersAreResponding(void) {
     int i;
     tU32 time;
     tNet_message* message;
-    LOG_TRACE("()");
 
     time = PDGetTotalTime();
     for (i = 0; i < gNumber_of_net_players; i++) {
@@ -2531,16 +2651,16 @@ void CheckPlayersAreResponding(void) {
 }
 
 // IDA: void __cdecl NetSynchStartStart()
+// FUNCTION: CARM95 0x00453b94
 void NetSynchStartStart(void) {
-    LOG_TRACE("()");
 
     CheckPlayersAreResponding();
 }
 
 // IDA: void __usercall DrawAnItem(int pX@<EAX>, int pY_index@<EDX>, int pFont_index@<EBX>, char *pText@<ECX>)
 //  Suffix added to avoid duplicate symbol
+// FUNCTION: CARM95 0x00453fc0
 void DrawAnItem__racestrt(int pX, int pY_index, int pFont_index, char* pText) {
-    LOG_TRACE("(%d, %d, %d, \"%s\")", pX, pY_index, pFont_index, pText);
 
     TransBrPixelmapText(gBack_screen,
         pX,
@@ -2551,11 +2671,11 @@ void DrawAnItem__racestrt(int pX, int pY_index, int pFont_index, char* pText) {
 }
 
 // IDA: void __usercall NetSynchStartDraw(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00453c5b
 void NetSynchStartDraw(int pCurrent_choice, int pCurrent_mode) {
     int i;
     int number_ready;
     char s[256];
-    LOG_TRACE("(%d, %d)", pCurrent_choice, pCurrent_mode);
 
     number_ready = 0;
     CheckPlayersAreResponding();
@@ -2579,10 +2699,18 @@ void NetSynchStartDraw(int pCurrent_choice, int pCurrent_mode) {
         DRPixelmapRectangleMaskedCopy(gBack_screen,
             gCurrent_graf_data->start_synch_x_0,
             gCurrent_graf_data->start_synch_top + 1 + gCurrent_graf_data->start_synch_y_pitch * i,
+#ifdef DETHRACE_FIX_BUGS
             gIcons_pix_low_res, /* DOS version uses low res, Windows version uses normal res */
+#else
+            gIcons_pix,
+#endif
             0,
             gNet_players[i].car_index * gCurrent_graf_data->net_head_icon_height,
+#ifdef DETHRACE_FIX_BUGS
             gIcons_pix_low_res->width, /* DOS version uses low res, Windows version uses normal res */
+#else
+            gIcons_pix->width,
+#endif
             gCurrent_graf_data->net_head_icon_height);
         TurnOnPaletteConversion();
         DrawAnItem__racestrt(
@@ -2605,20 +2733,22 @@ void NetSynchStartDraw(int pCurrent_choice, int pCurrent_mode) {
 }
 
 // IDA: int __usercall NetSynchStartDone@<EAX>(int pCurrent_choice@<EAX>, int pCurrent_mode@<EDX>, int pGo_ahead@<EBX>, int pEscaped@<ECX>, int pTimed_out)
+// FUNCTION: CARM95 0x00454007
 int NetSynchStartDone(int pCurrent_choice, int pCurrent_mode, int pGo_ahead, int pEscaped, int pTimed_out) {
-    LOG_TRACE("(%d, %d, %d, %d, %d)", pCurrent_choice, pCurrent_mode, pGo_ahead, pEscaped, pTimed_out);
 
     if (pEscaped) {
-        pCurrent_choice = -1;
-    } else if (pCurrent_choice == 0) {
-        gProgram_state.prog_status = eProg_idling;
+        return -1;
+    } else {
+        if (pCurrent_choice == 0) {
+            gProgram_state.prog_status = eProg_idling;
+        }
     }
     return pCurrent_choice;
 }
 
 // IDA: int __usercall NetSynchStartGoAhead@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x00454047
 int NetSynchStartGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
     if (*pCurrent_choice == 0 || (gNet_mode == eNet_mode_host && *pCurrent_choice >= 0)) {
         if (*pCurrent_choice == 0) {
@@ -2644,23 +2774,24 @@ int NetSynchStartGoAhead(int* pCurrent_choice, int* pCurrent_mode) {
 }
 
 // IDA: int __usercall ExitWhenReady@<EAX>(int *pCurrent_choice@<EAX>, int *pCurrent_mode@<EDX>)
+// FUNCTION: CARM95 0x0045412d
 int ExitWhenReady(int* pCurrent_choice, int* pCurrent_mode) {
-    LOG_TRACE("(%p, %p)", pCurrent_choice, pCurrent_mode);
 
-    if (!gSynch_race_start && gProgram_state.prog_status != eProg_game_starting) {
+    if (gSynch_race_start || gProgram_state.prog_status == eProg_game_starting) {
+        *pCurrent_choice = 1;
+        return 1;
+    } else {
         if (gProgram_state.prog_status == eProg_idling) {
             *pCurrent_choice = 0;
             return 1;
         } else {
             return 0;
         }
-    } else {
-        *pCurrent_choice = 1;
-        return 1;
     }
 }
 
 // IDA: tSO_result __usercall NetSynchRaceStart2@<EAX>(tNet_synch_mode pMode@<EAX>)
+// FUNCTION: CARM95 0x00454196
 tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
     static tFlicette flicker_on_hf[2] = {
         { 321, { 219, 112 }, { 172, 362 } },
@@ -2678,6 +2809,8 @@ tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
         { { 219, 480 }, { 172, 379 }, { 282, 182 }, { 192, 427 }, 0, 0, 0, NULL },
         { { 39, 112 }, { 172, 362 }, { 102, 182 }, { 192, 379 }, 1, 0, 0, NULL },
     };
+
+    // GLOBAL: CARM95 0x00510840
     static tInterface_spec interface_spec_hf = {
         0,
         203,
@@ -2742,6 +2875,7 @@ tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
     static tMouse_area mouse_areas_hs[1] = {
         { { 219, 480 }, { 172, 379 }, { 282, 182 }, { 192, 427 }, 0, 0, 0, NULL },
     };
+    // GLOBAL: CARM95 0x005109E8
     static tInterface_spec interface_spec_hs = {
         0, 209, 0, 0, 0, 0, 8,
         { -1, 0 }, { 1, 0 }, { 0, 0 }, { 1, 0 }, { NULL, NULL },
@@ -2766,6 +2900,8 @@ tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
     static tMouse_area mouse_areas_c[1] = {
         { { 219, 112 }, { 172, 362 }, { 282, 182 }, { 192, 379 }, 0, 0, 0, NULL },
     };
+
+    // GLOBAL: CARM95 0x00510B90
     static tInterface_spec interface_spec_c = {
         0, 204, 0, 0, 0, 0, 8,
         { -1, 0 }, { 1, 0 }, { 0, 0 }, { 1, 0 }, { NULL, NULL },
@@ -2779,16 +2915,16 @@ tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
         COUNT_OF(mouse_areas_c), mouse_areas_c, 0, NULL
     };
     int result;
-    LOG_TRACE("(%d)", pMode);
 
     if (pMode != eNet_synch_client) {
         if (gCurrent_net_game->status.stage == eNet_game_starting) {
             gCurrent_net_game->status.stage = eNet_game_ready;
         }
         SetUpNetCarPositions();
-        // gNet_synch_start = PDGetTotalTime();
+        gNet_synch_start = PDGetTotalTime();
     }
     TurnOnPaletteConversion();
+
     switch (pMode) {
     case eNet_synch_host_first:
         result = DoInterfaceScreen(&interface_spec_hf, 0, 1);
@@ -2799,20 +2935,28 @@ tSO_result NetSynchRaceStart2(tNet_synch_mode pMode) {
     case eNet_synch_client:
         result = DoInterfaceScreen(&interface_spec_c, 0, -1);
         break;
+#ifdef DETHRACE_FIX_BUGS
     default:
+        result = 1;
         break;
+#endif
     }
     TurnOffPaletteConversion();
     FadePaletteDown();
-    if (result > -2 && result < 1) {
+    switch (result) {
+    case -1:
+    case 0:
         NetLeaveGame(gCurrent_net_game);
+        return eSO_continue;
+    case 1:
+        return eSO_continue;
     }
     return eSO_continue;
 }
 
 // IDA: tSO_result __cdecl NetSynchRaceStart()
+// FUNCTION: CARM95 0x004542c4
 tSO_result NetSynchRaceStart(void) {
-    LOG_TRACE("()");
 
     SuspendPendingFlic();
     if (gNet_mode == eNet_mode_host) {

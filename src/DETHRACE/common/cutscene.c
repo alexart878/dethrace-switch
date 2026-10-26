@@ -18,16 +18,17 @@
 #include <stdlib.h>
 #include <time.h>
 
+// GLOBAL: CARM95 0x0051D424
 tS32 gLast_demo_end_anim = -90000;
 
 // IDA: void __usercall ShowCutScene(int pIndex@<EAX>, int pWait_end@<EDX>, int pSound_ID@<EBX>, br_scalar pDelay)
+// FUNCTION: CARM95 0x004a58c0
 void ShowCutScene(int pIndex, int pWait_end, int pSound_ID, br_scalar pDelay) {
-    LOG_TRACE("(%d, %d, %d, %f)", pIndex, pWait_end, pSound_ID, pDelay);
 
     gProgram_state.cut_scene = 1;
     if (pSound_ID >= 0) {
         DRS3LoadSound(pSound_ID);
-        SetFlicSound(pSound_ID, PDGetTotalTime() + 1000.f * pDelay);
+        SetFlicSound(pSound_ID, PDGetTotalTime() + (int)(1000.f * pDelay));
     }
     SetNonFatalAllocationErrors();
     RunFlic(pIndex);
@@ -47,15 +48,17 @@ void ShowCutScene(int pIndex, int pWait_end, int pSound_ID, br_scalar pDelay) {
 }
 
 // IDA: void __cdecl DoSCILogo()
+// FUNCTION: CARM95 0x004a5974
 void DoSCILogo(void) {
 }
 
 // IDA: void __cdecl DoStainlessLogo()
+// FUNCTION: CARM95 0x004a597f
 void DoStainlessLogo(void) {
-    LOG_TRACE("()");
 }
 
 // IDA: void __usercall PlaySmackerFile(char *pSmack_name@<EAX>)
+// FUNCTION: CARM95 0x004a598a
 void PlaySmackerFile(char* pSmack_name) {
     tPath_name the_path;
     br_colour* br_colours_ptr;
@@ -65,9 +68,9 @@ void PlaySmackerFile(char* pSmack_name) {
     int j;
     int len;
     int fuck_off;
-    LOG_TRACE("(\"%s\")", pSmack_name);
 
-    if (!gSound_override && !gCut_scene_override) {
+    if (gSound_override || gCut_scene_override) {
+    } else {
         StopMusic();
         FadePaletteDown();
         ClearEntireScreen();
@@ -80,7 +83,10 @@ void PlaySmackerFile(char* pSmack_name) {
         if (smk == NULL) {
             dr_dprintf("Unable to open smack file - attempt to load smack from CD...");
             if (GetCDPathFromPathsTxtFile(the_path)) {
-                strcat(the_path, gDir_separator);
+                len = strlen(the_path);
+                if (len != 0 && the_path[len - 1] != gDir_separator[0]) {
+                    strcat(the_path, gDir_separator);
+                }
                 strcat(the_path, "DATA");
                 PathCat(the_path, the_path, "CUTSCENE");
                 PathCat(the_path, the_path, pSmack_name);
@@ -102,8 +108,9 @@ void PlaySmackerFile(char* pSmack_name) {
                         br_colours_ptr[j] = (smack_colours_ptr[j * 3] << 16) | smack_colours_ptr[j * 3 + 2] | (smack_colours_ptr[j * 3 + 1] << 8);
                     }
 
-                    // TOOD: remove the commented-out line below when smk->NewPalette is set correctly per-frame
-                    // memset(gBack_screen->pixels, 0, gBack_screen->row_bytes * gBack_screen->height);
+#ifndef DETHRACE_FIX_BUGS
+                    memset(gBack_screen->pixels, 0, gBack_screen->row_bytes * gBack_screen->height);
+#endif
                     DRSetPalette(gCurrent_palette);
                     PDScreenBufferSwap(0);
                     EnsurePaletteUp();
@@ -133,8 +140,8 @@ void PlaySmackerFile(char* pSmack_name) {
 }
 
 // IDA: void __cdecl DoOpeningAnimation()
+// FUNCTION: CARM95 0x004a5d73
 void DoOpeningAnimation(void) {
-    LOG_TRACE("()");
 
     PlaySmackerFile("LOGO.SMK");
     PlaySmackerFile(harness_game_info.defines.INTRO_SMK_FILE);
@@ -142,13 +149,13 @@ void DoOpeningAnimation(void) {
 }
 
 // IDA: void __cdecl DoNewGameAnimation()
+// FUNCTION: CARM95 0x004a5de6
 void DoNewGameAnimation(void) {
-    LOG_TRACE("()");
 }
 
 // IDA: void __cdecl DoGoToRaceAnimation()
+// FUNCTION: CARM95 0x004a5d9d
 void DoGoToRaceAnimation(void) {
-    LOG_TRACE("()");
 
     if (!gNet_mode) {
         if (PercentageChance(50)) {
@@ -160,33 +167,34 @@ void DoGoToRaceAnimation(void) {
 }
 
 // IDA: void __cdecl DoEndRaceAnimation()
+// FUNCTION: CARM95 0x004a5df1
 void DoEndRaceAnimation(void) {
     int made_a_profit;
     int went_up_a_rank;
-    LOG_TRACE("()");
-
-    made_a_profit = gProgram_state.credits_earned >= gProgram_state.credits_lost;
-    went_up_a_rank = gProgram_state.credits_earned >= gProgram_state.credits_per_rank;
 
     FadePaletteDown();
 
-    if (gAusterity_mode || gNet_mode != eNet_mode_none) {
-        return;
-    }
-    if (gProgram_state.credits + gProgram_state.credits_earned - gProgram_state.credits_lost >= 0) {
-        if (made_a_profit && went_up_a_rank) {
-            PlaySmackerFile("SUCCESS.SMK");
-        } else if (made_a_profit || went_up_a_rank) {
-            PlaySmackerFile("MUNDANE.SMK");
-        } else {
-            PlaySmackerFile("UNSUCSES.SMK");
+    if (!gAusterity_mode) {
+        if (gNet_mode == eNet_mode_none) {
+            if (gProgram_state.credits_earned - gProgram_state.credits_lost + gProgram_state.credits >= 0) {
+                made_a_profit = gProgram_state.credits_earned >= gProgram_state.credits_lost;
+                went_up_a_rank = gProgram_state.credits_earned >= gProgram_state.credits_per_rank;
+
+                if (made_a_profit && went_up_a_rank) {
+                    PlaySmackerFile("SUCCESS.SMK");
+                } else if (made_a_profit || went_up_a_rank) {
+                    PlaySmackerFile("MUNDANE.SMK");
+                } else {
+                    PlaySmackerFile("UNSUCSES.SMK");
+                }
+            }
         }
     }
 }
 
 // IDA: void __cdecl DoGameOverAnimation()
+// FUNCTION: CARM95 0x004a5ed6
 void DoGameOverAnimation(void) {
-    LOG_TRACE("()");
 
     StopMusic();
     PlaySmackerFile("CRASH.SMK");
@@ -194,16 +202,16 @@ void DoGameOverAnimation(void) {
 }
 
 // IDA: void __cdecl DoGameCompletedAnimation()
+// FUNCTION: CARM95 0x004a5ef8
 void DoGameCompletedAnimation(void) {
-    LOG_TRACE("()");
 
     StopMusic();
     PlaySmackerFile("TOPRANK.SMK");
     StartMusic();
 }
 
+// DEMO only
 void DoFeatureUnavailableInDemo(void) {
-    LOG_TRACE("()");
 
     PrintMemoryDump(0, "BEFORE DEMO-ONLY SCREEN");
 
@@ -215,8 +223,8 @@ void DoFeatureUnavailableInDemo(void) {
     PrintMemoryDump(0, "AFTER DEMO-ONLY SCREEN");
 }
 
+// DEMO only
 void DoFullVersionPowerpoint(void) {
-    LOG_TRACE("()");
 
     FadePaletteDown();
     DRSetPalette(gRender_palette);
@@ -230,6 +238,7 @@ void DoFullVersionPowerpoint(void) {
     gLast_demo_end_anim = PDGetTotalTime();
 }
 
+// DEMO only
 void DoDemoGoodbye(void) {
     if (PDGetTotalTime() - gLast_demo_end_anim > 90000) {
         DoFullVersionPowerpoint();
@@ -237,8 +246,8 @@ void DoDemoGoodbye(void) {
 }
 
 // IDA: void __cdecl StartLoadingScreen()
+// FUNCTION: CARM95 0x004a5f1a
 void StartLoadingScreen(void) {
-    LOG_TRACE("()");
 
     PossibleService();
     if (gProgram_state.sausage_eater_mode) {

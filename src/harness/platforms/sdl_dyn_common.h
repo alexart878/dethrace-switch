@@ -1,0 +1,128 @@
+#ifndef sdl_dyn_common_h
+#define sdl_dyn_common_h
+
+#ifdef DETHRACE_SDL_DYNAMIC
+#ifdef _WIN32
+#include <windows.h>
+#ifdef CreateWindow
+#undef CreateWindow
+#endif
+static void *Harness_LoadObject(const char *name) {
+    return LoadLibraryA(name);
+}
+static void Harness_UnloadObject(void *obj) {
+    FreeLibrary(obj);
+}
+static void *Harness_LoadFunction(void *obj, const char *name) {
+    return GetProcAddress(obj, name);
+}
+static const char *Harness_LoadError(void) {
+    static char buffer[512];
+    DWORD cchMsg = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        buffer,
+        sizeof(buffer)-1,
+        NULL);
+    if (cchMsg == 0) {
+        strncpy(buffer, "GetProcAddress failed", sizeof(buffer));
+        buffer[sizeof(buffer)-1] = '\0';
+    }
+    return buffer;
+}
+#else
+#include <dlfcn.h>
+#ifdef __APPLE__
+#include <limits.h>
+#include <mach-o/dyld.h>
+#endif
+static void *Harness_LoadObject(const char *name) {
+#ifdef __APPLE__
+    static const char loader_prefix[] = "@loader_path/";
+    static const char executable_prefix[] = "@executable_path/";
+    char executable_path[PATH_MAX];
+    uint32_t executable_path_size;
+    const char* suffix;
+    char* last_slash;
+    char resolved_name[PATH_MAX];
+
+    if (name != NULL) {
+        if (strncmp(name, loader_prefix, sizeof(loader_prefix) - 1) == 0) {
+            suffix = name + sizeof(loader_prefix) - 1;
+        } else if (strncmp(name, executable_prefix, sizeof(executable_prefix) - 1) == 0) {
+            suffix = name + sizeof(executable_prefix) - 1;
+        } else {
+            suffix = NULL;
+        }
+
+        if (suffix != NULL) {
+            executable_path_size = sizeof(executable_path);
+            if (_NSGetExecutablePath(executable_path, &executable_path_size) == 0) {
+                last_slash = strrchr(executable_path, '/');
+                if (last_slash != NULL) {
+                    *last_slash = '\0';
+                    if (snprintf(resolved_name, sizeof(resolved_name), "%s/%s", executable_path, suffix) < (int)sizeof(resolved_name)) {
+                        return dlopen(resolved_name, RTLD_NOW | RTLD_LOCAL);
+                    }
+                }
+            }
+        }
+    }
+#endif
+    return dlopen(name, RTLD_NOW | RTLD_LOCAL);
+}
+static void Harness_UnloadObject(void *obj) {
+    dlclose(obj);
+}
+static void *Harness_LoadFunction(void *obj, const char *name) {
+    return dlsym(obj, name);
+}
+static const char *Harness_LoadError(void) {
+    return dlerror();
+}
+#endif
+#endif
+
+#define STR2_JOIN(A,B) A##B
+#define STR_JOIN(A,B) STR2_JOIN(A, B)
+
+#define X_TYPEDEF(name, ret, args) typedef ret SDLCALL t##SDL_##name##_fn args;
+#define X_STATIC_SYMBOL(name, ret, args) static t##SDL_##name##_fn* STR_JOIN(SYMBOL_PREFIX, name);
+#ifdef DETHRACE_SDL_DYNAMIC
+#define X_LOAD_FUNCTION(name, ret, args) \
+    STR_JOIN(SYMBOL_PREFIX, name) = Harness_LoadFunction(OBJECT_NAME, "SDL_" #name); \
+    if (STR_JOIN(SYMBOL_PREFIX, name) == NULL) {                                     \
+        fprintf(stderr, "Failed to load %s function: %s (%s)\n", SDL_NAME, "SDL_" #name, Harness_LoadError()); \
+        goto failure; \
+    }
+#else
+#define X_LOAD_FUNCTION(name, ret, args) STR_JOIN(SYMBOL_PREFIX, name) = SDL_##name;
+#endif
+
+FOREACH_SDLX_SYM(X_TYPEDEF)
+FOREACH_SDLX_SYM(X_STATIC_SYMBOL)
+
+static int STR_JOIN(SYMBOL_PREFIX,LoadSymbols)(void) {
+#ifdef DETHRACE_SDL_DYNAMIC
+    for (size_t i = 0; i < BR_ASIZE(possible_locations); i++) {
+        OBJECT_NAME = Harness_LoadObject(possible_locations[i]);
+        if (OBJECT_NAME != NULL) {
+            break;
+        }
+    }
+    if (OBJECT_NAME == NULL) {
+        fputs("Could not find " SDL_NAME " library\n", stderr);
+        return 1;
+    }
+#endif
+    FOREACH_SDLX_SYM(X_LOAD_FUNCTION)
+    return 0;
+#ifdef DETHRACE_SDL_DYNAMIC
+failure:
+    Harness_UnloadObject(OBJECT_NAME);
+    return 1;
+#endif
+}
+
+#endif /* sdl_dyn_common_h */

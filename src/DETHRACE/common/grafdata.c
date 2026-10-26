@@ -5,6 +5,7 @@
 #include "globvars.h"
 #include "pd/sys.h"
 
+// GLOBAL: CARM95 0x0050bcf0
 tGraf_data gGraf_data[2] = {
     { 320,
         200,
@@ -566,17 +567,21 @@ tGraf_data gGraf_data[2] = {
         55 }
 };
 
+// GLOBAL: CARM95 0x00551d88
 tGraf_data* gCurrent_graf_data;
+
+// GLOBAL: CARM95 0x00551d84
 int gGraf_data_index;
 
 // IDA: void __cdecl CalcGrafDataIndex()
+// FUNCTION: CARM95 0x0042f200
 void CalcGrafDataIndex(void) {
     int i;
 
     for (i = 0; i < 2; i++) {
-        if (gGraf_specs[gGraf_spec_index].total_width == gGraf_data[i].width && gGraf_specs[gGraf_spec_index].total_height == gGraf_data[i].height) {
-            gReal_graf_data_index = i;
+        if (gGraf_data[i].width == gGraf_specs[gGraf_spec_index].total_width && gGraf_data[i].height == gGraf_specs[gGraf_spec_index].total_height) {
             gGraf_data_index = i;
+            gReal_graf_data_index = gGraf_data_index;
             gCurrent_graf_data = &gGraf_data[i];
             return;
         }

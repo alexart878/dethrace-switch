@@ -51,8 +51,6 @@ extern tS32 gJoystick_min1x;
 // extern tU32 gScan_code[123];
 // #endif
 
-extern char* _unittest_last_fatal_error;
-
 // void KeyboardHandler(void);
 
 // int KeyDown(tU8 pScan_code);
@@ -69,7 +67,7 @@ void PDSetKeyArray(int* pKeys, int pMark);
 
 int PDGetASCIIFromKey(int pKey);
 
-HARNESS_NORETURN void PDFatalError(char* pThe_str);
+void PDFatalError(char* pThe_str);
 
 void PDNonFatalError(char* pThe_str);
 

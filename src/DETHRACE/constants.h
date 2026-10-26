@@ -470,6 +470,17 @@ enum {
     kFatalError_NetContentsTooBig_S = 114,
     kFatalError_FileCorrupt_S = 115,
     kFatalError_RandomNumberOutOfRange_S = 116,
+#ifdef DETHRACE_3DFX_PATCH
+    kFatalError_CouldntLockPixelmap_S = 117,
+    kFatalError_ShouldBeLockedButIsnt_S = 118,
+    kFatalError_CannotPurifyPixelmap_S = 119,
+    kFatalError_FileMustStartWith_S = 120,
+    kFatalError_CantCopeWithVersionFor_S = 121,
+    kFatalError_CannotTilePixelmap_S = 122,
+    kFatalError_Mysterious_S_S = 123,
+    kFatalError_CanOnlyDimRectanglesOfgBack_screen = 124,
+    kFatalError_InvalidMaterialAlpha = 125
+#endif
 };
 
 enum {
@@ -754,6 +765,54 @@ enum {
 };
 
 enum {
+    kPratcam_stationary_or_below_25mph = 0,
+    kPratcam_between_25_and_67mph = 1,
+    kPratcam_between_67_and_167mph = 2,
+    kPratcam_over_137mph = 3,
+    kPratcam_accelerating_unused_4 = 4,
+    kPratcam_flying = 5,
+    kPratcam_falling = 6,
+    kPratcam_rolling_gently = 7,
+    kPratcam_rolling_medium = 8,
+    kPratcam_rolling_violent = 9,
+    kPratcam_spinning_gently = 10,
+    kPratcam_spinning_medium = 11,
+    kPratcam_spinning_violent = 12,
+    kPratcam_small_hit_behind = 13,
+    kPratcam_small_hit_front = 14,
+    kPratcam_small_hit_left = 15,
+    kPratcam_small_hit_right = 16,
+    kPratcam_medium_hit_behind = 17,
+    kPratcam_medium_hit_front = 18,
+    kPratcam_medium_hit_left = 19,
+    kPratcam_medium_hit_right = 20,
+    kPratcam_big_hit_behind = 21,
+    kPratcam_big_hit_front = 22,
+    kPratcam_big_hit_left = 23,
+    kPratcam_big_hit_right = 24,
+    kPratcam_skidding_left = 25,
+    kPratcam_skidding_right = 26,
+    kPratcam_cockpit_head_left = 27,
+    kPratcam_cockpit_head_right = 28,
+    kPratcam_killed_one_ped = 29,
+    kPratcam_killed_lots_of_peds = 30,
+    kPratcam_apologise_for_ped_kill = 31,
+    kPratcam_opponent_wasted = 32,
+    kPratcam_checkpoint = 33,
+    kPratcam_race_complete = 34,
+    kPratcam_out_of_time = 35,
+    kPratcam_network_timeout = 36,
+    kPratcam_points_or_time = 37,
+    kPratcam_good_powerup = 38,
+    kPratcam_bad_powerup = 39,
+    kPratcam_weird_powerup = 40,
+    kPratcam_instant_handbrake = 41,
+    kPratcam_bouncey_bouncey = 42,
+    kPratcam_instant_bodywork_trash = 43,
+    kPratcam_upside_down = 44,
+};
+
+enum {
     NETMSGID_SENDMEDETAILS = 0x00,
     NETMSGID_DETAILS = 0x01,
     NETMSGID_JOIN = 0x02,
@@ -797,6 +856,12 @@ enum ExceptionFlags {
     ExceptionFlag_Mipmap = 4,
 };
 
+enum kEngineNoiseTypes {
+    kEngineNoise_Normal = 0,
+    kEngineNoise_EnclosedSpace = 1,
+    kEngineNoise_Underwater = 2
+};
+
 #define FONT_TYPEABLE 0
 #define FONT_ORANGHED 1
 #define FONT_BLUEHEAD 2
@@ -838,10 +903,23 @@ enum ExceptionFlags {
 #define OPPONENT_COUNT 5
 
 #define WORLD_SCALE 6.9f
+#define WORLD_SCALE_D 6.9
 
 #define SHADOW_MAX_RENDER_DISTANCE 36.0f
 
 #define DOUBLESIDED_USER_FLAG (void*)12345
+
+#define PHYSICS_STEP_TIME 40
+
+#define GRAVITY 10.0f
+#define PED_GRAVITY (9.8 / WORLD_SCALE_D / 1000.0 / 1000.0) // World units per millisecond squared
+#define UNDERWATER_ABILITY_FACTOR 0.6f
+#define MIN_SPEED 0.0001f
+#define MIN_OMEGA 0.05f
+#define MAX_DAMAGE_LEVEL 100
+#define HANDBRAKE_FAIL_DAMAGE 60
+#define SKID_MIN_V_CURRENT_CAR 20.0f
+#define SKID_MIN_V_OTHER_CAR 60.0f
 
 // average frame time in carm95
 #define MUNGE_ENGINE_INTERVAL 50

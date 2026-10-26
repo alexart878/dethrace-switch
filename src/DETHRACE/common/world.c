@@ -23,80 +23,175 @@
 #include "pedestrn.h"
 #include "piping.h"
 #include "replay.h"
+#include "skidmark.h"
 #include "spark.h"
 #include "trig.h"
 #include "utility.h"
 
+#include <ctype.h>
 #include <float.h>
 #include <string.h>
 
+// GLOBAL: CARM95 0x0050c710
 int gFunkotronics_array_size;
+
+// GLOBAL: CARM95 0x0050c714
 int gGroovidelics_array_size;
+
+// GLOBAL: CARM95 0x0050c718
 int gSpec_vol_mode;
+
+// GLOBAL: CARM95 0x0050c71c
 tFunkotronic_spec* gFunkotronics_array;
+
+// GLOBAL: CARM95 0x0050c720
 tGroovidelic_spec* gGroovidelics_array;
+
+// GLOBAL: CARM95 0x0050c728
 char* gFunk_type_names[] = { "spin", "rock", "throb", "slither", "roll" };
+
+// GLOBAL: CARM95 0x0050c740
 char* gFunk_anim_names[] = { "frames", "flic" };
+
+// GLOBAL: CARM95 0x0050c748
 char* gTime_mode_names[] = { "approximate", "accurate" };
+
+// GLOBAL: CARM95 0x0050c750
 char* gFunk_move_names[] = { "linear", "harmonic", "flash", "controlled", "absolute", "continuous" };
+
+// GLOBAL: CARM95 0x0050c768
 char* gFunk_nature_names[] = { "constant", "distance", "lastlap", "otherlaps" };
+
+// GLOBAL: CARM95 0x0050c778
 char* gGroove_nature_names[] = { "constant", "distance" };
+
+// GLOBAL: CARM95 0x0050c780
 char* gAxis_names[] = { "x", "y", "z" };
+
+// GLOBAL: CARM95 0x0050c790
 char* gLollipop_names[] = { "xlollipop", "ylollipop", "zlollipop" };
+
+// GLOBAL: CARM95 0x0050c7a0
 char* gGroove_path_names[] = { "straight", "circular" };
+
+// GLOBAL: CARM95 0x0050c7a8
 char* gGroove_object_names[] = { "spin", "rock", "throb", "shear" };
+
+// GLOBAL: CARM95 0x0050c7b8
 char* gDepth_effect_names[] = { "dark", "fog" };
+
+// GLOBAL: CARM95 0x0050c7c0
 br_actor* gGroove_by_proxy_actor;
+
+// GLOBAL: CARM95 0x0050c7c4
 tRotate_mode gCurrent_rotate_mode = eRotate_mode_y;
+
+// GLOBAL: CARM95 0x0050c7c8
 tScale_mode gCurrent_scale_mode = eScale_mode_all;
+
+// GLOBAL: CARM95 0x0050c7cc
 int gNumber_of_additional_models;
+
+// GLOBAL: CARM95 0x0050c7d0
 tRoad_texturing_level gRoad_texturing_level = eRTL_full;
+
+// GLOBAL: CARM95 0x0050c7d4
 tWall_texturing_level gWall_texturing_level = eWTL_full;
+
+// GLOBAL: CARM95 0x0050c7d8
 tCar_texturing_level gCar_texturing_level = eCTL_full;
-int gRendering_accessories;
+
+// GLOBAL: CARM95 0x0050c7dc
+int gRendering_accessories = 1;
+
+// GLOBAL: CARM95 0x0050c7e0
 int gNumber_of_actors;
+
+// GLOBAL: CARM95 0x0050c7e4
 int gNumber_of_lights;
-br_actor* gActor_array[500];
-float* gGroove_funk_bindings[960];
-br_actor* gDelete_list[500];
-br_actor* gLight_array[50];
-br_model* gAdditional_models[1000];
-br_actor* gSpec_vol_actors[100];
-tPath_name gAdditional_actor_path;
-tPath_name gAdditional_model_path;
-tU32 gPrevious_groove_times[2];
-int gRace_file_version;
-br_vector3 gActor_centre;
+
+// GLOBAL: CARM95 0x00532218
 float gTemp;
-br_actor* gLast_actor;
-br_actor* gKnown_actor;
-br_actor* gAdditional_actors;
-int gDelete_count;
+
+// GLOBAL: CARM95 0x00532220
+br_actor* gDelete_list[500];
+
+// GLOBAL: CARM95 0x005329f0
+tPath_name gAdditional_model_path;
+
+// GLOBAL: CARM95 0x00532af0
+float* gGroove_funk_bindings[960];
+
+// GLOBAL: CARM95 0x005339f0
+br_vector3 gActor_centre;
+
+// GLOBAL: CARM95 0x005339fc
 br_scalar gNearest_distance;
-br_actor* gNearest_actor;
-br_actor* gStandard_lamp;
+
+// GLOBAL: CARM95 0x00533a00
+tPath_name gAdditional_actor_path;
+
+// GLOBAL: CARM95 0x00533b00
+tU32 gPrevious_groove_times[2];
+
+// GLOBAL: CARM95 0x00533b08
+br_actor* gKnown_actor;
+
+// GLOBAL: CARM95 0x00533b0c
+br_actor* gLast_actor;
+
+// GLOBAL: CARM95 0x00533b10
+int gDelete_count;
+
+// GLOBAL: CARM95 0x00533b18
+br_model* gAdditional_models[1000];
+
+// GLOBAL: CARM95 0x00534ab8
+br_actor* gAdditional_actors;
+
+// GLOBAL: CARM95 0x00534abc
 br_scalar gSight_distance_squared;
 
-// IDA: float __cdecl MapSawToTriangle(float pNumber)
-float MapSawToTriangle(float pNumber) {
-    LOG_TRACE("(%f)", pNumber);
+// GLOBAL: CARM95 0x00534ac0
+br_actor* gSpec_vol_actors[100];
 
-    if (pNumber >= 0.5) {
-        return 3.0 - pNumber * 4.0;
+// GLOBAL: CARM95 0x00534c50
+br_actor* gNearest_actor;
+
+// GLOBAL: CARM95 0x005514e0
+br_actor* gActor_array[500];
+
+// GLOBAL: CARM95 0x00551cb0
+br_actor* gLight_array[50];
+
+br_actor* gStandard_lamp;
+
+// GLOBAL: CARM95 0x00551d78
+int gRace_file_version;
+
+#define GROOVE_FUNK_BUFFER_SIZE_INCREASE 16
+#define NO_OWNER -999
+
+// IDA: float __cdecl MapSawToTriangle(float pNumber)
+// FUNCTION: CARM95 0x0043f377
+float MapSawToTriangle(float pNumber) {
+
+    if (pNumber < 0.5) {
+        return pNumber * 4.0f - 1.0f;
     } else {
-        return pNumber * 4.0 - 1.0;
+        return 3.0f - pNumber * 4.0f;
     }
 }
 
 // IDA: void __cdecl SetSightDistance(br_scalar pYon)
+// FUNCTION: CARM95 0x00434b10
 void SetSightDistance(br_scalar pYon) {
-    gSight_distance_squared = pYon * 1.02f * (pYon * 1.02f);
+    gSight_distance_squared = BR_SQR(pYon * 1.02);
 }
 
 // IDA: br_actor* __usercall FindActorInArray@<EAX>(char *pThe_name@<EAX>)
 br_actor* FindActorInArray(char* pThe_name) {
     int i;
-    LOG_TRACE("(\"%s\")", pThe_name);
 
     for (i = 0; i < gNumber_of_actors; i++) {
         if (strcmp(gActor_array[i]->identifier, pThe_name) == 0) {
@@ -109,7 +204,6 @@ br_actor* FindActorInArray(char* pThe_name) {
 // IDA: br_actor* __usercall FindLightInArray@<EAX>(char *pThe_name@<EAX>)
 br_actor* FindLightInArray(char* pThe_name) {
     int i;
-    LOG_TRACE("(\"%s\")", pThe_name);
 
     for (i = 0; i < gNumber_of_lights; i++) {
         if (strcmp(gLight_array[i]->identifier, pThe_name) == 0) {
@@ -124,7 +218,6 @@ br_actor* CloneActor(br_actor* pSource_actor) {
     br_actor* new_actor;
     br_actor* child_actor;
     br_actor* new_child_actor;
-    LOG_TRACE("(%p)", pSource_actor);
 
     new_actor = BrActorAllocate(pSource_actor->type, pSource_actor->type_data);
     new_actor->model = pSource_actor->model;
@@ -144,8 +237,8 @@ br_actor* CloneActor(br_actor* pSource_actor) {
 }
 
 // IDA: void __usercall InitialiseStorageSpace(tBrender_storage *pStorage_space@<EAX>, int pMax_pixelmaps@<EDX>, int pMax_shade_tables@<EBX>, int pMax_materials@<ECX>, int pMax_models)
+// FUNCTION: CARM95 0x00434d37
 void InitialiseStorageSpace(tBrender_storage* pStorage_space, int pMax_pixelmaps, int pMax_shade_tables, int pMax_materials, int pMax_models) {
-    LOG_TRACE("(%p, %d, %d, %d, %d)", pStorage_space, pMax_pixelmaps, pMax_shade_tables, pMax_materials, pMax_models);
 
     pStorage_space->pixelmaps_count = 0;
     pStorage_space->shade_tables_count = 0;
@@ -163,6 +256,7 @@ void InitialiseStorageSpace(tBrender_storage* pStorage_space, int pMax_pixelmaps
 }
 
 // IDA: void __usercall DisposeStorageSpace(tBrender_storage *pStorage_space@<EAX>)
+// FUNCTION: CARM95 0x00434e0a
 void DisposeStorageSpace(tBrender_storage* pStorage_space) {
     BrMemFree(pStorage_space->pixelmaps);
     BrMemFree(pStorage_space->shade_tables);
@@ -172,32 +266,32 @@ void DisposeStorageSpace(tBrender_storage* pStorage_space) {
 }
 
 // IDA: void __usercall ClearOutStorageSpace(tBrender_storage *pStorage_space@<EAX>)
+// FUNCTION: CARM95 0x00434e60
 void ClearOutStorageSpace(tBrender_storage* pStorage_space) {
     int i;
-    LOG_TRACE("(%p)", pStorage_space);
 
-    for (i = 0; pStorage_space->pixelmaps_count > i; ++i) {
+    for (i = 0; i < pStorage_space->pixelmaps_count; i++) {
         if (pStorage_space->pixelmaps[i] != NULL) {
             BrMapRemove(pStorage_space->pixelmaps[i]);
             BrPixelmapFree(pStorage_space->pixelmaps[i]);
         }
     }
     pStorage_space->pixelmaps_count = 0;
-    for (i = 0; pStorage_space->shade_tables_count > i; ++i) {
+    for (i = 0; i < pStorage_space->shade_tables_count; i++) {
         if (pStorage_space->shade_tables[i] != NULL) {
             BrTableRemove(pStorage_space->shade_tables[i]);
             BrPixelmapFree(pStorage_space->shade_tables[i]);
         }
     }
     pStorage_space->shade_tables_count = 0;
-    for (i = 0; pStorage_space->materials_count > i; ++i) {
+    for (i = 0; i < pStorage_space->materials_count; i++) {
         if (pStorage_space->materials[i] != NULL) {
             BrMaterialRemove(pStorage_space->materials[i]);
             BrMaterialFree(pStorage_space->materials[i]);
         }
     }
     pStorage_space->materials_count = 0;
-    for (i = 0; pStorage_space->models_count > i; ++i) {
+    for (i = 0; i < pStorage_space->models_count; i++) {
         if (pStorage_space->models[i] != NULL) {
             BrModelRemove(pStorage_space->models[i]);
             BrModelFree(pStorage_space->models[i]);
@@ -208,88 +302,94 @@ void ClearOutStorageSpace(tBrender_storage* pStorage_space) {
 
 // IDA: tAdd_to_storage_result __usercall AddPixelmapToStorage@<EAX>(tBrender_storage *pStorage_space@<EAX>, br_pixelmap **pThe_pm@<EDX>)
 // This seems like the signature should be `br_pixelmap* pThe_pm`
-tAdd_to_storage_result AddPixelmapToStorage(tBrender_storage* pStorage_space, br_pixelmap** pThe_pm) {
+// FUNCTION: CARM95 0x00435014
+tAdd_to_storage_result AddPixelmapToStorage(tBrender_storage* pStorage_space, br_pixelmap* pThe_pm) {
     int i;
-    LOG_TRACE("(%p, %p)", pStorage_space, pThe_pm);
 
-    if (pStorage_space->pixelmaps_count >= pStorage_space->max_pixelmaps) {
+    if (pStorage_space->pixelmaps_count < pStorage_space->max_pixelmaps) {
+        for (i = 0; i < pStorage_space->pixelmaps_count; i++) {
+            if (pStorage_space->pixelmaps[i]->identifier != NULL
+                && pThe_pm->identifier != NULL
+                && strcmp(pStorage_space->pixelmaps[i]->identifier, pThe_pm->identifier) == 0) {
+                return eStorage_duplicate;
+            }
+        }
+        pStorage_space->pixelmaps[pStorage_space->pixelmaps_count] = pThe_pm;
+        pStorage_space->pixelmaps_count++;
+        return eStorage_allocated;
+    } else {
         return eStorage_not_enough_room;
     }
-
-    for (i = 0; i < pStorage_space->pixelmaps_count; i++) {
-        if (pStorage_space->pixelmaps[i]->identifier
-            && ((br_pixelmap*)pThe_pm)->identifier
-            && strcmp(pStorage_space->pixelmaps[i]->identifier, ((br_pixelmap*)pThe_pm)->identifier) == 0) {
-            return eStorage_duplicate;
-        }
-    }
-    pStorage_space->pixelmaps[pStorage_space->pixelmaps_count] = (br_pixelmap*)pThe_pm;
-    pStorage_space->pixelmaps_count++;
-    return eStorage_allocated;
 }
 
 // IDA: tAdd_to_storage_result __usercall AddShadeTableToStorage@<EAX>(tBrender_storage *pStorage_space@<EAX>, br_pixelmap *pThe_st@<EDX>)
+// FUNCTION: CARM95 0x00435107
 tAdd_to_storage_result AddShadeTableToStorage(tBrender_storage* pStorage_space, br_pixelmap* pThe_st) {
     int i;
-    LOG_TRACE("(%p, %p)", pStorage_space, pThe_st);
 
-    if (pStorage_space->shade_tables_count >= pStorage_space->max_shade_tables) {
+    if (pStorage_space->shade_tables_count < pStorage_space->max_shade_tables) {
+        for (i = 0; i < pStorage_space->shade_tables_count; i++) {
+            if (pStorage_space->shade_tables[i]->identifier
+                && pThe_st->identifier
+                && !strcmp(pStorage_space->shade_tables[i]->identifier, pThe_st->identifier)) {
+                return eStorage_duplicate;
+            }
+        }
+        pStorage_space->shade_tables[pStorage_space->shade_tables_count] = pThe_st;
+        pStorage_space->shade_tables_count++;
+        return eStorage_allocated;
+    } else {
         return eStorage_not_enough_room;
     }
-
-    for (i = 0; i < pStorage_space->shade_tables_count; i++) {
-        if (pStorage_space->shade_tables[i]->identifier
-            && pThe_st->identifier
-            && !strcmp(pStorage_space->shade_tables[i]->identifier, pThe_st->identifier)) {
-            return eStorage_duplicate;
-        }
-    }
-    pStorage_space->shade_tables[pStorage_space->shade_tables_count++] = pThe_st;
-    return eStorage_allocated;
 }
 
 // IDA: tAdd_to_storage_result __usercall AddMaterialToStorage@<EAX>(tBrender_storage *pStorage_space@<EAX>, br_material *pThe_mat@<EDX>)
+// FUNCTION: CARM95 0x004351fa
 tAdd_to_storage_result AddMaterialToStorage(tBrender_storage* pStorage_space, br_material* pThe_mat) {
     int i;
-    LOG_TRACE("(%p, %p)", pStorage_space, pThe_mat);
 
-    if (pStorage_space->materials_count >= pStorage_space->max_materials) {
+    if (pStorage_space->materials_count < pStorage_space->max_materials) {
+        for (i = 0; i < pStorage_space->materials_count; i++) {
+            if (pStorage_space->materials[i]->identifier
+                && pThe_mat->identifier
+                && !strcmp(pStorage_space->materials[i]->identifier, pThe_mat->identifier)) {
+                return eStorage_duplicate;
+            }
+        }
+        pStorage_space->saved_colour_maps[pStorage_space->materials_count] = NULL;
+        pStorage_space->materials[pStorage_space->materials_count] = pThe_mat;
+        pStorage_space->materials_count++;
+        return eStorage_allocated;
+    } else {
         return eStorage_not_enough_room;
     }
-    for (i = 0; i < pStorage_space->materials_count; i++) {
-        if (pStorage_space->materials[i]->identifier
-            && pThe_mat->identifier
-            && !strcmp(pStorage_space->materials[i]->identifier, pThe_mat->identifier)) {
-            return eStorage_duplicate;
-        }
-    }
-    pStorage_space->saved_colour_maps[pStorage_space->materials_count] = 0;
-    pStorage_space->materials[pStorage_space->materials_count++] = pThe_mat;
-    return eStorage_allocated;
 }
 
 // IDA: tAdd_to_storage_result __usercall AddModelToStorage@<EAX>(tBrender_storage *pStorage_space@<EAX>, br_model *pThe_mod@<EDX>)
+// FUNCTION: CARM95 0x00435300
 tAdd_to_storage_result AddModelToStorage(tBrender_storage* pStorage_space, br_model* pThe_mod) {
     int i;
-    LOG_TRACE("(%p, %p)", pStorage_space, pThe_mod);
 
-    if (pStorage_space->materials_count >= pStorage_space->max_models) {
+    if (pStorage_space->models_count < pStorage_space->max_models) {
+
+        for (i = 0; i < pStorage_space->models_count; i++) {
+            if (pStorage_space->models[i]
+                && pStorage_space->models[i]->identifier
+                && pThe_mod->identifier
+                && !strcmp(pStorage_space->models[i]->identifier, pThe_mod->identifier)) {
+                return eStorage_duplicate;
+            }
+        }
+        pStorage_space->models[pStorage_space->models_count] = pThe_mod;
+        pStorage_space->models_count++;
+        return eStorage_allocated;
+    } else {
         return eStorage_not_enough_room;
     }
-    for (i = 0; i < pStorage_space->models_count; i++) {
-        if (pStorage_space->models[i]
-            && pStorage_space->models[i]->identifier
-            && pThe_mod->identifier
-            && !strcmp(pStorage_space->models[i]->identifier, pThe_mod->identifier)) {
-            return eStorage_duplicate;
-        }
-    }
-    pStorage_space->models[pStorage_space->models_count] = pThe_mod;
-    pStorage_space->models_count++;
-    return eStorage_allocated;
 }
 
 // IDA: int __usercall LoadNPixelmaps@<EAX>(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>, int pCount@<EBX>)
+// FUNCTION: CARM95 0x00435402
 int LoadNPixelmaps(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     tPath_name the_path;
     int i;
@@ -299,9 +399,8 @@ int LoadNPixelmaps(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     char s[256];
     char* str;
     br_pixelmap* temp_array[200];
-    LOG_TRACE("(%p, %p, %d)", pStorage_space, pF, pCount);
 
-    new_ones = 0;
+    total = 0;
     for (i = 0; i < pCount; ++i) {
         PossibleService();
         GetALineAndDontArgue(pF, s);
@@ -310,66 +409,67 @@ int LoadNPixelmaps(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
         PathCat(the_path, the_path, "PIXELMAP");
         PathCat(the_path, the_path, str);
         AllowOpenToFail();
-        total = DRPixelmapLoadMany(the_path, temp_array, COUNT_OF(temp_array));
-        if (total == 0) {
+        new_ones = DRPixelmapLoadMany(the_path, temp_array, COUNT_OF(temp_array));
+        DoNotAllowOpenToFail();
+        if (new_ones == 0) {
             PathCat(the_path, gApplication_path, "PIXELMAP");
             PathCat(the_path, the_path, str);
-            total = DRPixelmapLoadMany(the_path, temp_array, COUNT_OF(temp_array));
-            if (total == 0) {
+            new_ones = DRPixelmapLoadMany(the_path, temp_array, COUNT_OF(temp_array));
+            if (new_ones == 0) {
                 FatalError(kFatalError_LoadPixelmapFile_S, str);
             }
         }
-        for (j = 0; j < total; j++) {
+        for (j = 0; j < new_ones; j++) {
             if (temp_array[j] != NULL) {
-                switch (AddPixelmapToStorage(pStorage_space, (br_pixelmap**)temp_array[j])) {
-                case eStorage_not_enough_room:
-                    FatalError(kFatalError_InsufficientPixelmapSlots);
+                switch (AddPixelmapToStorage(pStorage_space, temp_array[j])) {
+                case eStorage_allocated:
+                    BrMapAdd(temp_array[j]);
+                    total++;
                     break;
                 case eStorage_duplicate:
                     BrPixelmapFree(temp_array[j]);
                     break;
-                case eStorage_allocated:
-                    BrMapAdd(temp_array[j]);
-                    ++new_ones;
+                case eStorage_not_enough_room:
+                    FatalError(kFatalError_InsufficientPixelmapSlots);
                     break;
                 }
             }
         }
     }
-    return new_ones;
+    return total;
 }
 
 // IDA: br_pixelmap* __usercall LoadSinglePixelmap@<EAX>(tBrender_storage *pStorage_space@<EAX>, char *pName@<EDX>)
+// FUNCTION: CARM95 0x00435666
 br_pixelmap* LoadSinglePixelmap(tBrender_storage* pStorage_space, char* pName) {
     br_pixelmap* temp;
-    LOG_TRACE("(%p, \"%s\")", pStorage_space, pName);
 
     temp = LoadPixelmap(pName);
     if (!temp) {
         return BrMapFind(pName);
     }
 
-    switch (AddPixelmapToStorage(pStorage_space, (br_pixelmap**)temp)) {
-    case eStorage_not_enough_room:
-        FatalError(kFatalError_InsufficientPixelmapSlots);
-        break;
-
-    case eStorage_duplicate:
-        BrPixelmapFree(temp);
-        return BrMapFind(pName);
-
+    switch (AddPixelmapToStorage(pStorage_space, temp)) {
     case eStorage_allocated:
         BrMapAdd(temp);
         return temp;
+        break;
+    case eStorage_duplicate:
+        BrPixelmapFree(temp);
+        return BrMapFind(pName);
+        break;
+    case eStorage_not_enough_room:
+        FatalError(kFatalError_InsufficientPixelmapSlots);
+        return NULL;
     }
 
     return NULL;
 }
 
 // IDA: br_material* __usercall LoadSingleMaterial@<EAX>(tBrender_storage *pStorage_space@<EAX>, char *pName@<EDX>)
+// FUNCTION: CARM95 0x00435731
 br_material* LoadSingleMaterial(tBrender_storage* pStorage_space, char* pName) {
     br_material* temp;
-    LOG_TRACE("(%p, \"%s\")", pStorage_space, pName);
 
     temp = LoadMaterial(pName);
     if (!temp) {
@@ -377,23 +477,24 @@ br_material* LoadSingleMaterial(tBrender_storage* pStorage_space, char* pName) {
     }
 
     switch (AddMaterialToStorage(pStorage_space, temp)) {
-    case eStorage_not_enough_room:
-        FatalError(kFatalError_InsufficientMaterialSlots);
-        break;
-
-    case eStorage_duplicate:
-        BrMaterialFree(temp);
-        return BrMaterialFind(pName);
-
     case eStorage_allocated:
         BrMaterialAdd(temp);
         return temp;
+        break;
+    case eStorage_duplicate:
+        BrMaterialFree(temp);
+        return BrMaterialFind(pName);
+        break;
+    case eStorage_not_enough_room:
+        FatalError(kFatalError_InsufficientMaterialSlots);
+        return NULL;
     }
 
     return NULL;
 }
 
 // IDA: int __usercall LoadNShadeTables@<EAX>(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>, int pCount@<EBX>)
+// FUNCTION: CARM95 0x004357fc
 int LoadNShadeTables(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     tPath_name the_path;
     int i;
@@ -403,44 +504,42 @@ int LoadNShadeTables(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     char s[256];
     char* str;
     br_pixelmap* temp_array[50];
-    LOG_TRACE("(%p, %p, %d)", pStorage_space, pF, pCount);
 
-    new_ones = 0;
+    total = 0;
     for (i = 0; i < pCount; i++) {
         PossibleService();
         GetALineAndDontArgue(pF, s);
         str = strtok(s, "\t ,/");
         PathCat(the_path, gApplication_path, "SHADETAB");
         PathCat(the_path, the_path, str);
-        total = DRPixelmapLoadMany(the_path, temp_array, 50);
-        if (total == 0) {
+        new_ones = DRPixelmapLoadMany(the_path, temp_array, 50);
+        if (new_ones == 0) {
             FatalError(kFatalError_LoadShadeTableFile_S, str);
         }
-        for (j = 0; j < total; j++) {
+        for (j = 0; j < new_ones; j++) {
             if (temp_array[j]) {
                 switch (AddShadeTableToStorage(pStorage_space, temp_array[j])) {
-                case eStorage_not_enough_room:
-                    FatalError(kFatalError_InsufficientShadeTableSlots);
+                case eStorage_allocated:
+                    BrTableAdd(temp_array[j]);
+                    total++;
                     break;
-
                 case eStorage_duplicate:
                     BrPixelmapFree(temp_array[j]);
                     break;
-                case eStorage_allocated:
-                    BrTableAdd(temp_array[j]);
-                    new_ones++;
+                case eStorage_not_enough_room:
+                    FatalError(kFatalError_InsufficientShadeTableSlots);
                     break;
                 }
             }
         }
     }
-    return new_ones;
+    return total;
 }
 
 // IDA: br_pixelmap* __usercall LoadSingleShadeTable@<EAX>(tBrender_storage *pStorage_space@<EAX>, char *pName@<EDX>)
+// FUNCTION: CARM95 0x004359c7
 br_pixelmap* LoadSingleShadeTable(tBrender_storage* pStorage_space, char* pName) {
     br_pixelmap* temp;
-    LOG_TRACE("(%p, \"%s\")", pStorage_space, pName);
 
     temp = LoadShadeTable(pName);
     if (!temp) {
@@ -448,23 +547,24 @@ br_pixelmap* LoadSingleShadeTable(tBrender_storage* pStorage_space, char* pName)
     }
 
     switch (AddShadeTableToStorage(pStorage_space, temp)) {
-    case eStorage_not_enough_room:
-        FatalError(kFatalError_InsufficientShadeTableSlots);
-        break;
-
-    case eStorage_duplicate:
-        BrPixelmapFree(temp);
-        return BrTableFind(pName);
-
     case eStorage_allocated:
         BrTableAdd(temp);
         return temp;
+        break;
+    case eStorage_duplicate:
+        BrPixelmapFree(temp);
+        return BrTableFind(pName);
+        break;
+    case eStorage_not_enough_room:
+        FatalError(kFatalError_InsufficientShadeTableSlots);
+        return NULL;
     }
 
     return NULL;
 }
 
 // IDA: int __usercall LoadNMaterials@<EAX>(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>, int pCount@<EBX>)
+// FUNCTION: CARM95 0x00435a92
 int LoadNMaterials(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     tPath_name the_path;
     int i;
@@ -474,42 +574,43 @@ int LoadNMaterials(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     char s[256];
     char* str;
     br_material* temp_array[200];
-    LOG_TRACE("(%p, %p, %d)", pStorage_space, pF, pCount);
 
-    new_ones = 0;
+    total = 0;
     for (i = 0; i < pCount; ++i) {
         PossibleService();
         GetALineAndDontArgue(pF, s);
         str = strtok(s, "\t ,/");
         PathCat(the_path, gApplication_path, "MATERIAL");
         PathCat(the_path, the_path, str);
-        total = BrMaterialLoadMany(the_path, temp_array, 200);
-        if (total == 0) {
+        new_ones = BrMaterialLoadMany(the_path, temp_array, 200);
+        if (new_ones == 0) {
             FatalError(kFatalError_LoadMaterialFile_S, str);
         }
 #ifdef DETHRACE_3DFX_PATCH
-        GlorifyMaterial(temp_array, total);
+        GlorifyMaterial(temp_array, new_ones);
 #endif
-        for (j = 0; j < total; j++) {
+        for (j = 0; j < new_ones; j++) {
             if (temp_array[j]) {
                 switch (AddMaterialToStorage(pStorage_space, temp_array[j])) {
-                case eStorage_not_enough_room:
-                    FatalError(kFatalError_InsufficientMaterialSlots);
+                case eStorage_allocated:
+                    BrMaterialAdd(temp_array[j]);
+                    total++;
                     break;
                 case eStorage_duplicate:
                     BrMaterialFree(temp_array[j]);
                     break;
-                case eStorage_allocated:
-                    BrMaterialAdd(temp_array[j]);
-                    new_ones++;
+                case eStorage_not_enough_room:
+                    FatalError(kFatalError_InsufficientMaterialSlots);
+                    break;
                 }
             }
         }
     }
-    return new_ones;
+    return total;
 }
 
 // IDA: int __usercall LoadNModels@<EAX>(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>, int pCount@<EBX>)
+// FUNCTION: CARM95 0x00435c60
 int LoadNModels(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     tPath_name the_path;
     int i;
@@ -519,50 +620,49 @@ int LoadNModels(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     char s[256];
     char* str;
     br_model* temp_array[2000];
-    struct v11model* prepared;
-    int group;
-    LOG_TRACE("(%p, %p, %d)", pStorage_space, pF, pCount);
+    // struct v11model* prepared;
+    // int group;
 
-    new_ones = 0;
+    total = 0;
     for (i = 0; i < pCount; i++) {
         PossibleService();
         GetALineAndDontArgue(pF, s);
         str = strtok(s, "\t ,/");
         PathCat(the_path, gApplication_path, "MODELS");
         PathCat(the_path, the_path, str);
-        total = BrModelLoadMany(the_path, temp_array, 2000);
+        new_ones = BrModelLoadMany(the_path, temp_array, 2000);
 #ifdef DETHRACE_3DFX_PATCH
-        WhitenVertexRGB(temp_array, total);
+        WhitenVertexRGB(temp_array, new_ones);
 #endif
-        if (total == 0) {
+        if (new_ones == 0) {
             FatalError(kFatalError_LoadModelFile_S, str);
         }
-        for (j = 0; j < total; j++) {
+        for (j = 0; j < new_ones; j++) {
             if (temp_array[j]) {
                 switch (AddModelToStorage(pStorage_space, temp_array[j])) {
-                case eStorage_not_enough_room:
-                    FatalError(kFatalError_InsufficientModelSlots);
+                case eStorage_allocated:
+                    temp_array[j]->flags |= BR_MODF_UPDATEABLE;
+                    RemoveDoubleSided(temp_array[j]);
+                    BrModelAdd(temp_array[j]);
+                    total++;
                     break;
                 case eStorage_duplicate:
                     BrModelFree(temp_array[j]);
                     break;
-                case eStorage_allocated:
-                    temp_array[j]->flags |= 0x80u;
-                    RemoveDoubleSided(temp_array[j]);
-                    BrModelAdd(temp_array[j]);
-                    ++new_ones;
+                case eStorage_not_enough_room:
+                    FatalError(kFatalError_InsufficientModelSlots);
                     break;
                 }
             }
         }
     }
 
-    return new_ones;
+    return total;
 }
 
 // IDA: void __usercall DodgyModelUpdate(br_model *pM@<EAX>)
+// FUNCTION: CARM95 0x00435e72
 void DodgyModelUpdate(br_model* pM) {
-    LOG_TRACE("(%p)", pM);
 
     BrResFree(pM->faces);
     BrResFree(pM->vertices);
@@ -573,94 +673,96 @@ void DodgyModelUpdate(br_model* pM) {
 }
 
 // IDA: br_material* __usercall SuffixedMaterial@<EAX>(br_material *pOld@<EAX>, char *pSuffix@<EDX>)
+// FUNCTION: CARM95 0x00435f61
 br_material* SuffixedMaterial(br_material* pOld, char* pSuffix) {
     br_material* new_mat;
     char* new_id;
-    LOG_TRACE("(%p, \"%s\")", pOld, pSuffix);
 
     new_id = BrMemAllocate(strlen(pOld->identifier) + strlen(pSuffix) + 1, kMem_new_mat_id);
     sprintf(new_id, "%s%s", pOld->identifier, pSuffix);
     new_mat = BrMaterialFind(new_id);
-    if (new_mat == NULL) {
+    if (new_mat) {
+        BrMemFree(new_id);
+    } else {
         new_mat = BrMaterialAllocate(NULL);
         MaterialCopy(new_mat, pOld);
         new_mat->identifier = new_id;
         BrMaterialAdd(new_mat);
-    } else {
-        BrMemFree(new_id);
     }
     return new_mat;
 }
 
 // IDA: int __usercall FaceIsRoad@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00436027
 int FaceIsRoad(br_model* pModel, tU16 pFace) {
     br_vector3 v0;
     br_vector3 v1;
     br_vector3 cross;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     BrVector3Sub(&v0, &pModel->vertices[pModel->faces[pFace].vertices[0]].p, &pModel->vertices[pModel->faces[pFace].vertices[1]].p);
     BrVector3Sub(&v1, &pModel->vertices[pModel->faces[pFace].vertices[1]].p, &pModel->vertices[pModel->faces[pFace].vertices[2]].p);
     BrVector3Cross(&cross, &v0, &v1);
-    return sqrtf(cross.v[0] * cross.v[0] + cross.v[2] * cross.v[2]) < 0.7f * cross.v[1];
+    return sqrt(cross.v[0] * cross.v[0] + cross.v[2] * cross.v[2]) < 0.7f * cross.v[1];
 }
 
 // IDA: br_material* __usercall RoadPerspToUntex@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x004365aa
 br_material* RoadPerspToUntex(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
-    if (old_mat->colour_map == NULL || !FaceIsRoad(pModel, pFace)) {
-        return NULL;
+    if (old_mat->colour_map != NULL && FaceIsRoad(pModel, pFace)) {
+
+        new_mat = SuffixedMaterial(old_mat, ".road");
+        if (new_mat->colour_map != NULL) {
+            new_mat->colour_map = NULL;
+            BrMaterialUpdate(new_mat, BR_MATU_ALL);
+        }
+        return new_mat;
     }
-    new_mat = SuffixedMaterial(old_mat, ".road");
-    if (new_mat->colour_map != NULL) {
-        new_mat->colour_map = NULL;
-        BrMaterialUpdate(new_mat, BR_MATU_ALL);
-    }
-    return new_mat;
+    return NULL;
 }
 
 // IDA: br_material* __usercall WallPerspToLinear@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00435ec1
 br_material* WallPerspToLinear(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
-    if (old_mat->colour_map == NULL || !(old_mat->flags & BR_MATF_PERSPECTIVE) || FaceIsRoad(pModel, pFace)) {
-        return NULL;
+    if (old_mat->colour_map != NULL && (old_mat->flags & BR_MATF_PERSPECTIVE) && !FaceIsRoad(pModel, pFace)) {
+        new_mat = SuffixedMaterial(old_mat, ".pwall");
+        if (new_mat->flags & BR_MATF_PERSPECTIVE) {
+            new_mat->flags &= ~BR_MATF_PERSPECTIVE;
+            BrMaterialUpdate(new_mat, BR_MATU_ALL);
+        }
+        return new_mat;
     }
-    new_mat = SuffixedMaterial(old_mat, ".pwall");
-    if (new_mat->flags & BR_MATF_PERSPECTIVE) {
-        new_mat->flags &= ~BR_MATF_PERSPECTIVE;
-        BrMaterialUpdate(new_mat, BR_MATU_ALL);
-    }
-    return new_mat;
+    return NULL;
 }
 
 // IDA: br_material* __usercall WallPerspToUntex@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00436269
 br_material* WallPerspToUntex(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
-    if (old_mat->colour_map == NULL || FaceIsRoad(pModel, pFace)) {
-        return NULL;
+    if (old_mat->colour_map != NULL && FaceIsRoad(pModel, pFace)) {
+
+        if (old_mat->flags & BR_MATF_PERSPECTIVE) {
+            new_mat = SuffixedMaterial(old_mat, ".pwall");
+        } else {
+            new_mat = SuffixedMaterial(old_mat, ".lwall");
+        }
+        if (new_mat->colour_map != NULL) {
+            new_mat->colour_map = NULL;
+            BrMaterialUpdate(new_mat, BR_MATU_ALL);
+        }
+        return new_mat;
     }
-    if (old_mat->flags & BR_MATF_PERSPECTIVE) {
-        new_mat = SuffixedMaterial(old_mat, ".pwall");
-    } else {
-        new_mat = SuffixedMaterial(old_mat, ".lwall");
-    }
-    if (new_mat->colour_map != NULL) {
-        new_mat->colour_map = NULL;
-        BrMaterialUpdate(new_mat, BR_MATU_ALL);
-    }
-    return new_mat;
+    return NULL;
 }
 
 // IDA: void __usercall ProcessModelFaceMaterials2(br_model *pModel@<EAX>, tPMFM2CB pCallback@<EDX>)
@@ -668,7 +770,6 @@ void ProcessModelFaceMaterials2(br_model* pModel, tPMFM2CB pCallback) {
     tU16 f;
     tU16 group;
     br_material* old_mat;
-    LOG_TRACE("(%p, %d)", pModel, pCallback);
 
     if (pModel->faces) {
         for (f = 0; f < pModel->nfaces; f++) {
@@ -693,19 +794,19 @@ void ProcessModelFaceMaterials2(br_model* pModel, tPMFM2CB pCallback) {
 }
 
 // IDA: void __usercall ProcessModelFaceMaterials(br_model *pModel@<EAX>, tPMFMCB pCallback@<EDX>)
+// FUNCTION: CARM95 0x00436640
 void ProcessModelFaceMaterials(br_model* pModel, tPMFMCB pCallback) {
     tU16 f;
     br_material* possible_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pCallback);
 
     new_mat = NULL;
     for (f = 0; f < pModel->nfaces; f++) {
         if (pModel->faces[f].material != NULL) {
             possible_mat = (*pCallback)(pModel, f);
             if (possible_mat != NULL) {
-                pModel->faces[f].material = possible_mat;
                 new_mat = possible_mat;
+                pModel->faces[f].material = new_mat;
             }
         }
     }
@@ -715,6 +816,7 @@ void ProcessModelFaceMaterials(br_model* pModel, tPMFMCB pCallback) {
 }
 
 // IDA: int __usercall LoadNTrackModels@<EAX>(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>, int pCount@<EBX>)
+// FUNCTION: CARM95 0x00436325
 int LoadNTrackModels(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     tPath_name the_path;
     int i;
@@ -726,56 +828,54 @@ int LoadNTrackModels(tBrender_storage* pStorage_space, FILE* pF, int pCount) {
     char* str;
     br_model* temp_array[2000];
     struct v11model* prepared;
-    LOG_TRACE("(%p, %p, %d)", pStorage_space, pF, pCount);
 
-    new_ones = 0;
+    total = 0;
     for (i = 0; i < pCount; i++) {
         GetALineAndDontArgue(pF, s);
         str = strtok(s, "\t ,/");
         PathCat(the_path, gApplication_path, "MODELS");
         PathCat(the_path, the_path, str);
-        total = BrModelLoadMany(the_path, temp_array, 2000);
-        if (total == 0) {
+        new_ones = BrModelLoadMany(the_path, temp_array, COUNT_OF(temp_array));
+        if (new_ones == 0) {
             FatalError(kFatalError_LoadModelFile_S, str);
         }
 #ifdef DETHRACE_3DFX_PATCH
-        WhitenVertexRGB(temp_array, total);
+        WhitenVertexRGB(temp_array, new_ones);
 #endif
-        for (j = 0; j < total; j++) {
+        for (j = 0; j < new_ones; j++) {
             if (temp_array[j]) {
                 switch (AddModelToStorage(pStorage_space, temp_array[j])) {
-                case eStorage_not_enough_room:
-                    FatalError(kFatalError_InsufficientModelSlots);
-                    break;
-                case eStorage_duplicate:
-                    BrModelFree(temp_array[j]);
-                    break;
                 case eStorage_allocated:
                     temp_array[j]->flags |= BR_MODF_UPDATEABLE;
                     if (gRoad_texturing_level == eRTL_none) {
                         ProcessModelFaceMaterials(temp_array[j], RoadPerspToUntex);
                     }
-                    switch (gWall_texturing_level) {
-                    case eWTL_none:
-                        ProcessModelFaceMaterials(temp_array[j], WallPerspToUntex);
-                        break;
-                    case eWTL_linear:
+                    if (gWall_texturing_level == eWTL_linear) {
                         ProcessModelFaceMaterials(temp_array[j], WallPerspToLinear);
-                        break;
-                    default:
-                        break;
+                    }
+                    if (gWall_texturing_level == eWTL_none) {
+                        ProcessModelFaceMaterials(temp_array[j], WallPerspToUntex);
                     }
                     RemoveDoubleSided(temp_array[j]);
                     BrModelAdd(temp_array[j]);
-                    new_ones++;
+                    total++;
+                    break;
+
+                case eStorage_duplicate:
+                    BrModelFree(temp_array[j]);
+                    break;
+                case eStorage_not_enough_room:
+                    FatalError(kFatalError_InsufficientModelSlots);
+                    break;
                 }
             }
         }
     }
-    return new_ones;
+    return total;
 }
 
 // IDA: void __usercall LoadSomePixelmaps(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>)
+// FUNCTION: CARM95 0x004366f3
 void LoadSomePixelmaps(tBrender_storage* pStorage_space, FILE* pF) {
     tPath_name the_path;
     int i;
@@ -785,7 +885,6 @@ void LoadSomePixelmaps(tBrender_storage* pStorage_space, FILE* pF) {
     char s[256];
     char* str;
     br_pixelmap* temp_array[200];
-    LOG_TRACE("(%p, %p)", pStorage_space, pF);
 
     GetALineAndDontArgue(pF, s);
     str = strtok(s, "\t ,/");
@@ -794,6 +893,7 @@ void LoadSomePixelmaps(tBrender_storage* pStorage_space, FILE* pF) {
 }
 
 // IDA: void __usercall LoadSomeShadeTables(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>)
+// FUNCTION: CARM95 0x0043675d
 void LoadSomeShadeTables(tBrender_storage* pStorage_space, FILE* pF) {
     tPath_name the_path;
     int i;
@@ -803,7 +903,6 @@ void LoadSomeShadeTables(tBrender_storage* pStorage_space, FILE* pF) {
     char s[256];
     char* str;
     br_pixelmap* temp_array[50];
-    LOG_TRACE("(%p, %p)", pStorage_space, pF);
 
     GetALineAndDontArgue(pF, s);
     str = strtok(s, "\t ,/");
@@ -812,6 +911,7 @@ void LoadSomeShadeTables(tBrender_storage* pStorage_space, FILE* pF) {
 }
 
 // IDA: void __usercall LoadSomeMaterials(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>)
+// FUNCTION: CARM95 0x004367c7
 void LoadSomeMaterials(tBrender_storage* pStorage_space, FILE* pF) {
     tPath_name the_path;
     int i;
@@ -821,7 +921,6 @@ void LoadSomeMaterials(tBrender_storage* pStorage_space, FILE* pF) {
     char s[256];
     char* str;
     br_material* temp_array[200];
-    LOG_TRACE("(%p, %p)", pStorage_space, pF);
 
     GetALineAndDontArgue(pF, s);
     str = strtok(s, "\t ,/");
@@ -830,6 +929,7 @@ void LoadSomeMaterials(tBrender_storage* pStorage_space, FILE* pF) {
 }
 
 // IDA: void __usercall LoadSomeModels(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>)
+// FUNCTION: CARM95 0x00436831
 void LoadSomeModels(tBrender_storage* pStorage_space, FILE* pF) {
     tPath_name the_path;
     int i;
@@ -839,7 +939,6 @@ void LoadSomeModels(tBrender_storage* pStorage_space, FILE* pF) {
     char s[256];
     char* str;
     br_model* temp_array[2000];
-    LOG_TRACE("(%p, %p)", pStorage_space, pF);
 
     GetALineAndDontArgue(pF, s);
     str = strtok(s, "\t ,/");
@@ -848,6 +947,7 @@ void LoadSomeModels(tBrender_storage* pStorage_space, FILE* pF) {
 }
 
 // IDA: void __usercall LoadSomeTrackModels(tBrender_storage *pStorage_space@<EAX>, FILE *pF@<EDX>)
+// FUNCTION: CARM95 0x0043689f
 void LoadSomeTrackModels(tBrender_storage* pStorage_space, FILE* pF) {
     tPath_name the_path;
     int i;
@@ -857,7 +957,6 @@ void LoadSomeTrackModels(tBrender_storage* pStorage_space, FILE* pF) {
     char s[256];
     char* str;
     br_model* temp_array[2000];
-    LOG_TRACE("(%p, %p)", pStorage_space, pF);
 
     GetALineAndDontArgue(pF, s);
     str = strtok(s, "\t ,/");
@@ -866,8 +965,8 @@ void LoadSomeTrackModels(tBrender_storage* pStorage_space, FILE* pF) {
 }
 
 // IDA: void __usercall AddFunkGrooveBinding(int pSlot_number@<EAX>, float *pPeriod_address@<EDX>)
+// FUNCTION: CARM95 0x0043690d
 void AddFunkGrooveBinding(int pSlot_number, float* pPeriod_address) {
-    LOG_TRACE("(%d, %p)", pSlot_number, pPeriod_address);
 
     if (pSlot_number < 0 || pSlot_number >= COUNT_OF(gGroove_funk_bindings)) {
         FatalError(kFatalError_DefinedRefNumGrooveFunkOutOfRange);
@@ -878,8 +977,8 @@ void AddFunkGrooveBinding(int pSlot_number, float* pPeriod_address) {
 }
 
 // IDA: void __usercall ControlBoundFunkGroove(int pSlot_number@<EAX>, float pValue)
+// FUNCTION: CARM95 0x0043694f
 void ControlBoundFunkGroove(int pSlot_number, float pValue) {
-    LOG_TRACE("(%d, %f)", pSlot_number, pValue);
 
     if (pSlot_number < 0) {
         return;
@@ -891,8 +990,8 @@ void ControlBoundFunkGroove(int pSlot_number, float pValue) {
 }
 
 // IDA: float __usercall ControlBoundFunkGroovePlus@<ST0>(int pSlot_number@<EAX>, float pValue)
+// FUNCTION: CARM95 0x0043698f
 float ControlBoundFunkGroovePlus(int pSlot_number, float pValue) {
-    LOG_TRACE("(%d, %f)", pSlot_number, pValue);
 
     if (pSlot_number < 0) {
         return 0.f;
@@ -900,92 +999,90 @@ float ControlBoundFunkGroovePlus(int pSlot_number, float pValue) {
     if (pSlot_number >= COUNT_OF(gGroove_funk_bindings)) {
         FatalError(kFatalError_UsedRefNumGrooveFunkOutOfRange);
     }
-    *gGroove_funk_bindings[pSlot_number] = fmodf(*gGroove_funk_bindings[pSlot_number] + pValue, 1.f);
+    *gGroove_funk_bindings[pSlot_number] = fmod(*gGroove_funk_bindings[pSlot_number] + pValue, 1.f);
     return *gGroove_funk_bindings[pSlot_number];
 }
 
 // IDA: void __usercall ShiftBoundGrooveFunks(char *pStart@<EAX>, char *pEnd@<EDX>, int pDelta@<EBX>)
+// FUNCTION: CARM95 0x00437dca
 void ShiftBoundGrooveFunks(char* pStart, char* pEnd, ptrdiff_t pDelta) {
     int i;
-    LOG_TRACE("(\"%s\", \"%s\", %d)", pStart, pEnd, pDelta);
 
     for (i = 0; i < COUNT_OF(gGroove_funk_bindings); i++) {
-        if (pStart <= (char*)gGroove_funk_bindings[i] && (char*)gGroove_funk_bindings[i] < pEnd) {
-            gGroove_funk_bindings[i] = (float*)((char*)gGroove_funk_bindings[i] + (pDelta & ~(sizeof(void*) - 1))); // original code is (pDelta & 0xFFFFFFFC) but this caused problems;
+        if ((intptr_t)pStart <= (intptr_t)gGroove_funk_bindings[i] && (intptr_t)gGroove_funk_bindings[i] < (intptr_t)pEnd) {
+            gGroove_funk_bindings[i] = (float*)((char*)gGroove_funk_bindings[i] + (pDelta & ~(sizeof(void*) - 1)));
         }
     }
 }
 
 // IDA: tFunkotronic_spec* __cdecl AddNewFunkotronic()
+// FUNCTION: CARM95 0x00437c4c
 tFunkotronic_spec* AddNewFunkotronic(void) {
     void* new_array;
     int i;
-    LOG_TRACE("()");
 
     for (i = 0; i < gFunkotronics_array_size; i++) {
-        if (gFunkotronics_array[i].owner == -999) {
+        if (gFunkotronics_array[i].owner == NO_OWNER) {
             memset(&gFunkotronics_array[i], 0, sizeof(tFunkotronic_spec));
             return &gFunkotronics_array[i];
         }
     }
-    gFunkotronics_array_size += 16;
+    gFunkotronics_array_size += GROOVE_FUNK_BUFFER_SIZE_INCREASE;
     new_array = BrMemCalloc(gFunkotronics_array_size, sizeof(tFunkotronic_spec), kMem_funk_spec);
     if (gFunkotronics_array != NULL) {
-        memcpy(new_array, gFunkotronics_array, (gFunkotronics_array_size - 16) * sizeof(tFunkotronic_spec));
+        memcpy(new_array, gFunkotronics_array, (gFunkotronics_array_size - GROOVE_FUNK_BUFFER_SIZE_INCREASE) * sizeof(tFunkotronic_spec));
         ShiftBoundGrooveFunks(
             (char*)gFunkotronics_array,
-            (char*)&gFunkotronics_array[gFunkotronics_array_size - 16],
+            (char*)(gFunkotronics_array + gFunkotronics_array_size - GROOVE_FUNK_BUFFER_SIZE_INCREASE),
             (char*)new_array - (char*)gFunkotronics_array);
         BrMemFree(gFunkotronics_array);
     }
     gFunkotronics_array = new_array;
-    for (i = 0; i < 16; i++) {
-        gFunkotronics_array[gFunkotronics_array_size - 16 + i].owner = -999;
+    for (i = 0; i < GROOVE_FUNK_BUFFER_SIZE_INCREASE; i++) {
+        gFunkotronics_array[gFunkotronics_array_size + i - GROOVE_FUNK_BUFFER_SIZE_INCREASE].owner = NO_OWNER;
     }
-    return &gFunkotronics_array[gFunkotronics_array_size - 16];
+    return gFunkotronics_array + gFunkotronics_array_size - GROOVE_FUNK_BUFFER_SIZE_INCREASE;
 }
 
 // IDA: void __usercall DisposeFunkotronics(int pOwner@<EAX>)
+// FUNCTION: CARM95 0x004369fd
 void DisposeFunkotronics(int pOwner) {
     int i;
     tFunkotronic_spec* the_funk;
-    LOG_TRACE("(%d)", pOwner);
 
-    if (gFunkotronics_array == NULL) {
-        return;
-    }
-    for (i = 0; i < gFunkotronics_array_size; i++) {
-        the_funk = &gFunkotronics_array[i];
-        PossibleService();
-        if (the_funk->owner == pOwner) {
-            the_funk->owner = -999;
-            if (the_funk->proximity_array != NULL) {
-                BrMemFree(the_funk->proximity_array);
-            }
-            if (the_funk->texture_animation_type == eTexture_animation_flic) {
-                BrMemFree(the_funk->texture_animation_data.flic_info.flic_data);
-                EndFlic(&the_funk->texture_animation_data.flic_info.flic_descriptor);
-                BrMemFree(the_funk->material->colour_map->pixels);
-                the_funk->material->colour_map->pixels = NULL;
-                BrPixelmapFree(the_funk->material->colour_map);
-                the_funk->material->colour_map = NULL;
+    if (gFunkotronics_array != NULL) {
+        for (i = 0, the_funk = gFunkotronics_array; i < gFunkotronics_array_size; i++, the_funk++) {
+            PossibleService();
+            if (the_funk->owner == pOwner) {
+                the_funk->owner = NO_OWNER;
+                if (the_funk->proximity_array != NULL) {
+                    BrMemFree(the_funk->proximity_array);
+                }
+                if (the_funk->texture_animation_type == eTexture_animation_flic) {
+                    BrMemFree(the_funk->texture_animation_data.flic_info.flic_data);
+                    EndFlic(&the_funk->texture_animation_data.flic_info.flic_descriptor);
+                    BrMemFree(the_funk->material->colour_map->pixels);
+                    the_funk->material->colour_map->pixels = NULL;
+                    BrPixelmapFree(the_funk->material->colour_map);
+                    the_funk->material->colour_map = NULL;
+                }
             }
         }
     }
 }
 
 // IDA: void __usercall AddProximityVertex(br_vector3 *pV@<EAX>, tFunkotronic_spec *pThe_funk@<EDX>)
+// FUNCTION: CARM95 0x0043806e
 void AddProximityVertex(br_vector3* pV, tFunkotronic_spec* pThe_funk) {
-    LOG_TRACE("(%p, %p)", pV, pThe_funk);
 
     pThe_funk->proximity_array[pThe_funk->proximity_count] = *pV;
     pThe_funk->proximity_count++;
 }
 
 // IDA: void __cdecl AddProximityVertexXYZ(br_scalar pX, br_scalar pY, br_scalar pZ, tFunkotronic_spec *pThe_funk)
+// FUNCTION: CARM95 0x004380ad
 void AddProximityVertexXYZ(br_scalar pX, br_scalar pY, br_scalar pZ, tFunkotronic_spec* pThe_funk) {
     br_vector3 v;
-    LOG_TRACE("(%f, %f, %f, %p)", pX, pY, pZ, pThe_funk);
 
     v.v[0] = pX;
     v.v[1] = pY;
@@ -994,17 +1091,16 @@ void AddProximityVertexXYZ(br_scalar pX, br_scalar pY, br_scalar pZ, tFunkotroni
 }
 
 // IDA: br_uint_32 __usercall CalcProximities@<EAX>(br_actor *pActor@<EAX>, br_material *pMat@<EDX>, tFunkotronic_spec *pThe_funk@<EBX>)
+// FUNCTION: CARM95 0x00436af6
 br_uint_32 CalcProximities(br_actor* pActor, br_material* pMat, tFunkotronic_spec* pThe_funk) {
     br_face* the_face;
     int i;
-    LOG_TRACE("(%p, %p, %p)", pActor, pMat, pThe_funk);
 
     if (pActor->model != NULL) {
         if (pThe_funk->material == pMat) {
             pThe_funk->proximity_count += 8;
         } else {
-            for (i = 0; i < pActor->model->nfaces; i++) {
-                the_face = &pActor->model->faces[i];
+            for (i = 0, the_face = pActor->model->faces; i < pActor->model->nfaces; i++, the_face++) {
                 if (pThe_funk->material == the_face->material) {
                     pThe_funk->proximity_count += 3;
                 }
@@ -1015,10 +1111,10 @@ br_uint_32 CalcProximities(br_actor* pActor, br_material* pMat, tFunkotronic_spe
 }
 
 // IDA: br_uint_32 __usercall AddProximities@<EAX>(br_actor *pActor@<EAX>, br_material *pMat@<EDX>, tFunkotronic_spec *pThe_funk@<EBX>)
+// FUNCTION: CARM95 0x00437e2f
 br_uint_32 AddProximities(br_actor* pActor, br_material* pMat, tFunkotronic_spec* pThe_funk) {
     br_face* the_face;
     int i;
-    LOG_TRACE("(%p, %p, %p)", pActor, pMat, pThe_funk);
 
     if (pActor->model != NULL) {
         if (pThe_funk->material == pMat) {
@@ -1063,8 +1159,7 @@ br_uint_32 AddProximities(br_actor* pActor, br_material* pMat, tFunkotronic_spec
                 pActor->model->bounds.max.v[2],
                 pThe_funk);
         } else {
-            for (i = 0; i < pActor->model->nfaces; i++) {
-                the_face = &pActor->model->faces[i];
+            for (i = 0, the_face = pActor->model->faces; i < pActor->model->nfaces; i++, the_face++) {
                 if (pThe_funk->material == the_face->material) {
                     AddProximityVertex(&pActor->model->vertices[the_face->vertices[0]].p, pThe_funk);
                     AddProximityVertex(&pActor->model->vertices[the_face->vertices[1]].p, pThe_funk);
@@ -1079,7 +1174,6 @@ br_uint_32 AddProximities(br_actor* pActor, br_material* pMat, tFunkotronic_spec
 // IDA: void __usercall Adjust2FloatsForExceptions(float *pVictim1@<EAX>, float *pVictim2@<EDX>, br_pixelmap *pCulprit@<EBX>)
 void Adjust2FloatsForExceptions(float* pVictim1, float* pVictim2, br_pixelmap* pCulprit) {
     tException_list e;
-    LOG_TRACE("(%p, %p, %p)", pVictim1, pVictim2, pCulprit);
 
     if (pCulprit && pCulprit->identifier != NULL) {
         e = FindExceptionInList(pCulprit->identifier, gExceptions);
@@ -1096,7 +1190,10 @@ void Adjust2FloatsForExceptions(float* pVictim1, float* pVictim2, br_pixelmap* p
     }
 }
 
+#define SAFE_DIV(val) (gTemp = val, gTemp != 0.0f ? 1000.0 / gTemp : 0.0f)
+
 // IDA: void __usercall AddFunkotronics(FILE *pF@<EAX>, int pOwner@<EDX>, int pRef_offset@<EBX>)
+// FUNCTION: CARM95 0x00436b8b
 void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
     char s[256];
     char* str;
@@ -1114,11 +1211,6 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
     float s_max;
     void* the_pixels;
     br_pixelmap* the_pixelmap;
-    float x_0;
-    float x_1;
-    int d_0;
-    int d_1;
-    LOG_TRACE("(%p, %d, %d)", pF, pOwner, pRef_offset);
 
     first_time = 1;
     while (!feof(pF)) {
@@ -1131,14 +1223,14 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
         if (!first_time) {
             if (strcmp(s, "NEXT FUNK") != 0) {
                 FatalError(kFatalError_FunkotronicFile);
+            } else {
+                GetALineAndDontArgue(pF, s);
             }
-            GetALineAndDontArgue(pF, s);
         }
         first_time = 0;
-
+        str = strtok(s, "\t ,/");
         the_funk = AddNewFunkotronic();
         the_funk->owner = pOwner;
-        str = strtok(s, "\t ,/");
         the_funk->material = BrMaterialFind(str);
         if (the_funk->material == NULL) {
             FatalError(kFatalError_FindMaterialUsedByFunkotronicFile_S, str);
@@ -1151,29 +1243,33 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
         switch (the_funk->matrix_mod_type) {
         case eMatrix_mod_spin:
             if (the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
-                i = GetAnInt(pF);
-                AddFunkGrooveBinding(i + pRef_offset, &the_funk->matrix_mod_data.spin_info.period);
+                AddFunkGrooveBinding(GetAnInt(pF) + pRef_offset, &the_funk->matrix_mod_data.spin_info.period);
             } else {
-                x_0 = GetAFloat(pF);
-                the_funk->matrix_mod_data.spin_info.period = (x_0 == 0.0f) ? 0.0f : 1000.0f / x_0;
+                gTemp = GetAFloat(pF);
+                the_funk->matrix_mod_data.spin_info.period = (gTemp != 0.0f ? 1000.0 / gTemp : 0.0);
             }
             break;
-        case eMatrix_mod_rock: // rock
+
+        case eMatrix_mod_rock:
             if (the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
-                d_0 = GetAnInt(pF);
-                AddFunkGrooveBinding(d_0 + pRef_offset, &the_funk->matrix_mod_data.rock_info.period);
+                AddFunkGrooveBinding(GetAnInt(pF) + pRef_offset, &the_funk->matrix_mod_data.rock_info.period);
             } else {
-                x_0 = GetAFloat(pF);
-                the_funk->matrix_mod_data.rock_info.period = (x_0 == 0.0f) ? 0.0f : 1000.0f / x_0;
+                the_funk->matrix_mod_data.rock_info.period = SAFE_DIV(GetAFloat(pF));
             }
 
             the_funk->matrix_mod_data.rock_info.rock_angle = GetAFloat(pF);
-            GetPairOfFloats(pF, &x_0, &x_1);
-            the_funk->matrix_mod_data.rock_info.x_centre = x_0 / 100.0f;
-            the_funk->matrix_mod_data.rock_info.y_centre = x_1 / 100.0f;
+
+            {
+                float x_0, x_1;
+                GetPairOfFloats(pF, &x_0, &x_1);
+                the_funk->matrix_mod_data.rock_info.x_centre = x_0 / 100.f;
+                the_funk->matrix_mod_data.rock_info.y_centre = x_1 / 100.f;
+            }
             break;
-        case eMatrix_mod_throb: // throb
+
+        case eMatrix_mod_throb:
             if (the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
+                int d_0, d_1;
                 GetPairOfInts(pF, &d_0, &d_1);
                 if (d_0 >= 0) {
                     AddFunkGrooveBinding(d_0 + pRef_offset, &the_funk->matrix_mod_data.throb_info.x_period);
@@ -1182,18 +1278,23 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                     AddFunkGrooveBinding(d_1 + pRef_offset, &the_funk->matrix_mod_data.throb_info.y_period);
                 }
             } else {
-                GetPairOfFloats(pF, &speed1, &speed2);
-                the_funk->matrix_mod_data.throb_info.x_period = (speed1 == 0.0f) ? 0.0f : 1000.0f / speed1;
-                the_funk->matrix_mod_data.throb_info.y_period = (speed2 == 0.0f) ? 0.0f : 1000.0f / speed2;
+                float x_0, x_1;
+                GetPairOfFloats(pF, &x_0, &x_1);
+                the_funk->matrix_mod_data.throb_info.x_period = SAFE_DIV(x_0);
+                the_funk->matrix_mod_data.throb_info.y_period = SAFE_DIV(x_1);
             }
             GetPairOfFloatPercents(
                 pF,
                 &the_funk->matrix_mod_data.throb_info.x_magnitude,
                 &the_funk->matrix_mod_data.throb_info.y_magnitude);
-            GetPairOfFloats(pF, &x_0, &x_1);
-            the_funk->matrix_mod_data.throb_info.x_centre = x_0 / 100.0f;
-            the_funk->matrix_mod_data.throb_info.y_centre = x_1 / 100.0f;
-            if (the_funk->matrix_mode != eMove_controlled) {
+            {
+                float x_0, x_1;
+                GetPairOfFloats(pF, &x_0, &x_1);
+                the_funk->matrix_mod_data.throb_info.x_centre = x_0 / 100.0f;
+                the_funk->matrix_mod_data.throb_info.y_centre = x_1 / 100.0f;
+            }
+            // likely bug: the second conditional should be eMove_absolute
+            if (the_funk->matrix_mode != eMove_controlled && the_funk->matrix_mode != eMove_controlled) {
                 if (the_funk->matrix_mod_data.throb_info.x_period == 0.0f) {
                     the_funk->matrix_mod_data.throb_info.x_period = 1.0f;
                     the_funk->matrix_mod_data.throb_info.x_magnitude = 0.0f;
@@ -1204,8 +1305,10 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                 }
             }
             break;
-        case eMatrix_mod_slither: // slither
+
+        case eMatrix_mod_slither:
             if (the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
+                int d_0, d_1;
                 GetPairOfInts(pF, &d_0, &d_1);
                 if (d_0 >= 0) {
                     AddFunkGrooveBinding(d_0 + pRef_offset, &the_funk->matrix_mod_data.slither_info.x_period);
@@ -1214,15 +1317,16 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                     AddFunkGrooveBinding(d_1 + pRef_offset, &the_funk->matrix_mod_data.slither_info.y_period);
                 }
             } else {
-                GetPairOfFloats(pF, &speed1, &speed2);
-                the_funk->matrix_mod_data.slither_info.x_period = (speed1 == 0.0f) ? 0.0f : 1000.0f / speed1;
-                the_funk->matrix_mod_data.slither_info.y_period = (speed2 == 0.0f) ? 0.0f : 1000.0f / speed2;
+                float x_0, x_1;
+                GetPairOfFloats(pF, &x_0, &x_1);
+                the_funk->matrix_mod_data.slither_info.x_period = SAFE_DIV(x_0);
+                the_funk->matrix_mod_data.slither_info.y_period = SAFE_DIV(x_1);
             }
             GetPairOfFloatPercents(
                 pF,
                 &the_funk->matrix_mod_data.slither_info.x_magnitude,
                 &the_funk->matrix_mod_data.slither_info.y_magnitude);
-            if (the_funk->matrix_mode != eMove_controlled) {
+            if (the_funk->matrix_mode != eMove_controlled && the_funk->matrix_mode != eMove_controlled) {
                 if (the_funk->matrix_mod_data.slither_info.x_period == 0.0f) {
                     the_funk->matrix_mod_data.slither_info.x_period = 1.0f;
                     the_funk->matrix_mod_data.slither_info.x_magnitude = 0.0f;
@@ -1233,36 +1337,36 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                 }
             }
             break;
-        case eMatrix_mod_roll: // roll
+
+        case eMatrix_mod_roll:
             if (the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
+                int d_0, d_1;
                 GetPairOfInts(pF, &d_0, &d_1);
                 if (d_0 >= 0) {
-                    AddFunkGrooveBinding(d_0 + pRef_offset, &the_funk->matrix_mod_data.roll_info.x_period);
+                    AddFunkGrooveBinding(pRef_offset + d_0, &the_funk->matrix_mod_data.roll_info.x_period);
                 }
                 if (d_1 >= 0) {
-                    AddFunkGrooveBinding(d_1 + pRef_offset, &the_funk->matrix_mod_data.roll_info.y_period);
+                    AddFunkGrooveBinding(pRef_offset + d_1, &the_funk->matrix_mod_data.roll_info.y_period);
                 }
             } else {
-                GetPairOfFloats(pF, &speed1, &speed2);
-                the_funk->matrix_mod_data.roll_info.x_period = speed1 == 0.0f ? 0.0f : 1000.0f / speed1;
-                the_funk->matrix_mod_data.roll_info.y_period = speed2 == 0.0f ? 0.0f : 1000.0f / speed2;
+                float x_0, x_1;
+                GetPairOfFloats(pF, &x_0, &x_1);
+                the_funk->matrix_mod_data.roll_info.x_period = SAFE_DIV(x_0);
+                the_funk->matrix_mod_data.roll_info.y_period = SAFE_DIV(x_1);
             }
 #ifdef DETHRACE_3DFX_PATCH
             Adjust2FloatsForExceptions(&the_funk->matrix_mod_data.roll_info.x_period, &the_funk->matrix_mod_data.roll_info.y_period, the_funk->material->colour_map);
-
 #endif
             break;
-        default:
-            break;
+
+            DETHRACE_DEFAULT_BREAK
         }
         the_funk->lighting_animation_type = GetALineAndInterpretCommand(pF, gFunk_move_names, COUNT_OF(gFunk_move_names));
         if (the_funk->lighting_animation_type != eMove_none) {
             if (the_funk->lighting_animation_type == eMove_controlled || the_funk->lighting_animation_type == eMove_absolute) {
-                d_0 = GetAnInt(pF);
-                AddFunkGrooveBinding(d_0 + pRef_offset, &the_funk->lighting_animation_period);
+                AddFunkGrooveBinding(GetAnInt(pF) + pRef_offset, &the_funk->lighting_animation_period);
             } else {
-                x_0 = GetAFloat(pF);
-                the_funk->lighting_animation_period = (x_0 == 0.0f) ? 0.0f : 1000.0f / x_0;
+                the_funk->lighting_animation_period = SAFE_DIV(GetAFloat(pF));
             }
             GetThreeFloatPercents(pF, &a_min, &d_min, &s_min);
             GetThreeFloatPercents(pF, &a_max, &d_max, &s_max);
@@ -1283,13 +1387,32 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
         }
         the_funk->last_frame = 0.0f;
 
-        if (the_funk->texture_animation_type == eTexture_animation_flic) {
+        switch (the_funk->texture_animation_type) {
+        case eTexture_animation_frames:
+            the_funk->texture_animation_data.frames_info.mode = GetALineAndInterpretCommand(pF, gFunk_move_names, COUNT_OF(gFunk_move_names));
+            if (the_funk->texture_animation_data.frames_info.mode == eMove_controlled
+                || the_funk->texture_animation_data.frames_info.mode == eMove_absolute) {
+                AddFunkGrooveBinding(GetAnInt(pF) + pRef_offset, &the_funk->texture_animation_data.frames_info.period);
+            } else {
+                the_funk->texture_animation_data.frames_info.period = SAFE_DIV(GetAFloat(pF));
+            }
+            the_funk->texture_animation_data.frames_info.texture_count = (int)GetAFloat(pF);
+            the_funk->texture_animation_data.frames_info.current_frame = 0;
+            for (i = 0; i < the_funk->texture_animation_data.frames_info.texture_count; i++) {
+                GetAString(pF, s);
+                the_funk->texture_animation_data.frames_info.textures[i] = BrMapFind(s);
+                if (the_funk->texture_animation_data.frames_info.textures[i] == NULL) {
+                    FatalError(kFatalError_AnimationFramePixelmapUsedByFunkotronicFile);
+                }
+            }
+            break;
+
+        case eTexture_animation_flic:
             GetAString(pF, s);
             the_funk->texture_animation_data.flic_info.flic_data = 0;
-            if (LoadFlicData(
-                    s,
-                    &the_funk->texture_animation_data.flic_info.flic_data,
-                    &the_funk->texture_animation_data.flic_info.flic_data_length)) {
+            if (LoadFlicData(s, &the_funk->texture_animation_data.flic_info.flic_data, &the_funk->texture_animation_data.flic_info.flic_data_length) == 0) {
+                the_funk->texture_animation_type = eTexture_animation_none;
+            } else {
                 the_funk->texture_animation_data.flic_info.flic_descriptor.data_start = NULL;
                 StartFlic(
                     s,
@@ -1311,7 +1434,7 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                         "C:\\Msdev\\Projects\\DethRace\\World.c",
                         1729,
                         "Bruce bug at line %d, file C:\\Msdev\\Projects\\DethRace\\World.c",
-                        193);
+                        1729);
                 }
                 the_pixelmap = DRPixelmapAllocate(
 #ifdef DETHRACE_3DFX_PATCH
@@ -1329,30 +1452,12 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                 AssertFlicPixelmap(&the_funk->texture_animation_data.flic_info.flic_descriptor, the_pixelmap);
                 the_funk->material->colour_map = the_pixelmap;
                 BrMaterialUpdate(the_funk->material, BR_MATU_ALL);
-            } else {
-                the_funk->texture_animation_type = eTexture_animation_none;
             }
-        } else if (the_funk->texture_animation_type == eTexture_animation_frames) {
-            i = GetALineAndInterpretCommand(pF, gFunk_move_names, COUNT_OF(gFunk_move_names));
-            the_funk->texture_animation_data.frames_info.mode = i;
-            if (the_funk->texture_animation_data.frames_info.mode == eMove_controlled
-                || the_funk->texture_animation_data.frames_info.mode == eMove_absolute) {
-                d_0 = GetAnInt(pF);
-                AddFunkGrooveBinding(d_0 + pRef_offset, &the_funk->texture_animation_data.frames_info.period);
-            } else {
-                x_0 = GetAFloat(pF);
-                the_funk->texture_animation_data.frames_info.period = (x_0 == 0.0f) ? 0.0f : 1000.0F / x_0;
-            }
+            break;
 
-            the_funk->texture_animation_data.frames_info.texture_count = (int)GetAFloat(pF);
-            for (i = 0; i < the_funk->texture_animation_data.frames_info.texture_count; i++) {
-                GetAString(pF, s);
-                the_funk->texture_animation_data.frames_info.textures[i] = BrMapFind(s);
-                if (the_funk->texture_animation_data.frames_info.textures[i] == NULL) {
-                    FatalError(kFatalError_AnimationFramePixelmapUsedByFunkotronicFile);
-                }
-            }
+            DETHRACE_DEFAULT_BREAK
         }
+
         the_funk->proximity_count = 0;
         the_funk->proximity_array = 0;
         if (the_funk->mode == eFunk_mode_distance) {
@@ -1368,9 +1473,10 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
                         memmove(
                             &the_funk->proximity_array[j],
                             &the_funk->proximity_array[j + 1],
-                            sizeof(br_vector3) * (the_funk->proximity_count - j - 1));
-                        the_funk->proximity_count--;
+                            (the_funk->proximity_count - j - 1) * sizeof(br_vector3));
+
                         j--;
+                        the_funk->proximity_count--;
                     }
                 }
             }
@@ -1379,53 +1485,52 @@ void AddFunkotronics(FILE* pF, int pOwner, int pRef_offset) {
 }
 
 // IDA: void __usercall DisposeGroovidelics(int pOwner@<EAX>)
+// FUNCTION: CARM95 0x004380dd
 void DisposeGroovidelics(int pOwner) {
     int i;
     tGroovidelic_spec* the_groove;
-    LOG_TRACE("(%d)", pOwner);
 
-    if (gGroovidelics_array == NULL) {
-        return;
-    }
-    for (i = 0; i < gGroovidelics_array_size; i++) {
-        the_groove = &gGroovidelics_array[i];
-        PossibleService();
-        if (the_groove->owner == pOwner) {
-            the_groove->owner = -999;
+    if (gGroovidelics_array != NULL) {
+        for (i = 0, the_groove = gGroovidelics_array; i < gGroovidelics_array_size; i++, the_groove++) {
+            PossibleService();
+            if (the_groove->owner == pOwner) {
+                the_groove->owner = NO_OWNER;
+            }
         }
     }
 }
 
 // IDA: tGroovidelic_spec* __cdecl AddNewGroovidelic()
+// FUNCTION: CARM95 0x00438eb1
 tGroovidelic_spec* AddNewGroovidelic(void) {
     void* new_array;
     int i;
-    LOG_TRACE("()");
 
     for (i = 0; i < gGroovidelics_array_size; i++) {
-        if (gGroovidelics_array[i].owner == -999) {
+        if (gGroovidelics_array[i].owner == NO_OWNER) {
             memset(&gGroovidelics_array[i], 0, sizeof(tGroovidelic_spec));
             return &gGroovidelics_array[i];
         }
     }
-    gGroovidelics_array_size += 16;
+    gGroovidelics_array_size += GROOVE_FUNK_BUFFER_SIZE_INCREASE;
     new_array = BrMemCalloc(gGroovidelics_array_size, sizeof(tGroovidelic_spec), kMem_groove_spec);
     if (gGroovidelics_array != NULL) {
-        memcpy(new_array, gGroovidelics_array, (gGroovidelics_array_size - 16) * sizeof(tGroovidelic_spec));
+        memcpy(new_array, gGroovidelics_array, (gGroovidelics_array_size - GROOVE_FUNK_BUFFER_SIZE_INCREASE) * sizeof(tGroovidelic_spec));
         ShiftBoundGrooveFunks(
             (char*)gGroovidelics_array,
-            (char*)&gGroovidelics_array[gGroovidelics_array_size - 16],
+            (char*)(gGroovidelics_array + gGroovidelics_array_size - GROOVE_FUNK_BUFFER_SIZE_INCREASE),
             (char*)new_array - (char*)gGroovidelics_array);
         BrMemFree(gGroovidelics_array);
     }
     gGroovidelics_array = new_array;
-    for (i = 0; i < 16; i++) {
-        gGroovidelics_array[i + gGroovidelics_array_size - 16].owner = -999;
+    for (i = 0; i < GROOVE_FUNK_BUFFER_SIZE_INCREASE; i++) {
+        gGroovidelics_array[gGroovidelics_array_size + i - GROOVE_FUNK_BUFFER_SIZE_INCREASE].owner = NO_OWNER;
     }
-    return &gGroovidelics_array[gGroovidelics_array_size - 16];
+    return gGroovidelics_array + gGroovidelics_array_size - GROOVE_FUNK_BUFFER_SIZE_INCREASE;
 }
 
 // IDA: void __usercall AddGroovidelics(FILE *pF@<EAX>, int pOwner@<EDX>, br_actor *pParent_actor@<EBX>, int pRef_offset@<ECX>, int pAllowed_to_be_absent)
+// FUNCTION: CARM95 0x00438146
 void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_offset, int pAllowed_to_be_absent) {
     char s[256];
     char* str;
@@ -1433,13 +1538,6 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
     int i;
     int j;
     tGroovidelic_spec* the_groove;
-    float x_0;
-    float x_1;
-    float x_2;
-    int d_0;
-    int d_1;
-    int d_2;
-    LOG_TRACE("(%p, %d, %p, %d, %d)", pF, pOwner, pParent_actor, pRef_offset, pAllowed_to_be_absent);
 
     first_time = 1;
 
@@ -1453,8 +1551,9 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
         if (!first_time) {
             if (strcmp(s, "NEXT GROOVE") != 0) {
                 FatalError(kFatalError_GroovidelicFile);
+            } else {
+                GetALineAndDontArgue(pF, s);
             }
-            GetALineAndDontArgue(pF, s);
         }
         first_time = 0;
         str = strtok(s, "\t ,/");
@@ -1463,16 +1562,17 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
         the_groove->actor = DRActorFindRecurse(pParent_actor, str);
 
         if (the_groove->actor == NULL) {
-            if (!pAllowed_to_be_absent && !gAusterity_mode) {
+            if (pAllowed_to_be_absent || gAusterity_mode) {
+                if (gGroove_by_proxy_actor == NULL) {
+                    gGroove_by_proxy_actor = BrActorAllocate(BR_ACTOR_MODEL, NULL);
+                    gGroove_by_proxy_actor->model = LoadModel("PROXY.DAT");
+                    BrModelAdd(gGroove_by_proxy_actor->model);
+                    BrActorAdd(gDont_render_actor, gGroove_by_proxy_actor);
+                }
+                the_groove->actor = gGroove_by_proxy_actor;
+            } else {
                 FatalError(kFatalError_FindActorUsedByGroovidelicFile_S, str);
             }
-            if (gGroove_by_proxy_actor == NULL) {
-                gGroove_by_proxy_actor = BrActorAllocate(BR_ACTOR_MODEL, NULL);
-                gGroove_by_proxy_actor->model = LoadModel("PROXY.DAT");
-                BrModelAdd(gGroove_by_proxy_actor->model);
-                BrActorAdd(gDont_render_actor, gGroove_by_proxy_actor);
-            }
-            the_groove->actor = gGroove_by_proxy_actor;
         }
         the_groove->lollipop_mode = GetALineAndInterpretCommand(pF, gLollipop_names, COUNT_OF(gLollipop_names));
         the_groove->mode = GetALineAndInterpretCommand(pF, gGroove_nature_names, COUNT_OF(gGroove_nature_names));
@@ -1484,64 +1584,52 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
             the_groove->path_mode = GetALineAndInterpretCommand(pF, gFunk_move_names, COUNT_OF(gFunk_move_names));
         }
 
-        if (the_groove->path_type == eGroove_path_circular) {
-            TELL_ME_IF_WE_PASS_THIS_WAY();
-            // GetThreeFloats(pF, &v90, &v89, &v88);
-            // the_groove->path_data.circular_info.centre.v[0] = v90;
-            // the_groove->path_data.circular_info.centre.v[1] = v89;
-            // the_groove->path_data.circular_info.centre.v[2] = v88;
-            // if (the_groove->path_data.circular_info.centre.v[2] == 0.0
-            //     && *(float*)&the_groove->path_data.circular_info.axis == 0.0
-            //     && *((float*)&the_groove->path_data.circular_info + 6) == 0.0) {
-            //     v25 = (_DWORD*)the_groove->actor->t.t.translate.t.v;
-            //     v26 = (_DWORD*)&the_groove->path_data.circular_info.centre.v[2];
-            //     *v26 = *v25;
-            //     v26[1] = v25[1];
-            //     v26[2] = v25[2];
-            // }
-            // if (the_groove->path_mode != 3 && the_groove->path_mode != 4) {
-            //     v29 = GetAFloat(pF);
-            //     x_0 = v29;
-            //     if (v31) {
-            //         v62 = 0.0;
-            //     } else {
-            //         v62 = 1000.0 / x_0;
-            //     }
-            //     the_groove->path_data.circular_info.period = v62;
-            // } else {
-            //     v27 = &the_groove->path_data.circular_info.period;
-            //     v28 = GetAnInt(pF);
-            //     AddFunkGrooveBinding(v28 + pRef_offset, v27);
-            // }
-            // v32 = GetAFloat(pF);
-            // the_groove->path_data.circular_info.radius = v32;
-            // v33 = GetALineAndInterpretCommand(pF, gAxis_names, 3);
-            // the_groove->path_data.circular_info.axis = v33;
+        switch (the_groove->path_type) {
 
-        } else if (the_groove->path_type == eGroove_path_straight) {
-            GetThreeFloats(pF,
-                &the_groove->path_data.straight_info.centre.v[0],
-                &the_groove->path_data.straight_info.centre.v[1],
-                &the_groove->path_data.straight_info.centre.v[2]);
+        case eGroove_path_straight:
+            ReadThreeFloats(pF,
+                the_groove->path_data.straight_info.centre.v[0],
+                the_groove->path_data.straight_info.centre.v[1],
+                the_groove->path_data.straight_info.centre.v[2]);
 
             if (Vector3IsZero(&the_groove->path_data.straight_info.centre)) {
-                BrVector3Copy(&the_groove->path_data.straight_info.centre,
-                    &the_groove->actor->t.t.translate.t);
+                the_groove->path_data.straight_info.centre = the_groove->actor->t.t.translate.t;
             }
             if (the_groove->path_mode == eMove_controlled || the_groove->path_mode == eMove_absolute) {
                 AddFunkGrooveBinding(pRef_offset + GetAnInt(pF), &the_groove->path_data.straight_info.period);
             } else {
-                x_0 = GetAFloat(pF);
-                the_groove->path_data.straight_info.period = x_0 == 0.0f ? 0.0f : 1000.0 / x_0;
+                the_groove->path_data.straight_info.period = SAFE_DIV(GetAFloat(pF));
             }
             GetThreeFloats(
                 pF,
                 &the_groove->path_data.straight_info.x_delta,
                 &the_groove->path_data.straight_info.y_delta,
                 &the_groove->path_data.straight_info.z_delta);
+            break;
+
+        case eGroove_path_circular:
+            ReadThreeFloats(pF,
+                the_groove->path_data.circular_info.centre.v[0],
+                the_groove->path_data.circular_info.centre.v[1],
+                the_groove->path_data.circular_info.centre.v[2]);
+
+            if (Vector3IsZero(&the_groove->path_data.straight_info.centre)) {
+                the_groove->path_data.straight_info.centre = the_groove->actor->t.t.translate.t;
+            }
+            if (the_groove->path_mode == eMove_controlled || the_groove->path_mode == eMove_absolute) {
+                AddFunkGrooveBinding(pRef_offset + GetAnInt(pF), &the_groove->path_data.circular_info.period);
+            } else {
+                the_groove->path_data.circular_info.period = SAFE_DIV(GetAFloat(pF));
+            }
+            the_groove->path_data.circular_info.radius = GetAFloat(pF);
+            the_groove->path_data.circular_info.axis = GetALineAndInterpretCommand(pF, gAxis_names, COUNT_OF(gAxis_names));
+            break;
+
+            DETHRACE_DEFAULT_BREAK
         }
+
         the_groove->object_type = GetALineAndInterpretCommand(pF, gGroove_object_names, COUNT_OF(gGroove_object_names));
-        BrVector3Copy(&the_groove->object_position, &the_groove->actor->t.t.translate.t);
+        the_groove->object_position = the_groove->actor->t.t.translate.t;
         if (the_groove->object_type != eGroove_object_none) {
             the_groove->object_mode = GetALineAndInterpretCommand(pF, gFunk_move_names, COUNT_OF(gFunk_move_names));
         }
@@ -1550,31 +1638,35 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
             if (the_groove->object_mode == eMove_controlled || the_groove->object_mode == eMove_absolute) {
                 AddFunkGrooveBinding(pRef_offset + GetAnInt(pF), &the_groove->object_data.spin_info.period);
             } else {
-                x_0 = GetAFloat(pF);
-                the_groove->object_data.spin_info.period = (x_0 == 0.0f) ? 0.0f : (1000.0f / x_0);
+                the_groove->object_data.spin_info.period = SAFE_DIV(GetAFloat(pF));
             }
-            GetThreeFloats(pF,
-                &the_groove->object_centre.v[0],
-                &the_groove->object_centre.v[1],
-                &the_groove->object_centre.v[2]);
+
+            ReadThreeFloats(pF,
+                the_groove->object_centre.v[0],
+                the_groove->object_centre.v[1],
+                the_groove->object_centre.v[2]);
+
             the_groove->object_data.spin_info.axis = GetALineAndInterpretCommand(pF, gAxis_names, COUNT_OF(gAxis_names));
             break;
+
         case eGroove_object_rock:
             if (the_groove->object_mode == eMove_controlled || the_groove->object_mode == eMove_absolute) {
                 AddFunkGrooveBinding(pRef_offset + GetAnInt(pF), &the_groove->object_data.rock_info.period);
             } else {
-                x_0 = GetAFloat(pF);
-                the_groove->object_data.rock_info.period = (x_0 == 0.0f) ? 0.0f : (1000.0f / x_0);
+                the_groove->object_data.rock_info.period = SAFE_DIV(GetAFloat(pF));
             }
-            GetThreeFloats(pF,
-                &the_groove->object_centre.v[0],
-                &the_groove->object_centre.v[1],
-                &the_groove->object_centre.v[2]);
+            ReadThreeFloats(pF,
+                the_groove->object_centre.v[0],
+                the_groove->object_centre.v[1],
+                the_groove->object_centre.v[2]);
+
             the_groove->object_data.rock_info.axis = GetALineAndInterpretCommand(pF, gAxis_names, COUNT_OF(gAxis_names));
             the_groove->object_data.rock_info.max_angle = GetAFloat(pF);
             break;
+
         case eGroove_object_throb:
             if (the_groove->object_mode == eMove_controlled || the_groove->object_mode == eMove_absolute) {
+                int d_0, d_1, d_2;
                 GetThreeInts(pF, &d_0, &d_1, &d_2);
                 if (d_0 >= 0) {
                     AddFunkGrooveBinding(pRef_offset + d_0, &the_groove->object_data.throb_info.x_period);
@@ -1586,23 +1678,25 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
                     AddFunkGrooveBinding(pRef_offset + d_2, &the_groove->object_data.throb_info.z_period);
                 }
             } else {
+                float x_0, x_1, x_2;
                 GetThreeFloats(pF, &x_0, &x_1, &x_2);
-                the_groove->object_data.throb_info.x_period = (x_0 == 0.0f) ? 0.0f : (1000.0f / x_0);
-                the_groove->object_data.throb_info.y_period = (x_1 == 0.0f) ? 0.0f : (1000.0f / x_1);
-                the_groove->object_data.throb_info.z_period = (x_2 == 0.0f) ? 0.0f : (1000.0f / x_2);
+                the_groove->object_data.throb_info.x_period = SAFE_DIV(x_0);
+                the_groove->object_data.throb_info.y_period = SAFE_DIV(x_1);
+                the_groove->object_data.throb_info.z_period = SAFE_DIV(x_2);
             }
-            GetThreeFloats(pF,
-                &the_groove->object_centre.v[0],
-                &the_groove->object_centre.v[1],
-                &the_groove->object_centre.v[2]);
-            GetThreeFloatPercents(
-                pF,
+            ReadThreeFloats(pF,
+                the_groove->object_centre.v[0],
+                the_groove->object_centre.v[1],
+                the_groove->object_centre.v[2]);
+            GetThreeFloatPercents(pF,
                 &the_groove->object_data.throb_info.x_magnitude,
                 &the_groove->object_data.throb_info.y_magnitude,
                 &the_groove->object_data.throb_info.z_magnitude);
             break;
+
         case eGroove_object_shear:
             if (the_groove->object_mode == eMove_controlled || the_groove->object_mode == eMove_absolute) {
+                int d_0, d_1, d_2;
                 GetThreeInts(pF, &d_0, &d_1, &d_2);
                 if (d_0 >= 0) {
                     AddFunkGrooveBinding(pRef_offset + d_0, &the_groove->object_data.shear_info.x_period);
@@ -1614,96 +1708,72 @@ void AddGroovidelics(FILE* pF, int pOwner, br_actor* pParent_actor, int pRef_off
                     AddFunkGrooveBinding(pRef_offset + d_2, &the_groove->object_data.shear_info.z_period);
                 }
             } else {
+                float x_0, x_1, x_2;
                 GetThreeFloats(pF, &x_0, &x_1, &x_2);
-                the_groove->object_data.shear_info.x_period = x_0 == 0.0f ? 0.0f : 1000.0 / x_0;
-                the_groove->object_data.shear_info.y_period = x_1 == 0.0f ? 0.0f : 1000.0 / x_1;
-                the_groove->object_data.shear_info.z_period = x_2 == 0.0f ? 0.0f : 1000.0 / x_2;
+                the_groove->object_data.shear_info.x_period = SAFE_DIV(x_0);
+                the_groove->object_data.shear_info.y_period = SAFE_DIV(x_1);
+                the_groove->object_data.shear_info.z_period = SAFE_DIV(x_2);
             }
-            GetThreeFloats(pF,
-                &the_groove->object_centre.v[0],
-                &the_groove->object_centre.v[1],
-                &the_groove->object_centre.v[2]);
-            GetThreeFloatPercents(
-                pF,
+            ReadThreeFloats(pF,
+                the_groove->object_centre.v[0],
+                the_groove->object_centre.v[1],
+                the_groove->object_centre.v[2]);
+            GetThreeFloatPercents(pF,
                 &the_groove->object_data.shear_info.x_magnitude,
                 &the_groove->object_data.shear_info.y_magnitude,
                 &the_groove->object_data.shear_info.z_magnitude);
+            break;
 
-            break;
-        default:
-            break;
+            DETHRACE_DEFAULT_BREAK
         }
     }
 }
 
 // IDA: void __usercall KillGroovadelic(int pOwner@<EAX>)
+// FUNCTION: CARM95 0x00439009
 void KillGroovadelic(int pOwner) {
     int i;
     tGroovidelic_spec* the_groove;
-    LOG_TRACE("(%d)", pOwner);
 
-    if (gGroovidelics_array == NULL) {
-        return;
-    }
-    for (i = 0; i < gGroovidelics_array_size; i++) {
-        the_groove = &gGroovidelics_array[i];
-        if (the_groove->owner != pOwner) {
-            continue;
+    if (gGroovidelics_array != NULL) {
+        for (i = 0, the_groove = gGroovidelics_array; i < gGroovidelics_array_size; i++, the_groove++) {
+            if (the_groove->owner == pOwner
+                && the_groove->path_mode != eMove_controlled
+                && the_groove->path_mode != eMove_absolute
+                && the_groove->object_mode != eMove_controlled
+                && the_groove->object_mode != eMove_absolute) {
+                the_groove->owner = NO_OWNER;
+            }
         }
-        if (the_groove->path_mode == eMove_controlled) {
-            continue;
-        }
-        if (the_groove->path_mode == eMove_absolute) {
-            continue;
-        }
-        if (the_groove->object_mode == eMove_controlled) {
-            continue;
-        }
-        if (the_groove->object_mode == eMove_absolute) {
-            continue;
-        }
-        the_groove->owner = -999;
     }
 }
 
 // IDA: void __usercall KillFunkotronic(int pOwner@<EAX>)
+// FUNCTION: CARM95 0x004390a0
 void KillFunkotronic(int pOwner) {
     int i;
     tFunkotronic_spec* the_funk;
-    LOG_TRACE("(%d)", pOwner);
 
-    if (gFunkotronics_array == NULL) {
-        return;
-    }
-    for (i = 0; i < gFunkotronics_array_size; i++) {
-        the_funk = &gFunkotronics_array[i];
-        if (the_funk->owner != pOwner) {
-            continue;
+    if (gFunkotronics_array != NULL) {
+        for (i = 0, the_funk = gFunkotronics_array; i < gFunkotronics_array_size; i++, the_funk++) {
+            if (the_funk->owner == pOwner
+                && the_funk->matrix_mode != eMove_controlled
+                && the_funk->matrix_mode != eMove_absolute
+                && the_funk->lighting_animation_type != eMove_controlled
+                && the_funk->lighting_animation_type != eMove_absolute
+                && (the_funk->texture_animation_data.frames_info.mode != eMove_controlled
+                    || the_funk->texture_animation_type)) {
+                the_funk->owner = NO_OWNER;
+            }
         }
-        if (the_funk->matrix_mode == eMove_controlled) {
-            continue;
-        }
-        if (the_funk->matrix_mode == eMove_absolute) {
-            continue;
-        }
-        if (the_funk->lighting_animation_type == eMove_controlled) {
-            continue;
-        }
-        if (the_funk->lighting_animation_type == eMove_absolute) {
-            continue;
-        }
-        if (the_funk->texture_animation_data.frames_info.mode == eMove_controlled && the_funk->texture_animation_type == eTexture_animation_frames) {
-            continue;
-        }
-        the_funk->owner = -999;
     }
 }
 
 // IDA: br_uint_32 __usercall DeleteBastards@<EAX>(br_actor *pActor@<EAX>, br_matrix34 *pMatrix@<EDX>, void *pArg@<EBX>)
+// FUNCTION: CARM95 0x0043c666
 br_uint_32 DeleteBastards(br_actor* pActor, br_matrix34* pMatrix, void* pArg) {
     int i;
     int parent_already_doomed;
-    LOG_TRACE("(%p, %p, %p)", pActor, pMatrix, pArg);
 
     if ((gAdditional_actors != pActor && (pActor->identifier == NULL || pActor->identifier[0] == '&') && Vector3IsZero((br_vector3*)pMatrix->m[3])) || (pActor->model == NULL && pActor->type == BR_ACTOR_MODEL)) {
         parent_already_doomed = 0;
@@ -1722,45 +1792,50 @@ br_uint_32 DeleteBastards(br_actor* pActor, br_matrix34* pMatrix, void* pArg) {
 }
 
 // IDA: void __cdecl DeleteAnyZeroBastards()
+// FUNCTION: CARM95 0x0043c604
 void DeleteAnyZeroBastards(void) {
     int i;
-    LOG_TRACE("()");
 
     gDelete_count = 0;
     DRActorEnumRecurseWithTrans(gAdditional_actors, NULL, DeleteBastards, NULL);
-    for (i = 0; i < gDelete_count; i++) {
+    for (i = gDelete_count - 1; i >= 0; --i) {
         BrActorRemove(gDelete_list[i]);
     }
 }
 
 // IDA: br_uint_32 __usercall ApplyTransToModels@<EAX>(br_actor *pActor@<EAX>, br_matrix34 *pMatrix@<EDX>, void *pArg@<EBX>)
+// FUNCTION: CARM95 0x0043c775
 br_uint_32 ApplyTransToModels(br_actor* pActor, br_matrix34* pMatrix, void* pArg) {
     int i;
     br_vector3 temp_point;
-    LOG_TRACE("(%p, %p, %p)", pActor, pMatrix, pArg);
 
-    if (pActor->identifier == NULL || pActor->identifier[0] == '&') {
-        return 0;
-    }
-    if (pActor->model != NULL) {
-        for (i = 0; i < pActor->model->nvertices; i++) {
-            BrVector3Copy(&temp_point, &pActor->model->vertices[i].p);
-            BrMatrix34ApplyP(&pActor->model->vertices[i].p, &temp_point, pMatrix);
+    if (pActor->identifier != NULL && pActor->identifier[0] != '&') {
+        if (pActor->model != NULL) {
+            for (i = 0; i < pActor->model->nvertices; i++) {
+                temp_point = pActor->model->vertices[i].p;
+                BrMatrix34ApplyP(&pActor->model->vertices[i].p, &temp_point, pMatrix);
+            }
+            BrModelUpdate(pActor->model, BR_MATU_ALL);
         }
-        BrModelUpdate(pActor->model, BR_MATU_ALL);
+        BrMatrix34Identity(&pActor->t.t.mat);
+        pActor->t.type = BR_TRANSFORM_IDENTITY;
     }
-    BrMatrix34Identity(&pActor->t.t.mat);
-    pActor->t.type = BR_TRANSFORM_IDENTITY;
     return 0;
 }
 
 // IDA: int __usercall FindSpecVolIndex@<EAX>(br_actor *pActor@<EAX>)
+// FUNCTION: CARM95 0x00439152
 int FindSpecVolIndex(br_actor* pActor) {
     int i;
     tSpecial_volume* v;
-    LOG_TRACE("(%p)", pActor);
 
-    for (i = 0; i < gProgram_state.special_volume_count; i++) {
+#ifdef DETHRACE_FIX_BUGS
+    if (pActor == NULL) {
+        return -1;
+    }
+#endif
+
+    for (i = 0, v = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, v++) {
         if (gSpec_vol_actors[i] == pActor) {
             return i;
         }
@@ -1769,8 +1844,8 @@ int FindSpecVolIndex(br_actor* pActor) {
 }
 
 // IDA: void __usercall MungeMaterial(br_matrix34 *pMat@<EAX>, br_material *pMat_1@<EDX>, br_material *pMat_2@<EBX>, int pAxis_0@<ECX>, int pAxis_1)
+// FUNCTION: CARM95 0x004392c4
 void MungeMaterial(br_matrix34* pMat, br_material* pMat_1, br_material* pMat_2, int pAxis_0, int pAxis_1) {
-    LOG_TRACE("(%p, %p, %p, %d, %d)", pMat, pMat_1, pMat_2, pAxis_0, pAxis_1);
 
     pMat_1->map_transform.m[0][0] = 6.f * BrVector3Length((br_vector3*)pMat->m[pAxis_0]);
     pMat_1->map_transform.m[1][1] = 6.f * BrVector3Length((br_vector3*)pMat->m[pAxis_1]);
@@ -1778,9 +1853,9 @@ void MungeMaterial(br_matrix34* pMat, br_material* pMat_1, br_material* pMat_2, 
 }
 
 // IDA: void __usercall SetSpecVolMatSize(br_actor *pActor@<EAX>)
+// FUNCTION: CARM95 0x00439226
 void SetSpecVolMatSize(br_actor* pActor) {
     br_model* model;
-    LOG_TRACE("(%p)", pActor);
 
     model = pActor->model;
     MungeMaterial(&pActor->t.t.mat, model->faces[5].material, model->faces[17].material, 0, 1);
@@ -1789,9 +1864,9 @@ void SetSpecVolMatSize(br_actor* pActor) {
 }
 
 // IDA: void __usercall FindInverseAndWorldBox(tSpecial_volume *pSpec@<EAX>)
+// FUNCTION: CARM95 0x004393a7
 void FindInverseAndWorldBox(tSpecial_volume* pSpec) {
     br_bounds bnds;
-    LOG_TRACE("(%p)", pSpec);
 
     bnds.min.v[0] = -1.0;
     bnds.min.v[1] = -1.0;
@@ -1804,10 +1879,10 @@ void FindInverseAndWorldBox(tSpecial_volume* pSpec) {
 }
 
 // IDA: void __cdecl UpdateSpecVol()
+// FUNCTION: CARM95 0x004391b7
 void UpdateSpecVol(void) {
     int index;
     tSpecial_volume* v;
-    LOG_TRACE("()");
 
     index = FindSpecVolIndex(gLast_actor);
     if (index >= 0) {
@@ -1819,50 +1894,48 @@ void UpdateSpecVol(void) {
 }
 
 // IDA: void __cdecl SaveSpecialVolumes()
+// FUNCTION: CARM95 0x0043c853
 void SaveSpecialVolumes(void) {
     tPath_name the_path;
     FILE* f;
     int i;
     tSpecial_volume* v;
-    LOG_TRACE("()");
 
     PathCat(the_path, gApplication_path, "SPECSAVE.TXT");
     f = DRfopen(the_path, "wt");
-    if (f == NULL) {
-        return;
-    }
-    fprintf(f, "// SPECIAL EFFECTS VOLUMES\n\n");
-    fprintf(f, "%d\t\t\t\t// # special effects volumes\n\n", gProgram_state.special_volume_count);
-    for (i = 0; i < gProgram_state.special_volume_count; i++) {
-        v = &gProgram_state.special_volumes[i];
-        if (v->no_mat) {
-            fprintf(f, "%s\n", "DEFAULT WATER");
-        } else {
-            fprintf(f, "NEW IMPROVED!\n");
-            fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[0][0], v->mat.m[0][1], v->mat.m[0][2]);
-            fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[1][0], v->mat.m[1][1], v->mat.m[1][2]);
-            fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[2][0], v->mat.m[2][1], v->mat.m[2][2]);
-            fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[3][0], v->mat.m[3][1], v->mat.m[3][2]);
+    if (f != NULL) {
+        fprintf(f, "// SPECIAL EFFECTS VOLUMES\n\n");
+        fprintf(f, "%d\t\t\t\t// # special effects volumes\n\n", gProgram_state.special_volume_count);
+        for (i = 0, v = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, v++) {
+            if (v->no_mat) {
+                fprintf(f, "%s\n", "DEFAULT WATER");
+            } else {
+                fprintf(f, "NEW IMPROVED!\n");
+                fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[0][0], v->mat.m[0][1], v->mat.m[0][2]);
+                fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[1][0], v->mat.m[1][1], v->mat.m[1][2]);
+                fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[2][0], v->mat.m[2][1], v->mat.m[2][2]);
+                fprintf(f, "%.3f, %.3f, %.3f\n", v->mat.m[3][0], v->mat.m[3][1], v->mat.m[3][2]);
+            }
+            fprintf(f, "%.0f\t\t\t\t// gravity multiplier\n", v->gravity_multiplier);
+            fprintf(f, "%.0f\t\t\t\t// viscosity multiplier\n", v->viscosity_multiplier);
+            fprintf(f, "%.0f\t\t\t\t// Car damage per millisecond\n", v->car_damage_per_ms);
+            fprintf(f, "%.0f\t\t\t\t// Pedestrian damage per millisecond\n", v->ped_damage_per_ms);
+            fprintf(f, "%d\t\t\t\t\t// camera effect index\n", v->camera_special_effect_index);
+            fprintf(f, "%d\t\t\t\t\t// sky colour\n", v->sky_col);
+            fprintf(f, "%s\t\t\t\t// Windscreen material to use\n", (v->screen_material != NULL) ? v->screen_material->identifier : "none");
+            fprintf(f, "%d\t\t\t\t\t// Sound ID of entry noise\n", v->entry_noise);
+            fprintf(f, "%d\t\t\t\t\t// Sound ID of exit noise\n", v->exit_noise);
+            fprintf(f, "%d\t\t\t\t\t// Engine noise index\n", v->engine_noise_index);
+            fprintf(f, "%d\t\t\t\t\t// material index\n", v->material_modifier_index);
+            fprintf(f, "\n");
         }
-        fprintf(f, "%.0f\t\t\t\t// gravity multiplier\n", v->gravity_multiplier);
-        fprintf(f, "%.0f\t\t\t\t// viscosity multiplier\n", v->viscosity_multiplier);
-        fprintf(f, "%.0f\t\t\t\t// Car damage per millisecond\n", v->car_damage_per_ms);
-        fprintf(f, "%.0f\t\t\t\t// Pedestrian damage per millisecond\n", v->ped_damage_per_ms);
-        fprintf(f, "%d\t\t\t\t\t// camera effect index\n", v->camera_special_effect_index);
-        fprintf(f, "%d\t\t\t\t\t// sky colour\n", v->sky_col);
-        fprintf(f, "%s\t\t\t\t// Windscreen material to use\n", (v->screen_material != NULL) ? v->screen_material->identifier : "none");
-        fprintf(f, "%d\t\t\t\t\t// Sound ID of entry noise\n", v->entry_noise);
-        fprintf(f, "%d\t\t\t\t\t// Sound ID of exit noise\n", v->exit_noise);
-        fprintf(f, "%d\t\t\t\t\t// Engine noise index\n", v->engine_noise_index);
-        fprintf(f, "%d\t\t\t\t\t// material index\n", v->material_modifier_index);
-        fprintf(f, "\n");
+        fclose(f);
     }
-    fclose(f);
 }
 
 // IDA: void __cdecl SaveAdditionalStuff()
+// FUNCTION: CARM95 0x0043c589
 void SaveAdditionalStuff(void) {
-    LOG_TRACE("()");
 
     if (gSpec_vol_mode) {
         UpdateSpecVol();
@@ -1879,8 +1952,6 @@ void SaveAdditionalStuff(void) {
 
 // IDA: br_uint_32 __cdecl ProcessMaterials(br_actor *pActor, tPMFM2CB pCallback)
 br_uint_32 ProcessMaterials(br_actor* pActor, tPMFM2CB pCallback) {
-    LOG_TRACE("(%p, %d)", pActor, pCallback);
-
     if (pActor->material) {
         pCallback(pActor->material);
     }
@@ -1893,68 +1964,63 @@ br_uint_32 ProcessMaterials(br_actor* pActor, tPMFM2CB pCallback) {
 
 // IDA: br_uint_32 __cdecl ProcessFaceMaterials2(br_actor *pActor, tPMFM2CB pCallback)
 br_uint_32 ProcessFaceMaterials2(br_actor* pActor, tPMFM2CB pCallback) {
-    LOG_TRACE("(%p, %d)", pActor, pCallback);
     NOT_IMPLEMENTED();
 }
 
 // IDA: void __usercall ChangePerspToSubdivCB(br_material *pMaterial@<EAX>)
 void ChangePerspToSubdivCB(br_material* pMaterial) {
-    LOG_TRACE("(%p)", pMaterial);
     NOT_IMPLEMENTED();
 }
 
 // IDA: void __cdecl ChangePerspToSubdiv()
 void ChangePerspToSubdiv(void) {
-    LOG_TRACE("()");
     NOT_IMPLEMENTED();
 }
 
 // IDA: void __usercall ChangeSubdivToPerspCB(br_material *pMaterial@<EAX>)
 void ChangeSubdivToPerspCB(br_material* pMaterial) {
-    LOG_TRACE("(%p)", pMaterial);
     NOT_IMPLEMENTED();
 }
 
 // IDA: void __cdecl ChangeSubdivToPersp()
 void ChangeSubdivToPersp(void) {
-    LOG_TRACE("()");
     NOT_IMPLEMENTED();
 }
 
 // IDA: br_uint_32 __cdecl ProcessFaceMaterials(br_actor *pActor, tPMFMCB pCallback)
+// FUNCTION: CARM95 0x00439ddd
 br_uintptr_t ProcessFaceMaterials(br_actor* pActor, tPMFMCB pCallback) {
-    LOG_TRACE("(%p, %d)", pActor, pCallback);
 
-    if (pActor->identifier == NULL || pActor->identifier[0] != '&') {
-        if (pActor->type == BR_ACTOR_MODEL && pActor->model != NULL) {
-            ProcessModelFaceMaterials(pActor->model, pCallback);
-        }
-        return BrActorEnum(pActor, (br_actor_enum_cbfn*)ProcessFaceMaterials, pCallback);
-    } else {
+    if (pActor->identifier != NULL && pActor->identifier[0] == '&') {
         return 0;
     }
+    if (pActor->type == BR_ACTOR_MODEL && pActor->model != NULL) {
+        ProcessModelFaceMaterials(pActor->model, pCallback);
+    }
+    return BrActorEnum(pActor, (br_actor_enum_cbfn*)ProcessFaceMaterials, pCallback);
 }
 
 // IDA: int __usercall DRPixelmapHasZeros@<EAX>(br_pixelmap *pm@<EAX>)
+// FUNCTION: CARM95 0x00439597
 int DRPixelmapHasZeros(br_pixelmap* pm) {
     int x;
     int y;
     char* row_ptr;
     char* pp;
-    int i;
 
     if (pm->flags & BR_PMF_NO_ACCESS) {
         return 1;
     }
 
-    row_ptr = (char*)pm->pixels + (pm->row_bytes * pm->base_y) + pm->base_x;
+    row_ptr = pm->pixels;
+    row_ptr += (pm->row_bytes * pm->base_y) + pm->base_x;
+
     for (y = 0; y < pm->height; y++) {
         pp = row_ptr;
-        for (x = 0; x < pm->width; x++) {
+        for (x = 0; x < pm->width; x++, pp++) {
             // found a zero (transparent) pixel?
             if (*pp == 0)
                 return 1;
-            pp++;
         }
         row_ptr += pm->row_bytes;
     }
@@ -1962,18 +2028,18 @@ int DRPixelmapHasZeros(br_pixelmap* pm) {
 }
 
 // IDA: int __usercall StorageContainsPixelmap@<EAX>(tBrender_storage *pStorage@<EAX>, br_pixelmap *pMap@<EDX>)
+// FUNCTION: CARM95 0x00439668
 int StorageContainsPixelmap(tBrender_storage* pStorage, br_pixelmap* pMap) {
     int i;
 
-    for (i = 0; i < pStorage->pixelmaps_count; i++) {
-        if (pMap == pStorage->pixelmaps[i]) {
-            return 1;
-        }
+    for (i = 0; i < pStorage->pixelmaps_count && pMap != pStorage->pixelmaps[i]; i++) {
+        ;
     }
-    return 0;
+    return pStorage->pixelmaps_count != i;
 }
 
 // IDA: void __usercall HideStoredOpaqueTextures(tBrender_storage *pStorage@<EAX>)
+// FUNCTION: CARM95 0x004394b4
 void HideStoredOpaqueTextures(tBrender_storage* pStorage) {
     int i;
 
@@ -1982,7 +2048,7 @@ void HideStoredOpaqueTextures(tBrender_storage* pStorage) {
             if (!DRPixelmapHasZeros(pStorage->materials[i]->colour_map)) {
                 pStorage->saved_colour_maps[i] = pStorage->materials[i]->colour_map;
                 pStorage->materials[i]->colour_map = NULL;
-                pStorage->materials[i]->flags &= 0xFDu;
+                pStorage->materials[i]->flags &= ~BR_MATF_PRELIT;
                 BrMaterialUpdate(pStorage->materials[i], BR_MATU_ALL);
             }
         }
@@ -1990,6 +2056,7 @@ void HideStoredOpaqueTextures(tBrender_storage* pStorage) {
 }
 
 // IDA: void __usercall RevealStoredTransparentTextures(tBrender_storage *pStorage@<EAX>)
+// FUNCTION: CARM95 0x004396ce
 void RevealStoredTransparentTextures(tBrender_storage* pStorage) {
     int i;
 
@@ -2006,6 +2073,7 @@ void RevealStoredTransparentTextures(tBrender_storage* pStorage) {
 }
 
 // IDA: void __usercall HideStoredTextures(tBrender_storage *pStorage@<EAX>)
+// FUNCTION: CARM95 0x00439784
 void HideStoredTextures(tBrender_storage* pStorage) {
     int i;
 
@@ -2014,7 +2082,7 @@ void HideStoredTextures(tBrender_storage* pStorage) {
             if (StorageContainsPixelmap(pStorage, pStorage->materials[i]->colour_map)) {
                 pStorage->saved_colour_maps[i] = pStorage->materials[i]->colour_map;
                 pStorage->materials[i]->colour_map = NULL;
-                pStorage->materials[i]->flags &= 0xFDu;
+                pStorage->materials[i]->flags &= ~BR_MATF_PRELIT;
                 BrMaterialUpdate(pStorage->materials[i], BR_MATU_ALL);
             }
         }
@@ -2022,6 +2090,7 @@ void HideStoredTextures(tBrender_storage* pStorage) {
 }
 
 // IDA: void __usercall RevealStoredTextures(tBrender_storage *pStorage@<EAX>)
+// FUNCTION: CARM95 0x00439847
 void RevealStoredTextures(tBrender_storage* pStorage) {
     int i;
 
@@ -2036,43 +2105,41 @@ void RevealStoredTextures(tBrender_storage* pStorage) {
 }
 
 // IDA: void __usercall SetCarStorageTexturingLevel(tBrender_storage *pStorage@<EAX>, tCar_texturing_level pNew@<EDX>, tCar_texturing_level pOld@<EBX>)
+// FUNCTION: CARM95 0x0043940b
 void SetCarStorageTexturingLevel(tBrender_storage* pStorage, tCar_texturing_level pNew, tCar_texturing_level pOld) {
-    LOG_TRACE("(%p, %d, %d)", pStorage, pNew, pOld);
 
     switch (pNew) {
+    case eCTL_full:
+        RevealStoredTextures(pStorage);
+        break;
     case eCTL_none:
         HideStoredTextures(pStorage);
         break;
     case eCTL_transparent:
         switch (pOld) {
-        case eCTL_none:
-            RevealStoredTransparentTextures(pStorage);
-            break;
         case eCTL_full:
             HideStoredOpaqueTextures(pStorage);
             break;
-        default:
-            break;
+        case eCTL_none:
+            RevealStoredTransparentTextures(pStorage);
+
+            DETHRACE_DEFAULT_BREAK
         }
-        break;
-    case eCTL_full:
-        RevealStoredTextures(pStorage);
-        break;
-    default:
-        break;
+
+        DETHRACE_DEFAULT_BREAK
     }
 }
 
 // IDA: tCar_texturing_level __cdecl GetCarTexturingLevel()
+// FUNCTION: CARM95 0x004398e0
 tCar_texturing_level GetCarTexturingLevel(void) {
-    LOG_TRACE("()");
 
     return gCar_texturing_level;
 }
 
 // IDA: void __usercall SetCarTexturingLevel(tCar_texturing_level pLevel@<EAX>)
+// FUNCTION: CARM95 0x004398f5
 void SetCarTexturingLevel(tCar_texturing_level pLevel) {
-    LOG_TRACE("(%d)", pLevel);
 
     if (pLevel != gCar_texturing_level) {
         if (gOur_car_storage_space.models_count != 0) {
@@ -2089,28 +2156,28 @@ void SetCarTexturingLevel(tCar_texturing_level pLevel) {
 }
 
 // IDA: int __usercall HasThisSuffix@<EAX>(char *pIdent@<EAX>, char *pSuffix@<EDX>)
+// FUNCTION: CARM95 0x00439a77
 int HasThisSuffix(char* pIdent, char* pSuffix) {
     size_t len_ident;
     size_t len_suffix;
-    LOG_TRACE("(\"%s\", \"%s\")", pIdent, pSuffix);
 
     len_ident = strlen(pIdent);
     len_suffix = strlen(pSuffix);
     if (pIdent == NULL) {
         return 0;
     }
-    if (pIdent < pSuffix) {
+    if (len_ident < len_suffix) {
         return 0;
     }
     return strcmp(pIdent + len_ident - len_suffix, pSuffix) == 0;
 }
 
 // IDA: br_material* __usercall UnsuffixedMaterial@<EAX>(char *pOld_ident@<EAX>, char *pSuffix@<EDX>)
+// FUNCTION: CARM95 0x00439bf4
 br_material* UnsuffixedMaterial(char* pOld_ident, char* pSuffix) {
     br_material* result;
     int unsuffixed_len;
     char* new_id;
-    LOG_TRACE("(\"%s\", \"%s\")", pOld_ident, pSuffix);
 
     unsuffixed_len = strlen(pOld_ident) - strlen(pSuffix);
     new_id = BrMemAllocate(unsuffixed_len + 1, kMem_new_mat_id_2);
@@ -2121,25 +2188,24 @@ br_material* UnsuffixedMaterial(char* pOld_ident, char* pSuffix) {
 }
 
 // IDA: br_material* __usercall RoadUntexToPersp@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00439e59
 br_material* RoadUntexToPersp(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
     if (HasThisSuffix(old_mat->identifier, ".road")) {
         new_mat = UnsuffixedMaterial(old_mat->identifier, ".road");
-    } else {
-        new_mat = NULL;
+        return new_mat;
     }
-    return new_mat;
+    return NULL;
 }
 
 // IDA: br_material* __usercall WallLinearToUntex@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00439983
 br_material* WallLinearToUntex(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
     if (HasThisSuffix(old_mat->identifier, ".pwall")) {
@@ -2147,108 +2213,110 @@ br_material* WallLinearToUntex(br_model* pModel, tU16 pFace) {
             old_mat->colour_map = NULL;
             BrMaterialUpdate(old_mat, BR_MATU_ALL);
         }
+        return old_mat;
     } else {
         if (!FaceIsRoad(pModel, pFace) && old_mat->identifier != NULL && old_mat->colour_map != NULL) {
-            old_mat = SuffixedMaterial(old_mat, ".lwall");
-            if (old_mat->colour_map != NULL) {
-                old_mat->colour_map = NULL;
-                BrMaterialUpdate(old_mat, BR_MATU_ALL);
+            new_mat = SuffixedMaterial(old_mat, ".lwall");
+            if (new_mat->colour_map != NULL) {
+                new_mat->colour_map = NULL;
+                BrMaterialUpdate(new_mat, BR_MATU_ALL);
             }
-        } else {
-            old_mat = NULL;
+            return new_mat;
         }
     }
-    return old_mat;
+    return NULL;
 }
 
 // IDA: br_material* __usercall WallUntexToLinear@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00439b2e
 br_material* WallUntexToLinear(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
     if (HasThisSuffix(old_mat->identifier, ".lwall")) {
         new_mat = UnsuffixedMaterial(old_mat->identifier, ".lwall");
-    } else if (HasThisSuffix(old_mat->identifier, ".pwall")) {
-        old_mat->colour_map = UnsuffixedMaterial(old_mat->identifier, ".pwall")->colour_map;
+        return new_mat;
+    }
+    if (HasThisSuffix(old_mat->identifier, ".pwall")) {
+        new_mat = UnsuffixedMaterial(old_mat->identifier, ".pwall");
+        old_mat->colour_map = new_mat->colour_map;
         old_mat->flags &= ~BR_MATF_PERSPECTIVE;
         BrMaterialUpdate(old_mat, BR_MATU_ALL);
-        new_mat = NULL;
-    } else {
-        new_mat = NULL;
+        return NULL;
     }
-    return new_mat;
+    return NULL;
 }
 
 // IDA: br_material* __usercall WallUntexToPersp@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00439c7a
 br_material* WallUntexToPersp(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
     if (HasThisSuffix(old_mat->identifier, ".lwall")) {
-        new_mat = UnsuffixedMaterial(old_mat->identifier, ".lwall");
-    } else if (HasThisSuffix(old_mat->identifier, ".pwall")) {
-        new_mat = UnsuffixedMaterial(old_mat->identifier, ".pwall");
-    } else {
-        new_mat = NULL;
+        return UnsuffixedMaterial(old_mat->identifier, ".lwall");
     }
-    return new_mat;
+    if (HasThisSuffix(old_mat->identifier, ".pwall")) {
+        return UnsuffixedMaterial(old_mat->identifier, ".pwall");
+    }
+
+    return NULL;
 }
 
 // IDA: br_material* __usercall WallLinearToPersp@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x00439d11
 br_material* WallLinearToPersp(br_model* pModel, tU16 pFace) {
     br_material* old_mat;
     br_material* new_mat;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     old_mat = pModel->faces[pFace].material;
     if (HasThisSuffix(old_mat->identifier, ".pwall")) {
-        new_mat = UnsuffixedMaterial(old_mat->identifier, ".pwall");
-    } else {
-        new_mat = NULL;
+        return UnsuffixedMaterial(old_mat->identifier, ".pwall");
     }
-    return new_mat;
+    return NULL;
 }
 
 // IDA: tRoad_texturing_level __cdecl GetRoadTexturingLevel()
+// FUNCTION: CARM95 0x00439d73
 tRoad_texturing_level GetRoadTexturingLevel(void) {
     return gRoad_texturing_level;
 }
 
 // IDA: void __usercall SetRoadTexturingLevel(tRoad_texturing_level pLevel@<EAX>)
+// FUNCTION: CARM95 0x00439d88
 void SetRoadTexturingLevel(tRoad_texturing_level pLevel) {
-    LOG_TRACE("(%d)", pLevel);
     gRoad_texturing_level = pLevel;
 }
 
 // IDA: void __usercall ReallySetRoadTexturingLevel(tRoad_texturing_level pLevel@<EAX>)
+// FUNCTION: CARM95 0x00439d9b
 void ReallySetRoadTexturingLevel(tRoad_texturing_level pLevel) {
-    LOG_TRACE("(%d)", pLevel);
 
     if (pLevel != gRoad_texturing_level) {
-        ProcessFaceMaterials(gProgram_state.track_spec.the_actor, (pLevel == eRTL_none) ? RoadUntexToPersp : RoadPerspToUntex);
+        ProcessFaceMaterials(gProgram_state.track_spec.the_actor, (pLevel != eRTL_none) ? RoadUntexToPersp : RoadPerspToUntex);
     }
 }
 
 // IDA: tWall_texturing_level __cdecl GetWallTexturingLevel()
+// FUNCTION: CARM95 0x00439ec1
 tWall_texturing_level GetWallTexturingLevel(void) {
-    LOG_TRACE("()");
 
     return gWall_texturing_level;
 }
 
 // IDA: void __usercall SetWallTexturingLevel(tWall_texturing_level pLevel@<EAX>)
+// FUNCTION: CARM95 0x00439ed6
 void SetWallTexturingLevel(tWall_texturing_level pLevel) {
-    LOG_TRACE("(%d)", pLevel);
 
     gWall_texturing_level = pLevel;
 }
 
 // IDA: void __usercall ReallySetWallTexturingLevel(tWall_texturing_level pLevel@<EAX>)
+// FUNCTION: CARM95 0x00439ee9
 void ReallySetWallTexturingLevel(tWall_texturing_level pLevel) {
+    // GLOBAL: CARM95 0x0050C7E8
     static tPMFMCB* tweaker[3][3] = {
         {
             NULL,
@@ -2266,74 +2334,62 @@ void ReallySetWallTexturingLevel(tWall_texturing_level pLevel) {
             NULL,
         },
     };
-    LOG_TRACE("(%d)", pLevel);
 
-    if (gWall_texturing_level != pLevel) {
+    if (pLevel != gWall_texturing_level) {
         ProcessFaceMaterials(gProgram_state.track_spec.the_actor, tweaker[gWall_texturing_level][pLevel]);
     }
 }
 
 // IDA: br_material* __usercall DisposeSuffixedMaterials@<EAX>(br_model *pModel@<EAX>, tU16 pFace@<EDX>)
+// FUNCTION: CARM95 0x0043cdec
 br_material* DisposeSuffixedMaterials(br_model* pModel, tU16 pFace) {
     size_t max_suffix_len;
     br_material* mat;
     br_material* victim;
+    // GLOBAL: CARM95 0x0050C810
     static char* suffixes[3] = { ".road", ".pwall", ".lwall" };
     int s;
     char* id;
-    LOG_TRACE("(%p, %d)", pModel, pFace);
 
     mat = pModel->faces[pFace].material;
-    if (mat->identifier == NULL) {
-        return NULL;
-    }
-    max_suffix_len = 0;
-    for (s = 0; s < COUNT_OF(suffixes); s++) {
-        if (max_suffix_len < strlen(suffixes[s])) {
-            max_suffix_len = strlen(suffixes[s]);
+    if (mat->identifier != NULL) {
+        max_suffix_len = 0;
+        for (s = 0; s < BR_ASIZE(suffixes); s++) {
+            if (max_suffix_len < strlen(suffixes[s])) {
+                max_suffix_len = strlen(suffixes[s]);
+            }
         }
-    }
-    id = BrMemAllocate(strlen(mat->identifier) + max_suffix_len + 1, kMem_new_mat_id_3);
-    for (s = 0; s < COUNT_OF(suffixes); s++) {
-        sprintf(id, "%s%s", mat->identifier, suffixes[s]);
-        victim = BrMaterialFind(id);
-        if (victim != NULL) {
-            BrMaterialRemove(victim);
-            BrMaterialFree(victim);
+        id = BrMemAllocate(strlen(mat->identifier) + max_suffix_len + 1, kMem_new_mat_id_3);
+        for (s = 0; s < BR_ASIZE(suffixes); s++) {
+            sprintf(id, "%s%s", mat->identifier, suffixes[s]);
+            victim = BrMaterialFind(id);
+            if (victim != NULL) {
+                BrMaterialRemove(victim);
+                BrMaterialFree(victim);
+            }
         }
     }
     return NULL;
 }
 
 // IDA: void __cdecl DisposeTexturingMaterials()
+// FUNCTION: CARM95 0x0043cd4f
 void DisposeTexturingMaterials(void) {
-    LOG_TRACE("()");
-
-    switch (gWall_texturing_level) {
-    case eWTL_linear:
+    if (gWall_texturing_level == eWTL_linear) {
         ProcessFaceMaterials(gProgram_state.track_spec.the_actor, WallLinearToPersp);
-        break;
-    case eWTL_none:
+    } else if (gWall_texturing_level == eWTL_none) {
         ProcessFaceMaterials(gProgram_state.track_spec.the_actor, WallUntexToPersp);
-        break;
-    default:
-        break;
     }
-
-    switch (gRoad_texturing_level) {
-    case eRTL_none:
+    if (gRoad_texturing_level == eRTL_none) {
         ProcessFaceMaterials(gProgram_state.track_spec.the_actor, RoadUntexToPersp);
-        break;
-    default:
-        break;
     }
-
     if (gWall_texturing_level != eWTL_full || gRoad_texturing_level != eRTL_full) {
         ProcessFaceMaterials(gProgram_state.track_spec.the_actor, DisposeSuffixedMaterials);
     }
 }
 
 // IDA: br_uint_32 __cdecl SetAccessoryRenderingCB(br_actor *pActor, void *pFlag)
+// FUNCTION: CARM95 0x00439f27
 br_uintptr_t SetAccessoryRenderingCB(br_actor* pActor, void* pFlag) {
     if (pActor->identifier && *pActor->identifier == '&') {
         pActor->render_style = *(br_uint_8*)pFlag;
@@ -2342,10 +2398,9 @@ br_uintptr_t SetAccessoryRenderingCB(br_actor* pActor, void* pFlag) {
 }
 
 // IDA: void __usercall SetAccessoryRendering(int pOn@<EAX>)
+// FUNCTION: CARM95 0x00439f63
 void SetAccessoryRendering(int pOn) {
     int style;
-
-    LOG_TRACE("(%d)", pOn);
 
     if (gTrack_actor) {
         if (pOn) {
@@ -2359,33 +2414,34 @@ void SetAccessoryRendering(int pOn) {
 }
 
 // IDA: int __cdecl GetAccessoryRendering()
+// FUNCTION: CARM95 0x00439fba
 int GetAccessoryRendering(void) {
-    LOG_TRACE("()");
 
     return gRendering_accessories;
 }
 
 // IDA: void __usercall SetCarSimplificationLevel(int pLevel@<EAX>)
+// FUNCTION: CARM95 0x00439fcf
 void SetCarSimplificationLevel(int pLevel) {
-    LOG_TRACE("(%d)", pLevel);
 
     gCar_simplification_level = pLevel;
 }
 
 // IDA: int __cdecl GetCarSimplificationLevel()
+// FUNCTION: CARM95 0x00439fe2
 int GetCarSimplificationLevel(void) {
-    LOG_TRACE("()");
 
     return gCar_simplification_level;
 }
 
 // IDA: void __usercall ParseSpecialVolume(FILE *pF@<EAX>, tSpecial_volume *pSpec@<EDX>, char *pScreen_name_str@<EBX>)
+// FUNCTION: CARM95 0x00439ff7
 void ParseSpecialVolume(FILE* pF, tSpecial_volume* pSpec, char* pScreen_name_str) {
     char s[256];
     pSpec->gravity_multiplier = GetAScalar(pF);
     pSpec->viscosity_multiplier = GetAScalar(pF);
-    pSpec->car_damage_per_ms = GetAScalar(pF);
-    pSpec->ped_damage_per_ms = GetAScalar(pF);
+    pSpec->car_damage_per_ms = GetAFloat(pF);
+    pSpec->ped_damage_per_ms = GetAFloat(pF);
     pSpec->camera_special_effect_index = GetAnInt(pF);
     pSpec->sky_col = GetAnInt(pF);
 
@@ -2401,9 +2457,10 @@ void ParseSpecialVolume(FILE* pF, tSpecial_volume* pSpec, char* pScreen_name_str
     pSpec->material_modifier_index = GetAnInt(pF);
 }
 
+#ifdef DETHRACE_3DFX_PATCH
+
 // IDA: void __usercall AddExceptionToList(tException_list *pDst@<EAX>, tException_list pNew@<EDX>)
 void AddExceptionToList(tException_list* pDst, tException_list pNew) {
-    LOG_TRACE("(%p, %d)", pDst, pNew);
 
     pNew->next = *pDst;
     *pDst = pNew;
@@ -2417,7 +2474,6 @@ void LoadExceptionsFile(char* pName) {
     int file_version;
     tException_list e;
     char delimiters[4];
-    LOG_TRACE("(\"%s\")", pName);
 
     strcpy(delimiters, "\t ,");
     f = DRfopen(pName, "rt");
@@ -2425,11 +2481,11 @@ void LoadExceptionsFile(char* pName) {
         GetALineAndDontArgue(f, line);
         tok = strtok(line, delimiters);
         if (DRStricmp(tok, "VERSION")) {
-            FatalError(120, pName, "VERSION");
+            FatalError(kFatalError_FileMustStartWith_S, pName, "VERSION");
         }
         tok = strtok(NULL, delimiters);
         if (sscanf(tok, "%d", &file_version) == 0 || file_version != 1) {
-            FatalError(121, tok, pName);
+            FatalError(kFatalError_CantCopeWithVersionFor_S, tok, pName);
         }
 
         while (1) {
@@ -2438,13 +2494,13 @@ void LoadExceptionsFile(char* pName) {
             if (DRStricmp(tok, "end") == 0) {
                 break;
             }
-            e = BrMemAllocate(sizeof(tException_list), kMem_misc);
+            e = BrMemAllocate(sizeof(tException_node), kMem_misc);
             e->name = BrMemAllocate(strlen(tok) + 1, kMem_misc_string);
             strcpy(e->name, tok);
             e->flags = 0;
             while (1) {
                 tok = strtok(NULL, delimiters);
-                if (tok == NULL /*|| (IsTable[(unsigned __int8)(*v11 + 1)] & 0xE0) == 0*/) {
+                if (tok == NULL || !isalpha(tok[0])) {
                     break;
                 }
                 if (DRStricmp(tok, "mipmap") == 0) {
@@ -2456,7 +2512,7 @@ void LoadExceptionsFile(char* pName) {
                 } else if (DRStricmp(tok, "quadruple") == 0) {
                     e->flags |= ExceptionFlag_Quadruple;
                 } else {
-                    FatalError(123, tok, pName);
+                    FatalError(kFatalError_Mysterious_S_S, tok, pName);
                 }
             }
             AddExceptionToList(&gExceptions, e);
@@ -2468,7 +2524,6 @@ void LoadExceptionsFile(char* pName) {
 // IDA: void __usercall LoadExceptionsFileForTrack(char *pTrack_file_name@<EAX>)
 void LoadExceptionsFileForTrack(char* pTrack_file_name) {
     tPath_name exceptions_file_name;
-    LOG_TRACE("(\"%s\")", pTrack_file_name);
 
     sprintf(
         exceptions_file_name,
@@ -2484,7 +2539,6 @@ void LoadExceptionsFileForTrack(char* pTrack_file_name) {
 void FreeExceptions(void) {
     tException_list list;
     tException_list next;
-    LOG_TRACE("()");
 
     list = gExceptions;
     if (list) {
@@ -2498,7 +2552,10 @@ void FreeExceptions(void) {
     gExceptions = NULL;
 }
 
+#endif
+
 // IDA: void __usercall LoadTrack(char *pFile_name@<EAX>, tTrack_spec *pTrack_spec@<EDX>, tRace_info *pRace_info@<EBX>)
+// FUNCTION: CARM95 0x0043a136
 void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_info) {
     char temp_name[14];
     FILE* f;
@@ -2523,7 +2580,9 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     int skid_mark_cnt = 0;
 #endif
     tPath_name the_path;
+#ifdef DETHRACE_3DFX_PATCH
     tPath_name general_file_path;
+#endif
     char s[256];
     char* str;
     float temp_float;
@@ -2541,13 +2600,13 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     tPed_subs* ped_subs;
     br_pixelmap* sky;
     br_material* material;
-    LOG_TRACE("(\"%s\", %p, %p)", pFile_name, pTrack_spec, pRace_info);
 
     killed_sky = 0;
     PathCat(the_path, gApplication_path, "RACES");
     PathCat(the_path, the_path, pFile_name);
 #ifdef DETHRACE_3DFX_PATCH
-    LoadExceptionsFileForTrack(the_path);
+    PathCat(general_file_path, gApplication_path, "RACES");
+    LoadExceptionsFileForTrack(general_file_path);
 #endif
     f = DRfopen(the_path, "rt");
     if (f == NULL) {
@@ -2555,7 +2614,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     }
     GetALineAndDontArgue(f, s);
     str = strtok(s, "\t ,/");
-    if (strcmp(str, "VERSION") == 0) {
+    if (strcmp(s, "VERSION") == 0) {
         str = strtok(NULL, "\t ,/");
         sscanf(str, "%d", &gRace_file_version);
         GetALineAndDontArgue(f, s);
@@ -2605,55 +2664,57 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
             GetALineAndDontArgue(f, s);
         }
         pRace_info->checkpoints[i].quad_count = GetAnInt(f);
-        for (j = 0; j < pRace_info->checkpoints[i].quad_count; j++) {
-            for (k = 0; k < 4; ++k) {
+        for (k = 0; k < pRace_info->checkpoints[i].quad_count; k++) {
+            for (j = 0; j < 4; j++) {
                 GetThreeScalars(
                     f,
-                    &pRace_info->checkpoints[i].vertices[j][k].v[0],
-                    &pRace_info->checkpoints[i].vertices[j][k].v[1],
-                    &pRace_info->checkpoints[i].vertices[j][k].v[2]);
+                    pRace_info->checkpoints[i].vertices[k][j].v,
+                    pRace_info->checkpoints[i].vertices[k][j].v + 1,
+                    pRace_info->checkpoints[i].vertices[k][j].v + 2);
             }
-            p[0] = pRace_info->checkpoints[i].vertices[j][0];
-            p[1] = pRace_info->checkpoints[i].vertices[j][1];
-            p[2] = pRace_info->checkpoints[i].vertices[j][2];
-            pRace_info->checkpoints[i].normal[j].v[0] = (p[2].v[2] - p[0].v[2]) * (p[1].v[1] - p[0].v[1]) - (p[1].v[2] - p[0].v[2]) * (p[2].v[1] - p[0].v[1]);
-            pRace_info->checkpoints[i].normal[j].v[1] = (p[1].v[2] - p[0].v[2]) * (p[2].v[0] - p[0].v[0]) - (p[2].v[2] - p[0].v[2]) * (p[1].v[0] - p[0].v[0]);
-            pRace_info->checkpoints[i].normal[j].v[2] = (p[2].v[1] - p[0].v[1]) * (p[1].v[0] - p[0].v[0]) - (p[1].v[1] - p[0].v[1]) * (p[2].v[0] - p[0].v[0]);
+
+            BrVector3Sub(&a, &pRace_info->checkpoints[i].vertices[k][1], &pRace_info->checkpoints[i].vertices[k][0]);
+            BrVector3Sub(&b, &pRace_info->checkpoints[i].vertices[k][2], &pRace_info->checkpoints[i].vertices[k][0]);
+            BrVector3Cross(&pRace_info->checkpoints[i].normal[k], &a, &b);
         }
         if (gRace_file_version > 0) {
-            if (gRace_file_version == 1) {
-                GetPairOfInts(f, pRace_info->checkpoints[i].map_left, &pRace_info->checkpoints[i].map_left[1]);
-                GetPairOfInts(f, pRace_info->checkpoints[i].map_top, &pRace_info->checkpoints[i].map_top[1]);
-                GetPairOfInts(f, pRace_info->checkpoints[i].map_right, &pRace_info->checkpoints[i].map_right[1]);
-                GetPairOfInts(f, pRace_info->checkpoints[i].map_bottom, &pRace_info->checkpoints[i].map_bottom[1]);
-            } else {
+            if (gRace_file_version > 1) {
                 GetPairOfInts(f, pRace_info->checkpoints[i].map_left, &pRace_info->checkpoints[i].map_left[1]);
                 GetPairOfInts(f, pRace_info->checkpoints[i].map_top, &pRace_info->checkpoints[i].map_top[1]);
                 pRace_info->checkpoints[i].map_right[0] = cp_rect_w[0] + pRace_info->checkpoints[i].map_left[0];
                 pRace_info->checkpoints[i].map_right[1] = cp_rect_w[0] + pRace_info->checkpoints[i].map_left[1];
                 pRace_info->checkpoints[i].map_bottom[0] = cp_rect_h[0] + pRace_info->checkpoints[i].map_top[0];
                 pRace_info->checkpoints[i].map_bottom[1] = cp_rect_h[0] + pRace_info->checkpoints[i].map_top[1];
+            } else {
+                GetPairOfInts(f, pRace_info->checkpoints[i].map_left, &pRace_info->checkpoints[i].map_left[1]);
+                GetPairOfInts(f, pRace_info->checkpoints[i].map_top, &pRace_info->checkpoints[i].map_top[1]);
+                GetPairOfInts(f, pRace_info->checkpoints[i].map_right, &pRace_info->checkpoints[i].map_right[1]);
+                GetPairOfInts(f, pRace_info->checkpoints[i].map_bottom, &pRace_info->checkpoints[i].map_bottom[1]);
             }
         }
     }
-    if (gRace_file_version <= 3) {
-        LoadSomePixelmaps(&gTrack_storage_space, f);
-    } else if (gAusterity_mode) {
-        SkipNLines(f);
-        LoadSomePixelmaps(&gTrack_storage_space, f);
+    if (gRace_file_version > 3) {
+        if (gAusterity_mode) {
+            SkipNLines(f);
+            LoadSomePixelmaps(&gTrack_storage_space, f);
+        } else {
+            LoadSomePixelmaps(&gTrack_storage_space, f);
+            SkipNLines(f);
+        }
     } else {
         LoadSomePixelmaps(&gTrack_storage_space, f);
-        SkipNLines(f);
     }
     LoadSomeShadeTables(&gTrack_storage_space, f);
-    if (gRace_file_version <= 3) {
-        LoadSomeMaterials(&gTrack_storage_space, f);
-    } else if (gAusterity_mode) {
-        SkipNLines(f);
-        LoadSomeMaterials(&gTrack_storage_space, f);
+    if (gRace_file_version > 3) {
+        if (gAusterity_mode) {
+            SkipNLines(f);
+            LoadSomeMaterials(&gTrack_storage_space, f);
+        } else {
+            LoadSomeMaterials(&gTrack_storage_space, f);
+            SkipNLines(f);
+        }
     } else {
         LoadSomeMaterials(&gTrack_storage_space, f);
-        SkipNLines(f);
     }
 #ifdef DETHRACE_3DFX_PATCH
     if (!gShade_tables_do_not_work)
@@ -2664,64 +2725,69 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
             if (gTrack_storage_space.materials[i]->flags & (BR_MATF_LIGHT | BR_MATF_PRELIT | BR_MATF_SMOOTH)) {
                 gTrack_storage_space.materials[i]->flags &= ~(BR_MATF_LIGHT | BR_MATF_PRELIT | BR_MATF_SMOOTH);
                 if (gTrack_storage_space.materials[i]->flags & BR_MATF_TWO_SIDED) {
-                    gTrack_storage_space.materials[i]->user = DOUBLESIDED_USER_FLAG;
+                    gTrack_storage_space.materials[i]->colour_map_1 = DOUBLESIDED_USER_FLAG;
                     gTrack_storage_space.materials[i]->flags &= ~BR_MATF_TWO_SIDED;
                 }
                 BrMaterialUpdate(gTrack_storage_space.materials[i], BR_MATU_RENDERING);
             }
         }
     }
-    if (gRace_file_version <= 5) {
-        LoadSomeTrackModels(&gTrack_storage_space, f);
-    } else if (gAusterity_mode) {
-        SkipNLines(f);
-        LoadSomeTrackModels(&gTrack_storage_space, f);
+    if (gRace_file_version > 5) {
+        if (gAusterity_mode) {
+            SkipNLines(f);
+            LoadSomeTrackModels(&gTrack_storage_space, f);
+        } else {
+            LoadSomeTrackModels(&gTrack_storage_space, f);
+            SkipNLines(f);
+        }
     } else {
         LoadSomeTrackModels(&gTrack_storage_space, f);
-        SkipNLines(f);
     }
 
     PrintMemoryDump(0, "JUST LOADED IN TEXTURES/MATS/MODELS FOR TRACK");
-    if (gRace_file_version <= 5) {
-        GetALineAndDontArgue(f, s);
-        str = strtok(s, "\t ,/");
-        PathCat(the_path, gApplication_path, "ACTORS");
-        PathCat(the_path, the_path, str);
-    } else if (gAusterity_mode) {
-        GetALineAndDontArgue(f, s);
-        GetALineAndDontArgue(f, s);
-        str = strtok(s, "\t ,/");
-        PathCat(the_path, gApplication_path, "ACTORS");
-        PathCat(the_path, the_path, str);
+    if (gRace_file_version > 5) {
+        if (gAusterity_mode) {
+            GetALineAndDontArgue(f, s);
+            GetALineAndDontArgue(f, s);
+            str = strtok(s, "\t ,/");
+            PathCat(the_path, gApplication_path, "ACTORS");
+            PathCat(the_path, the_path, str);
+        } else {
+            GetALineAndDontArgue(f, s);
+            str = strtok(s, "\t ,/");
+            PathCat(the_path, gApplication_path, "ACTORS");
+            PathCat(the_path, the_path, str);
+            GetALineAndDontArgue(f, s);
+        }
     } else {
         GetALineAndDontArgue(f, s);
         str = strtok(s, "\t ,/");
         PathCat(the_path, gApplication_path, "ACTORS");
         PathCat(the_path, the_path, str);
-        GetALineAndDontArgue(f, s);
     }
     pTrack_spec->the_actor = BrActorLoad(the_path);
-    if (gRace_file_version <= 6) {
-        gDefault_blend_pc = 75;
-    } else {
+    if (gRace_file_version > 6) {
         GetAString(f, s);
         if (!sscanf(s, "%d", &gDefault_blend_pc) || gDefault_blend_pc < 0 || gDefault_blend_pc > 100) {
             PDFatalError("Wanted a default blend percentage. Didn't get one. Old data file?");
         }
+    } else {
+        gDefault_blend_pc = 75;
     }
     PossibleService();
     ExtractColumns(pTrack_spec);
     for (i = 0; gTrack_storage_space.models_count > i; ++i) {
         PossibleService();
-        if (gTrack_storage_space.models[i] && gTrack_storage_space.models[i]->flags & 0x82) {
-            gTrack_storage_space.models[i]->flags &= 0xFF7Du;
+        needs_updating = 0;
+        if (gTrack_storage_space.models[i] && gTrack_storage_space.models[i]->flags & (BR_MODF_UPDATEABLE | BR_MODF_KEEP_ORIGINAL)) {
+            gTrack_storage_space.models[i]->flags &= ~(BR_MODF_UPDATEABLE | BR_MODF_KEEP_ORIGINAL);
+            // Minor asm differences here due to using open-sourced BRender 1.3.2
             for (group = 0; group < V11MODEL(gTrack_storage_space.models[i])->ngroups; group++) {
-                int f = V11MODEL(gTrack_storage_space.models[i])->groups[group].face_user[0];
-                material = gTrack_storage_space.models[i]->faces[f].material;
+                material = gTrack_storage_space.models[i]->faces[V11MODEL(gTrack_storage_space.models[i])->groups[group].face_user[0]].material;
                 V11MODEL(gTrack_storage_space.models[i])->groups[group].user = material;
                 if (material && !material->index_shade) {
                     material->index_shade = BrTableFind("DRRENDER.TAB");
-                    BrMaterialUpdate(material, 0x7FFFu);
+                    BrMaterialUpdate(material, BR_MATU_ALL);
                 }
             }
             DodgyModelUpdate(gTrack_storage_space.models[i]);
@@ -2730,8 +2796,8 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     PrintMemoryDump(0, "JUST LOADED IN TRACK ACTOR AND PROCESSED COLUMNS");
     gTrack_actor = pTrack_spec->the_actor;
     if (!gRendering_accessories && !gNet_mode) {
-        PossibleService();
         style = BR_RSTYLE_NONE;
+        PossibleService();
         DRActorEnumRecurse(gTrack_actor, (br_actor_enum_cbfn*)SetAccessoryRenderingCB, &style);
     }
     BrActorAdd(gUniverse_actor, pTrack_spec->the_actor);
@@ -2764,7 +2830,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
                 break;
             }
         }
-        sky = 0;
+        sky = NULL;
         killed_sky = 1;
     }
     gProgram_state.default_depth_effect.sky_texture = sky;
@@ -2775,10 +2841,11 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     }
     PossibleService();
 
-    gSky_image_width = BrDegreeToAngle(360.0 / GetAnInt(f));
+    gSky_image_width = BrDegreeToAngle(360.0f / GetAnInt(f));
     gSky_image_height = BrDegreeToAngle(GetAScalar(f));
     gSky_image_underground = gSky_image_height * (sky_pixels_high - GetAnInt(f)) / sky_pixels_high;
 
+    MungeForwardSky();
     MungeRearviewSky();
     PossibleService();
 
@@ -2811,9 +2878,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     gProgram_state.special_volume_count = GetAnInt(f);
     if (gProgram_state.special_volume_count) {
         gProgram_state.special_volumes = BrMemAllocate(sizeof(tSpecial_volume) * gProgram_state.special_volume_count, kMem_special_volume);
-        i = 0;
-        spec = gProgram_state.special_volumes;
-        for (i = 0; i < gProgram_state.special_volume_count; i++) {
+        for (i = 0, spec = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, spec++) {
             PossibleService();
             spec->no_mat = 0;
             GetALineAndDontArgue(f, s);
@@ -2835,7 +2900,6 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
                 gDefault_water_spec_vol = spec;
                 spec->no_mat = 1;
             } else {
-                TELL_ME_IF_WE_PASS_THIS_WAY();
                 spec->no_mat = 0;
                 str = strtok(s, "\t ,/");
                 sscanf(str, "%f", &spec->bounds.min.v[0]);
@@ -2845,14 +2909,17 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
                 sscanf(str, "%f", &spec->bounds.min.v[2]);
                 GetThreeScalars(f, &spec->bounds.max.v[0], &spec->bounds.max.v[1], &spec->bounds.max.v[2]);
                 BrMatrix34Identity(&spec->mat);
-                for (k = 0; k < 3; ++k) {
-                    // FIXME: not 100% sure this is correct
-                    spec->mat.m[3][k] = (spec->bounds.max.v[k] + spec->bounds.min.v[k]) / 2.f;
-                    spec->mat.m[k][k] = spec->bounds.max.v[k] - spec->bounds.min.v[k];
+                for (j = 0; j < 3; j++) {
+#ifdef DETHRACE_FIX_BUGS
+                    // Fix -Wmaybe-uninitialized warning
+                    temp_bounds.min.v[j] = spec->bounds.min.v[j];
+                    temp_bounds.max.v[j] = spec->bounds.max.v[j];
+#endif
+                    spec->mat.m[3][j] = (temp_bounds.max.v[j] + temp_bounds.min.v[j]) / 2.0f;
+                    MAT(&spec->mat.m, j, j) = temp_bounds.max.v[j] - spec->mat.m[3][j];
                 }
                 ParseSpecialVolume(f, spec, NULL);
             }
-            spec++;
         }
     }
     GetAString(f, s);
@@ -2872,8 +2939,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
                 &gProgram_state.special_screens[i].max_x,
                 &gProgram_state.special_screens[i].max_z);
             GetAString(f, s);
-            material = BrMaterialFind(s);
-            gProgram_state.special_screens[i].material = material;
+            gProgram_state.special_screens[i].material = BrMaterialFind(s);
         }
     }
     PossibleService();
@@ -2894,22 +2960,22 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     PossibleService();
     PrintMemoryDump(0, "JUST LOADING IN FUNKS AND GROOVES");
     ped_subs = NULL;
-    count = 0;
+    line_count = 0;
     if (gRace_file_version > 3) {
-        line_count = GetAnInt(f);
+        ped_subs_index = GetAnInt(f);
         if (gAusterity_mode) {
-            if (line_count >= 0) {
+            if (ped_subs_index >= 0) {
                 PathCat(the_path, gApplication_path, "PEDSUBS.TXT");
                 g = DRfopen(the_path, "rt");
                 if (g == NULL) {
                     FatalError(kFatalError_OpenRacesFile);
                 }
-                for (i = 0; i < line_count; ++i) {
+                for (i = 0; i < ped_subs_index; i++) {
                     SkipNLines(g);
                 }
-                count = GetAnInt(g);
-                ped_subs = BrMemAllocate(sizeof(tPed_subs) * count, kMem_misc);
-                for (ped_subs_index = 0; ped_subs_index < count; ped_subs_index++) {
+                line_count = GetAnInt(g);
+                ped_subs = BrMemAllocate(sizeof(tPed_subs) * line_count, kMem_misc);
+                for (i = 0; i < line_count; i++) {
                     GetPairOfInts(g, &ped_subs[i].orig, &ped_subs[i].subs);
                 }
                 fclose(g);
@@ -2917,7 +2983,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
         }
     }
     PossibleService();
-    LoadInPedestrians(f, count, ped_subs);
+    LoadInPedestrians(f, line_count, ped_subs);
     if (ped_subs != NULL) {
         BrMemFree(ped_subs);
     }
@@ -2947,8 +3013,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
             LoadSinglePixelmap(&gTrack_storage_space, str);
             str[sl] = 0;
             strcat(str, ".MAT");
-            material = LoadSingleMaterial(&gTrack_storage_space, str);
-            pRace_info->material_modifiers[i].skid_mark_material = material;
+            pRace_info->material_modifiers[i].skid_mark_material = LoadSingleMaterial(&gTrack_storage_space, str);
 #ifdef DETHRACE_3DFX_PATCH
             if (material != NULL) {
                 GlorifyMaterial(&material, 1);
@@ -2964,7 +3029,7 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
 #if defined(DETHRACE_FIX_BUGS)
     /* Display skidmarks even if the race has no specified skidmark material. */
     if (!skid_mark_cnt && num_materials) {
-        LOG_WARN("Track %s has no valid skid mark material, setting the default one",
+        LOG_WARN2("Track %s has no valid skid mark material, setting the default one",
             pRace_info->track_file_name);
         LoadSinglePixelmap(&gTrack_storage_space, "SKIDMARK.PIX");
         material = LoadSingleMaterial(&gTrack_storage_space, "SKIDMARK.MAT");
@@ -3005,12 +3070,10 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
     for (i = 0; i < COUNT_OF(gNon_car_spec_list); ++i) {
         gNon_car_spec_list[i] = '\0';
     }
-    for (i = 0; i < NONCAR_UNUSED_SLOTS; i++) {
+    for (i = 0; i < NONCAR_UNUSED_SLOTS; i++, non_car++) {
         non_car->collision_info.driver = eDriver_non_car_unused_slot;
-        non_car++;
     }
-    i = 0;
-    for (i = 0; i < num_non_cars; i++) {
+    for (i = 0; i < num_non_cars; i++, non_car++) {
         PossibleService();
         GetAString(f, s);
         PathCat(the_path, gApplication_path, "NONCARS");
@@ -3024,7 +3087,6 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
         ReadShrapnelMaterials(non_car_f, &non_car->collision_info);
         gNon_car_spec_list[non_car->collision_info.index] = i + 1;
         fclose(non_car_f);
-        non_car++;
     }
     GetSmokeShadeTables(f);
     pRace_info->number_of_net_start_points = GetAnInt(f);
@@ -3036,15 +3098,15 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
             &pRace_info->net_starts[i].pos.v[2]);
         pRace_info->net_starts[i].yaw = GetAScalar(f);
     }
-    if (gRace_file_version <= 2) {
-        LoadInKevStuff(NULL);
-    } else {
+    if (gRace_file_version > 2) {
         LoadInKevStuff(f);
-    }
-    if (gRace_file_version < 5) {
-        gYon_multiplier = 1.0;
     } else {
+        LoadInKevStuff(NULL);
+    }
+    if (gRace_file_version >= 5) {
         gYon_multiplier = GetAScalar(f);
+    } else {
+        gYon_multiplier = 1.0;
     }
     GetAString(f, s);
     if (strcmp(s, pFile_name) != 0) {
@@ -3057,8 +3119,8 @@ void LoadTrack(char* pFile_name, tTrack_spec* pTrack_spec, tRace_info* pRace_inf
 }
 
 // IDA: br_uint_32 __cdecl RemoveBounds(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x0043cf3f
 br_uintptr_t RemoveBounds(br_actor* pActor, void* pArg) {
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
     if (pActor->type == BR_ACTOR_BOUNDS || pActor->type == BR_ACTOR_BOUNDS_CORRECT) {
         BrResFree(pActor->type_data);
@@ -3068,17 +3130,17 @@ br_uintptr_t RemoveBounds(br_actor* pActor, void* pArg) {
 }
 
 // IDA: void __usercall RemoveBoundsStructures(br_actor *pActor@<EAX>)
+// FUNCTION: CARM95 0x0043cf21
 void RemoveBoundsStructures(br_actor* pActor) {
-    LOG_TRACE("(%p)", pActor);
 
     DRActorEnumRecurse(pActor, RemoveBounds, NULL);
 }
 
 // IDA: void __usercall FreeTrack(tTrack_spec *pTrack_spec@<EAX>)
+// FUNCTION: CARM95 0x0043cb89
 void FreeTrack(tTrack_spec* pTrack_spec) {
     int i;
     tNon_car_spec* non_car;
-    LOG_TRACE("(%p)", pTrack_spec);
 
     if (gAdditional_actors != NULL) {
         BrActorRemove(gAdditional_actors);
@@ -3099,6 +3161,9 @@ void FreeTrack(tTrack_spec* pTrack_spec) {
     PossibleService();
     ClearOutStorageSpace(&gTrack_storage_space);
     PossibleService();
+#ifdef DETHRACE_3DFX_PATCH
+    RemoveMaterialsFromSkidmarks();
+#endif
     DisposeGroovidelics(-2);
     PossibleService();
     DisposeOpponentPaths();
@@ -3108,11 +3173,14 @@ void FreeTrack(tTrack_spec* pTrack_spec) {
     if (gCurrent_race.map_image != NULL) {
         BrPixelmapFree(gCurrent_race.map_image);
     }
+    if (gProgram_state.special_volume_count != 0) {
+        BrMemFree(gProgram_state.special_volumes);
+    }
     if (gProgram_state.special_screens_count != 0) {
         BrMemFree(gProgram_state.special_screens);
     }
     PossibleService();
-    for (i = 0, non_car = gProgram_state.non_cars; i < gProgram_state.num_non_car_spaces; i++, non_car++) {
+    for (non_car = gProgram_state.non_cars, i = 0; i < gProgram_state.num_non_car_spaces; i++, non_car++) {
         PossibleService();
         if (non_car->collision_info.driver == eDriver_non_car && non_car->collision_info.car_master_actor != NULL) {
             BrActorRemove(non_car->collision_info.car_master_actor);
@@ -3126,8 +3194,8 @@ void FreeTrack(tTrack_spec* pTrack_spec) {
 }
 
 // IDA: void __usercall ProcessTrack(br_actor *pWorld@<EAX>, tTrack_spec *pTrack_spec@<EDX>, br_actor *pCamera@<EBX>, br_matrix34 *pCamera_to_world_transform@<ECX>, int pRender_blends)
+// FUNCTION: CARM95 0x0043cf8c
 void ProcessTrack(br_actor* pWorld, tTrack_spec* pTrack_spec, br_actor* pCamera, br_matrix34* pCamera_to_world_transform, int pRender_blends) {
-    LOG_TRACE("(%p, %p, %p, %p, %d)", pWorld, pTrack_spec, pCamera, pCamera_to_world_transform, pRender_blends);
 
     RenderTrack(pWorld, pTrack_spec, pCamera, pCamera_to_world_transform, pRender_blends);
     if (gAdditional_actors) {
@@ -3138,8 +3206,8 @@ void ProcessTrack(br_actor* pWorld, tTrack_spec* pTrack_spec, br_actor* pCamera,
 }
 
 // IDA: br_scalar __cdecl NormaliseDegreeAngle(br_scalar pAngle)
+// FUNCTION: CARM95 0x0043cfd8
 br_scalar NormaliseDegreeAngle(br_scalar pAngle) {
-    LOG_TRACE("(%f)", pAngle);
 
     while (pAngle < .0f) {
         pAngle += 360.f;
@@ -3147,7 +3215,7 @@ br_scalar NormaliseDegreeAngle(br_scalar pAngle) {
     return pAngle;
 }
 
-#define SAW(T, PERIOD) (fmodf((T), (PERIOD)) / (PERIOD))
+#define SAW(T, PERIOD) (fmod((T), (PERIOD)) / (PERIOD))
 
 #define MOVE_FUNK_PARAMETER(DEST, MODE, PERIOD, AMPLITUDE, FLASH_VALUE)                     \
     do {                                                                                    \
@@ -3173,7 +3241,7 @@ br_scalar NormaliseDegreeAngle(br_scalar pAngle) {
             }                                                                               \
             break;                                                                          \
         case eMove_flash:                                                                   \
-            if (2 * fmodf(f_the_time, (PERIOD)) > (PERIOD)) {                               \
+            if (2 * fmod(f_the_time, (PERIOD)) > (PERIOD)) {                                \
                 DEST = (FLASH_VALUE);                                                       \
             } else {                                                                        \
                 DEST = -(FLASH_VALUE);                                                      \
@@ -3192,6 +3260,7 @@ br_scalar NormaliseDegreeAngle(br_scalar pAngle) {
     } while (0)
 
 // IDA: void __cdecl FunkThoseTronics()
+// FUNCTION: CARM95 0x0043d010
 void FunkThoseTronics(void) {
     int i;
     int j;
@@ -3207,162 +3276,197 @@ void FunkThoseTronics(void) {
     float f_the_time;
     float rot_amount;
     float f_time_diff;
-    br_vector2 tmp_v2;
+    static br_vector2 tmp_v2;
     br_pixelmap* old_colour_map;
-    LOG_TRACE("()");
 
-    if (gFunkotronics_array == NULL) {
-        return;
-    }
-    DontLetFlicFuckWithPalettes();
-    the_time = GetTotalTime();
-    f_the_time = (float)the_time;
-    for (i = 0; i < gFunkotronics_array_size; i++) {
-        the_funk = &gFunkotronics_array[i];
-        if (the_funk->owner == -999) {
-            continue;
-        }
-        j = 0;
-        if (the_funk->mode == eFunk_mode_distance && the_funk->proximity_array != NULL) {
-            j = -2;
-            for (j = 0; j < the_funk->proximity_count; j++) {
-                if (Vector3DistanceSquared(&the_funk->proximity_array[j], gOur_pos) <= gSight_distance_squared) {
-                    j = -1;
-                    break;
-                }
-            }
-        }
-        if (j == -1 || (j != -2 && (the_funk->mode != eFunk_mode_last_lap_only || gLap >= gTotal_laps) && (the_funk->mode != eFunk_mode_all_laps_but_last || gLap < gTotal_laps))) {
-            the_material = the_funk->material;
-            mat_matrix = &the_material->map_transform;
-            if (!gAction_replay_mode || !ReplayIsPaused() || the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
-                switch (the_funk->matrix_mod_type) {
-                case eMatrix_mod_spin:
-
-                    BrMatrix23Identity(mat_matrix);
-                    the_material->map_transform.m[2][0] -= .5f;
-                    the_material->map_transform.m[2][1] -= .5f;
-                    if (the_funk->matrix_mod_data.spin_info.period > 0.f) {
-                        f_time_diff = 1.f - fmodf(the_funk->matrix_mod_data.spin_info.period, 1.f);
-                    } else {
-                        f_time_diff = fmodf(-the_funk->matrix_mod_data.spin_info.period, 1.f);
-                    }
-
-                    MOVE_FUNK_PARAMETER(rot_amount, the_funk->matrix_mode, f_time_diff, 65536.f, 7.5f);
-                    DRMatrix23PostRotate(mat_matrix, (br_angle)rot_amount);
-
-                    the_material->map_transform.m[2][0] += .5f;
-                    the_material->map_transform.m[2][1] += .5f;
-                    break;
-                case eMatrix_mod_rock:
-                    BrMatrix23Identity(mat_matrix);
-                    the_material->map_transform.m[2][0] -= the_funk->matrix_mod_data.rock_info.x_centre;
-                    the_material->map_transform.m[2][1] -= the_funk->matrix_mod_data.rock_info.y_centre;
-
-                    MOVE_FUNK_PARAMETER(rot_amount, the_funk->matrix_mode, the_funk->matrix_mod_data.rock_info.period, the_funk->matrix_mod_data.rock_info.rock_angle, the_funk->matrix_mod_data.rock_info.rock_angle);
-                    DRMatrix23PostRotate(mat_matrix, BrDegreeToAngle(NormaliseDegreeAngle(rot_amount)));
-
-                    the_material->map_transform.m[2][0] += the_funk->matrix_mod_data.rock_info.x_centre;
-                    the_material->map_transform.m[2][1] += the_funk->matrix_mod_data.rock_info.y_centre;
-                    break;
-                case eMatrix_mod_throb:
-                    BrMatrix23Identity(mat_matrix);
-                    the_material->map_transform.m[2][0] -= the_funk->matrix_mod_data.throb_info.x_centre;
-                    the_material->map_transform.m[2][1] -= the_funk->matrix_mod_data.throb_info.y_centre;
-
-                    MOVE_FUNK_PARAMETER(tmp_v2.v[1], the_funk->matrix_mode, the_funk->matrix_mod_data.throb_info.y_period, the_funk->matrix_mod_data.throb_info.y_magnitude, the_funk->matrix_mod_data.throb_info.y_magnitude);
-                    MOVE_FUNK_PARAMETER(tmp_v2.v[0], the_funk->matrix_mode, the_funk->matrix_mod_data.throb_info.x_period, the_funk->matrix_mod_data.throb_info.x_magnitude, the_funk->matrix_mod_data.throb_info.x_magnitude);
-                    BrMatrix23PostScale(mat_matrix, tmp_v2.v[0] + 1.f, tmp_v2.v[1] + 1.f);
-
-                    the_material->map_transform.m[2][0] += the_funk->matrix_mod_data.throb_info.x_centre;
-                    the_material->map_transform.m[2][1] += the_funk->matrix_mod_data.throb_info.y_centre;
-                    break;
-                case eMatrix_mod_slither:
-                    MOVE_FUNK_PARAMETER(the_material->map_transform.m[2][0], the_funk->matrix_mode, the_funk->matrix_mod_data.slither_info.x_period, the_funk->matrix_mod_data.slither_info.x_magnitude, the_funk->matrix_mod_data.slither_info.x_magnitude);
-                    MOVE_FUNK_PARAMETER(the_material->map_transform.m[2][1], the_funk->matrix_mode, the_funk->matrix_mod_data.slither_info.y_period, the_funk->matrix_mod_data.slither_info.y_magnitude, the_funk->matrix_mod_data.slither_info.y_magnitude);
-                    break;
-                case eMatrix_mod_roll:
-                    MOVE_FUNK_PARAMETER(the_material->map_transform.m[2][0], the_funk->matrix_mode, the_funk->matrix_mod_data.roll_info.x_period, 1.f, 1.875f);
-                    MOVE_FUNK_PARAMETER(the_material->map_transform.m[2][1], the_funk->matrix_mode, the_funk->matrix_mod_data.roll_info.y_period, 1.f, 1.875f);
-                    break;
-                case eMatrix_mod_none:
-                    break;
-                }
-                if (the_funk->matrix_mod_type != eMatrix_mod_none) {
-                    BrMaterialUpdate(the_funk->material, BR_MATU_MAP_TRANSFORM);
-                }
-            }
-            if (the_funk->lighting_animation_type != eMove_none) {
-                MOVE_FUNK_PARAMETER(the_material->ka, the_funk->lighting_animation_type, the_funk->lighting_animation_period, the_funk->ambient_delta, the_funk->ambient_delta);
-                the_material->ka += the_funk->ambient_base;
-
-                MOVE_FUNK_PARAMETER(the_material->kd, the_funk->lighting_animation_type, the_funk->lighting_animation_period, the_funk->direct_delta, the_funk->direct_delta);
-                the_material->kd += the_funk->direct_base;
-
-                MOVE_FUNK_PARAMETER(the_material->ks, the_funk->lighting_animation_type, the_funk->lighting_animation_period, the_funk->specular_delta, the_funk->specular_delta);
-                the_material->ks += the_funk->specular_base;
-            }
-            if (the_funk->texture_animation_type == eTexture_animation_frames) {
-                if (!gAction_replay_mode || !ReplayIsPaused() || the_funk->mode == eFunk_mode_all_laps_but_last || the_funk->mode == 4) {
-                    old_colour_map = the_material->colour_map;
-                    if (the_funk->time_mode == eTime_mode_accurate) {
-                        MOVE_FUNK_PARAMETER(rot_amount, the_funk->texture_animation_data.frames_info.mode, the_funk->texture_animation_data.frames_info.period, the_funk->texture_animation_data.frames_info.texture_count, the_funk->texture_animation_data.frames_info.texture_count);
-                        the_material->colour_map = the_funk->texture_animation_data.frames_info.textures[(int)rot_amount];
-                    } else {
-                        if (the_funk->texture_animation_data.frames_info.period <= fabsf(f_the_time - the_funk->last_frame)) {
-                            the_funk->last_frame = f_the_time;
-                            the_funk->texture_animation_data.frames_info.current_frame++;
-                            if (the_funk->texture_animation_data.frames_info.current_frame >= the_funk->texture_animation_data.frames_info.texture_count) {
-                                the_funk->texture_animation_data.frames_info.current_frame = 0;
-                            }
-                            the_material->colour_map = the_funk->texture_animation_data.frames_info.textures[the_funk->texture_animation_data.frames_info.current_frame];
+    if (gFunkotronics_array != NULL) {
+        DontLetFlicFuckWithPalettes();
+        the_time = GetTotalTime();
+        f_the_time = (float)the_time;
+        for (i = 0, the_funk = gFunkotronics_array; i < gFunkotronics_array_size; i++, the_funk++) {
+            if (the_funk->owner != NO_OWNER) {
+                if (the_funk->mode == eFunk_mode_distance && the_funk->proximity_array != NULL) {
+                    for (j = 0, the_proximity = the_funk->proximity_array; j < the_funk->proximity_count; j++, the_proximity++) {
+                        if (((the_proximity->v[0] - gOur_pos->v[0]) * (the_proximity->v[0] - gOur_pos->v[0])
+                                + ((the_proximity->v[2] - gOur_pos->v[2]) * (the_proximity->v[2] - gOur_pos->v[2])
+                                    + (the_proximity[0].v[1] - gOur_pos->v[1]) * (the_proximity[0].v[1] - gOur_pos->v[1])))
+                            <= gSight_distance_squared) {
+                            j = -1;
+                            break;
                         }
                     }
-                    if (the_material->colour_map != old_colour_map) {
-                        BrMaterialUpdate(the_funk->material, BR_MATU_COLOURMAP);
+                    if (j != -1) {
+                        continue;
                     }
+                } else if ((the_funk->mode == eFunk_mode_last_lap_only && gLap < gTotal_laps)
+                    || (the_funk->mode == eFunk_mode_all_laps_but_last && gLap >= gTotal_laps)) {
+                    continue;
                 }
-            } else if (the_funk->texture_animation_type == eTexture_animation_flic && (!gAction_replay_mode || !ReplayIsPaused())) {
-                f_time_diff = f_the_time;
-                if (f_time_diff < the_funk->last_frame) {
-                    f_time_diff = 2 * the_funk->last_frame - f_time_diff;
-                }
-                if (the_funk->time_mode == eTime_mode_accurate) {
-                    if (the_funk->last_frame) {
-                        iteration_count = (f_time_diff - the_funk->last_frame) / the_funk->texture_animation_data.flic_info.flic_descriptor.frame_period;
-                    } else {
-                        iteration_count = 1;
+                {
+                    the_material = the_funk->material;
+                    mat_matrix = &the_material->map_transform;
+                    if (!gAction_replay_mode || !ReplayIsPaused() || the_funk->matrix_mode == eMove_controlled || the_funk->matrix_mode == eMove_absolute) {
+                        switch (the_funk->matrix_mod_type) {
+                        case eMatrix_mod_spin:
+                            BrMatrix23Identity(mat_matrix);
+                            mat_matrix->m[2][0] -= .5f;
+                            mat_matrix->m[2][1] -= .5f;
+                            if (the_funk->matrix_mod_data.spin_info.period > 0.f) {
+                                rot_amount = 1.f - fmod(the_funk->matrix_mod_data.spin_info.period, 1.f);
+                            } else {
+                                rot_amount = fmod(-the_funk->matrix_mod_data.spin_info.period, 1.f);
+                            }
+
+                            DRMatrix23PostRotate(mat_matrix, (br_angle)(the_funk->matrix_mode == eMove_continuous ? (rot_amount != 0.f ? (fmod(f_the_time, rot_amount) / rot_amount) * 65536.0 : 0.0) : (the_funk->matrix_mode == eMove_controlled ? rot_amount * 65536.0 : (the_funk->matrix_mode == eMove_absolute ? rot_amount : (the_funk->matrix_mode == eMove_linear ? (rot_amount != 0.f ? MapSawToTriangle((fmod(f_the_time, rot_amount) / rot_amount)) * 65536.0 : 0.f) : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, rot_amount) > rot_amount ? -65536.0 : 65536.0) : (rot_amount != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, rot_amount) / rot_amount) * 360)) * 65536.0 : 0.f)))))));
+
+                            mat_matrix->m[2][0] += .5f;
+                            mat_matrix->m[2][1] += .5f;
+                            break;
+                        case eMatrix_mod_rock:
+                            BrMatrix23Identity(mat_matrix);
+                            mat_matrix->m[2][0] -= the_funk->matrix_mod_data.rock_info.x_centre;
+                            mat_matrix->m[2][1] -= the_funk->matrix_mod_data.rock_info.y_centre;
+
+                            DRMatrix23PostRotate(mat_matrix, BrDegreeToAngle(NormaliseDegreeAngle((the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.rock_info.period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.rock_info.period) / the_funk->matrix_mod_data.rock_info.period) * the_funk->matrix_mod_data.rock_info.rock_angle : 0.0) : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.rock_info.period * the_funk->matrix_mod_data.rock_info.rock_angle : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.rock_info.period : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.rock_info.period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.rock_info.period) / the_funk->matrix_mod_data.rock_info.period)) * the_funk->matrix_mod_data.rock_info.rock_angle : 0.f) : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.rock_info.period) > the_funk->matrix_mod_data.rock_info.period ? -the_funk->matrix_mod_data.rock_info.rock_angle : the_funk->matrix_mod_data.rock_info.rock_angle) : (the_funk->matrix_mod_data.rock_info.period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.rock_info.period) / the_funk->matrix_mod_data.rock_info.period) * 360)) * the_funk->matrix_mod_data.rock_info.rock_angle : 0.f)))))))));
+
+                            mat_matrix->m[2][0] += the_funk->matrix_mod_data.rock_info.x_centre;
+                            mat_matrix->m[2][1] += the_funk->matrix_mod_data.rock_info.y_centre;
+                            break;
+                        case eMatrix_mod_throb:
+                            BrMatrix23Identity(mat_matrix);
+                            mat_matrix->m[2][0] -= the_funk->matrix_mod_data.throb_info.x_centre;
+                            mat_matrix->m[2][1] -= the_funk->matrix_mod_data.throb_info.y_centre;
+
+                            BrMatrix23PostScale(mat_matrix, (the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.throb_info.x_period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.throb_info.x_period) / the_funk->matrix_mod_data.throb_info.x_period) * the_funk->matrix_mod_data.throb_info.x_magnitude : 0.0) : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.throb_info.x_period * the_funk->matrix_mod_data.throb_info.x_magnitude : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.throb_info.x_period : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.throb_info.x_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.throb_info.x_period) / the_funk->matrix_mod_data.throb_info.x_period)) * the_funk->matrix_mod_data.throb_info.x_magnitude : 0.f) : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.throb_info.x_period) > the_funk->matrix_mod_data.throb_info.x_period ? -the_funk->matrix_mod_data.throb_info.x_magnitude : the_funk->matrix_mod_data.throb_info.x_magnitude) : (the_funk->matrix_mod_data.throb_info.x_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.throb_info.x_period) / the_funk->matrix_mod_data.throb_info.x_period) * 360)) * the_funk->matrix_mod_data.throb_info.x_magnitude : 0.f)))))) + 1.0, (the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.throb_info.y_period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.throb_info.y_period) / the_funk->matrix_mod_data.throb_info.y_period) * the_funk->matrix_mod_data.throb_info.y_magnitude : 0.0) : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.throb_info.y_period * the_funk->matrix_mod_data.throb_info.y_magnitude : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.throb_info.y_period : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.throb_info.y_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.throb_info.y_period) / the_funk->matrix_mod_data.throb_info.y_period)) * the_funk->matrix_mod_data.throb_info.y_magnitude : 0.f) : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.throb_info.y_period) > the_funk->matrix_mod_data.throb_info.y_period ? -the_funk->matrix_mod_data.throb_info.y_magnitude : the_funk->matrix_mod_data.throb_info.y_magnitude) : (the_funk->matrix_mod_data.throb_info.y_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.throb_info.y_period) / the_funk->matrix_mod_data.throb_info.y_period) * 360)) * the_funk->matrix_mod_data.throb_info.y_magnitude : 0.f)))))) + 1.0);
+
+                            mat_matrix->m[2][0] += the_funk->matrix_mod_data.throb_info.x_centre;
+                            mat_matrix->m[2][1] += the_funk->matrix_mod_data.throb_info.y_centre;
+                            break;
+                        case eMatrix_mod_slither:
+                            mat_matrix->m[2][0] = (the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.slither_info.x_period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.slither_info.x_period) / the_funk->matrix_mod_data.slither_info.x_period) * the_funk->matrix_mod_data.slither_info.x_magnitude : 0.0)
+                                                                                             : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.slither_info.x_period * the_funk->matrix_mod_data.slither_info.x_magnitude
+                                                                                                                                          : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.slither_info.x_period
+                                                                                                                                                                                     : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.slither_info.x_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.slither_info.x_period) / the_funk->matrix_mod_data.slither_info.x_period)) * the_funk->matrix_mod_data.slither_info.x_magnitude : 0.f)
+                                                                                                                                                                                                                              : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.slither_info.x_period) > the_funk->matrix_mod_data.slither_info.x_period ? -the_funk->matrix_mod_data.slither_info.x_magnitude : the_funk->matrix_mod_data.slither_info.x_magnitude)
+                                                                                                                                                                                                                                                                      : (the_funk->matrix_mod_data.slither_info.x_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.slither_info.x_period) / the_funk->matrix_mod_data.slither_info.x_period) * 360)) * the_funk->matrix_mod_data.slither_info.x_magnitude : 0.f))))));
+                            mat_matrix->m[2][1] = (the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.slither_info.y_period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.slither_info.y_period) / the_funk->matrix_mod_data.slither_info.y_period) * the_funk->matrix_mod_data.slither_info.y_magnitude : 0.0)
+                                                                                             : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.slither_info.y_period * the_funk->matrix_mod_data.slither_info.y_magnitude
+                                                                                                                                          : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.slither_info.y_period
+                                                                                                                                                                                     : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.slither_info.y_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.slither_info.y_period) / the_funk->matrix_mod_data.slither_info.y_period)) * the_funk->matrix_mod_data.slither_info.y_magnitude : 0.f)
+                                                                                                                                                                                                                              : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.slither_info.y_period) > the_funk->matrix_mod_data.slither_info.y_period ? -the_funk->matrix_mod_data.slither_info.y_magnitude : the_funk->matrix_mod_data.slither_info.y_magnitude)
+                                                                                                                                                                                                                                                                      : (the_funk->matrix_mod_data.slither_info.y_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.slither_info.y_period) / the_funk->matrix_mod_data.slither_info.y_period) * 360)) * the_funk->matrix_mod_data.slither_info.y_magnitude : 0.f))))));
+                            break;
+                        case eMatrix_mod_roll:
+                            mat_matrix->m[2][0] = (the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.roll_info.x_period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.roll_info.x_period) / the_funk->matrix_mod_data.roll_info.x_period) * 1.0 : 0.0)
+                                                                                             : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.roll_info.x_period * 1.0
+                                                                                                                                          : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.roll_info.x_period
+                                                                                                                                                                                     : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.roll_info.x_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.roll_info.x_period) / the_funk->matrix_mod_data.roll_info.x_period)) * 1.0 : 0.f)
+                                                                                                                                                                                                                              : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.roll_info.x_period) > the_funk->matrix_mod_data.roll_info.x_period ? -1.0 : 1.0)
+                                                                                                                                                                                                                                                                      : (the_funk->matrix_mod_data.roll_info.x_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.roll_info.x_period) / the_funk->matrix_mod_data.roll_info.x_period) * 360)) * 1.0 : 0.f))))));
+                            mat_matrix->m[2][1] = (the_funk->matrix_mode == eMove_continuous ? (the_funk->matrix_mod_data.roll_info.y_period != 0.f ? (fmod(f_the_time, the_funk->matrix_mod_data.roll_info.y_period) / the_funk->matrix_mod_data.roll_info.y_period) * 1.0 : 0.0)
+                                                                                             : (the_funk->matrix_mode == eMove_controlled ? the_funk->matrix_mod_data.roll_info.y_period * 1.0
+                                                                                                                                          : (the_funk->matrix_mode == eMove_absolute ? the_funk->matrix_mod_data.roll_info.y_period
+                                                                                                                                                                                     : (the_funk->matrix_mode == eMove_linear ? (the_funk->matrix_mod_data.roll_info.y_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->matrix_mod_data.roll_info.y_period) / the_funk->matrix_mod_data.roll_info.y_period)) * 1.0 : 0.f)
+                                                                                                                                                                                                                              : (the_funk->matrix_mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->matrix_mod_data.roll_info.y_period) > the_funk->matrix_mod_data.roll_info.y_period ? -1.0 : 1.0)
+                                                                                                                                                                                                                                                                      : (the_funk->matrix_mod_data.roll_info.y_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->matrix_mod_data.roll_info.y_period) / the_funk->matrix_mod_data.roll_info.y_period) * 360)) * 1.0 : 0.f))))));
+                            break;
+
+                            DETHRACE_DEFAULT_BREAK;
+                        }
+                        if (the_funk->matrix_mod_type != eMatrix_mod_none) {
+                            BrMaterialUpdate(the_funk->material, BR_MATU_MAP_TRANSFORM);
+                        }
                     }
-                } else {
-                    if (f_time_diff - the_funk->last_frame > the_funk->texture_animation_data.flic_info.flic_descriptor.frame_period) {
-                        iteration_count = 1;
-                    } else {
-                        iteration_count = 0;
+                    if (the_funk->lighting_animation_type != eMove_none) {
+                        the_material->ka = the_funk->ambient_base + (the_funk->lighting_animation_type == eMove_continuous ? (the_funk->lighting_animation_period != 0.f ? (fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period) * the_funk->ambient_delta : 0.0) : (the_funk->lighting_animation_type == eMove_controlled ? the_funk->ambient_delta * the_funk[0].lighting_animation_period : (the_funk->lighting_animation_type == eMove_absolute ? the_funk->lighting_animation_period : (the_funk->lighting_animation_type == eMove_linear ? (the_funk->lighting_animation_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period)) * the_funk->ambient_delta : 0.f) : (the_funk->lighting_animation_type == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->lighting_animation_period) > the_funk->lighting_animation_period ? -the_funk->ambient_delta : the_funk->ambient_delta) : (the_funk->lighting_animation_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period) * 360)) * the_funk->ambient_delta : 0.f))))));
+
+                        the_material->kd = the_funk->direct_base + (the_funk->lighting_animation_type == eMove_continuous ? (the_funk->lighting_animation_period != 0.f ? (fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period) * the_funk->direct_delta : 0.0) : (the_funk->lighting_animation_type == eMove_controlled ? the_funk->lighting_animation_period * the_funk->direct_delta : (the_funk->lighting_animation_type == eMove_absolute ? the_funk->lighting_animation_period : (the_funk->lighting_animation_type == eMove_linear ? (the_funk->lighting_animation_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period)) * the_funk->direct_delta : 0.f) : (the_funk->lighting_animation_type == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->lighting_animation_period) > the_funk->lighting_animation_period ? -the_funk->direct_delta : the_funk->direct_delta) : (the_funk->lighting_animation_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period) * 360)) * the_funk->direct_delta : 0.f))))));
+
+                        the_material->ks = the_funk->specular_base + (the_funk->lighting_animation_type == eMove_continuous ? (the_funk->lighting_animation_period != 0.f ? (fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period) * the_funk->specular_delta : 0.0) : (the_funk->lighting_animation_type == eMove_controlled ? the_funk[0].specular_delta * the_funk[0].lighting_animation_period : (the_funk->lighting_animation_type == eMove_absolute ? the_funk->lighting_animation_period : (the_funk->lighting_animation_type == eMove_linear ? (the_funk->lighting_animation_period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period)) * the_funk->specular_delta : 0.f) : (the_funk->lighting_animation_type == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->lighting_animation_period) > the_funk->lighting_animation_period ? -the_funk->specular_delta : the_funk->specular_delta) : (the_funk->lighting_animation_period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->lighting_animation_period) / the_funk->lighting_animation_period) * 360)) * the_funk->specular_delta : 0.f))))));
                     }
-                }
-                for (j = 0; j < iteration_count; j++) {
-                    finished = PlayNextFlicFrame(&the_funk->texture_animation_data.flic_info.flic_descriptor);
-                    BrMapUpdate(the_funk->material->colour_map, BR_MAPU_ALL);
-                    BrMaterialUpdate(the_funk->material, BR_MATU_COLOURMAP);
-                    if (finished) {
-                        EndFlic(&the_funk->texture_animation_data.flic_info.flic_descriptor);
-                        StartFlic(
-                            the_funk->texture_animation_data.flic_info.flic_descriptor.file_name,
-                            -1,
-                            &the_funk->texture_animation_data.flic_info.flic_descriptor,
-                            the_funk->texture_animation_data.flic_info.flic_data_length,
-                            (tS8*)the_funk->texture_animation_data.flic_info.flic_data,
-                            the_material->colour_map, 0, 0, 0);
+                    switch (the_funk->texture_animation_type) {
+                    case eTexture_animation_frames:
+                        if (!gAction_replay_mode || !ReplayIsPaused() || the_funk->mode == eFunk_mode_all_laps_but_last || the_funk->mode == 4) {
+                            if (the_time < the_funk->last_frame) {
+                                time_diff = the_funk->last_frame - the_time;
+                                f_time_diff = time_diff;
+                            } else {
+                                time_diff = the_time - the_funk->last_frame;
+                                f_time_diff = time_diff;
+                            }
+                            old_colour_map = the_material->colour_map;
+                            if (the_funk->time_mode == eTime_mode_accurate) {
+
+                                the_material->colour_map = the_funk->texture_animation_data.frames_info.textures[(int)(the_funk->texture_animation_data.frames_info.mode == eMove_continuous ? (the_funk->texture_animation_data.frames_info.period != 0.f ? (fmod(f_the_time, the_funk->texture_animation_data.frames_info.period) / the_funk->texture_animation_data.frames_info.period) * the_funk->texture_animation_data.frames_info.texture_count : 0.0)
+                                                                                                                                                                                             : (the_funk->texture_animation_data.frames_info.mode == eMove_controlled ? the_funk->texture_animation_data.frames_info.period * the_funk->texture_animation_data.frames_info.texture_count
+                                                                                                                                                                                                                                                                      : (the_funk->texture_animation_data.frames_info.mode == eMove_absolute ? the_funk->texture_animation_data.frames_info.period
+                                                                                                                                                                                                                                                                                                                                             : (the_funk->texture_animation_data.frames_info.mode == eMove_linear ? (the_funk->texture_animation_data.frames_info.period != 0.f ? MapSawToTriangle((fmod(f_the_time, the_funk->texture_animation_data.frames_info.period) / the_funk->texture_animation_data.frames_info.period)) * the_funk->texture_animation_data.frames_info.texture_count : 0.f)
+                                                                                                                                                                                                                                                                                                                                                                                                                  : (the_funk->texture_animation_data.frames_info.mode == eMove_flash ? (2.0 * fmod(f_the_time, the_funk->texture_animation_data.frames_info.period) > the_funk->texture_animation_data.frames_info.period ? -the_funk->texture_animation_data.frames_info.texture_count : the_funk->texture_animation_data.frames_info.texture_count)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      : (the_funk->texture_animation_data.frames_info.period != 0.f ? BR_SIN(BrDegreeToAngle((fmod(f_the_time, the_funk->texture_animation_data.frames_info.period) / the_funk->texture_animation_data.frames_info.period) * 360)) * the_funk->texture_animation_data.frames_info.texture_count : 0.f))))))];
+                            } else {
+                                if (the_funk->texture_animation_data.frames_info.period <= f_time_diff) {
+                                    the_funk->last_frame = f_the_time;
+                                    the_funk->texture_animation_data.frames_info.current_frame++;
+                                    if (the_funk->texture_animation_data.frames_info.current_frame >= the_funk->texture_animation_data.frames_info.texture_count) {
+                                        the_funk->texture_animation_data.frames_info.current_frame = 0;
+                                    }
+                                    the_material->colour_map = the_funk->texture_animation_data.frames_info.textures[the_funk->texture_animation_data.frames_info.current_frame];
+                                }
+                            }
+                            if (the_material->colour_map != old_colour_map) {
+                                BrMaterialUpdate(the_funk->material, BR_MATU_COLOURMAP);
+                            }
+                        }
+                        break;
+                    case eTexture_animation_flic:
+                        if (!gAction_replay_mode || !ReplayIsPaused()) {
+                            old_last_time = the_funk->last_frame;
+                            if (old_last_time > the_time) {
+                                the_time = old_last_time + (old_last_time - the_time);
+                            }
+                            if (the_funk->time_mode == eTime_mode_accurate) {
+                                if (old_last_time) {
+                                    iteration_count = (the_time - old_last_time) / the_funk->texture_animation_data.flic_info.flic_descriptor.frame_period;
+                                } else {
+                                    iteration_count = 1;
+                                }
+                            } else {
+                                if (the_time - the_funk->last_frame >= the_funk->texture_animation_data.flic_info.flic_descriptor.frame_period) {
+                                    iteration_count = 1;
+                                } else {
+                                    iteration_count = 0;
+                                }
+                            }
+                            for (j = 0; j < iteration_count; j++) {
+                                finished = PlayNextFlicFrame(&the_funk->texture_animation_data.flic_info.flic_descriptor);
+                                BrMapUpdate(the_funk->material->colour_map, BR_MAPU_ALL);
+                                BrMaterialUpdate(the_funk->material, BR_MATU_COLOURMAP);
+                                if (finished) {
+                                    EndFlic(&the_funk->texture_animation_data.flic_info.flic_descriptor);
+                                    StartFlic(
+                                        the_funk->texture_animation_data.flic_info.flic_descriptor.file_name,
+                                        -1,
+                                        &the_funk->texture_animation_data.flic_info.flic_descriptor,
+                                        the_funk->texture_animation_data.flic_info.flic_data_length,
+                                        (tS8*)the_funk->texture_animation_data.flic_info.flic_data,
+                                        the_material->colour_map, 0, 0, 0);
+                                }
+                                the_funk->last_frame = f_the_time;
+                            }
+                        }
+                        break;
+
+                        DETHRACE_DEFAULT_BREAK;
                     }
-                    the_funk->last_frame = f_the_time;
                 }
             }
         }
+        LetFlicFuckWithPalettes();
     }
-    LetFlicFuckWithPalettes();
 }
 
 // IDA: void __usercall LollipopizeActor(br_actor *pSubject_actor@<EAX>, br_matrix34 *ref_to_world@<EDX>, tLollipop_mode pWhich_axis@<EBX>)
+// FUNCTION: CARM95 0x0043f3c3
 void LollipopizeActor(br_actor* pSubject_actor, br_matrix34* ref_to_world, tLollipop_mode pWhich_axis) {
     br_vector3 ref_to_subject;
     br_vector3 fixed_axis;
@@ -3370,33 +3474,57 @@ void LollipopizeActor(br_actor* pSubject_actor, br_matrix34* ref_to_world, tLoll
     br_vector3 vector_b;
     br_matrix34 subject_to_world;
     br_matrix34 mat;
-    LOG_TRACE("(%p, %p, %d)", pSubject_actor, ref_to_world, pWhich_axis);
 
     BrActorToActorMatrix34(&subject_to_world, pSubject_actor, gNon_track_actor);
     BrVector3Sub(&ref_to_subject, (br_vector3*)ref_to_world->m[3], (br_vector3*)subject_to_world.m[3]);
     switch (pWhich_axis) {
-    case eLollipop_none:
-        TELL_ME_IF_WE_PASS_THIS_WAY();
-        break;
     case eLollipop_x_match:
-        BrVector3SetFloat(&vector_a, 1.f, 0.f, 0.f);
+        BrVector3SetFloat(&fixed_axis, 1.f, 0.f, 0.f);
         break;
     case eLollipop_y_match:
-        BrVector3SetFloat(&vector_a, 0.f, 1.f, 0.f);
+        BrVector3SetFloat(&fixed_axis, 0.f, 1.f, 0.f);
         break;
     case eLollipop_z_match:
-        BrVector3SetFloat(&vector_a, 0.f, 0.f, 1.f);
+        BrVector3SetFloat(&fixed_axis, 0.f, 0.f, 1.f);
         break;
-    }
-    BrVector3Cross(&vector_b, &ref_to_subject, &vector_a);
-    BrVector3Normalise(&vector_b, &vector_b);
 
-    BrVector3Cross(&fixed_axis, &vector_a, &vector_b);
+        DETHRACE_DEFAULT_BREAK
+    }
+    BrVector3Cross(&vector_a, &ref_to_subject, &fixed_axis);
+    BrVector3Normalise(&vector_a, &vector_a);
+
+    BrVector3Cross(&vector_b, &fixed_axis, &vector_a);
 
     switch (pWhich_axis) {
-    case eLollipop_none:
-        break;
     case eLollipop_x_match:
+        mat.m[0][0] = fixed_axis.v[0];
+        mat.m[1][0] = fixed_axis.v[1];
+        mat.m[2][0] = fixed_axis.v[2];
+        mat.m[0][1] = vector_a.v[0];
+        mat.m[1][1] = vector_a.v[1];
+        mat.m[2][1] = vector_a.v[2];
+        mat.m[0][2] = vector_b.v[0];
+        mat.m[1][2] = vector_b.v[1];
+        mat.m[2][2] = vector_b.v[2];
+        mat.m[3][0] = 0.f;
+        mat.m[3][1] = 0.f;
+        mat.m[3][2] = 0.f;
+        break;
+    case eLollipop_y_match:
+        mat.m[0][0] = vector_a.v[0];
+        mat.m[1][0] = vector_a.v[1];
+        mat.m[2][0] = vector_a.v[2];
+        mat.m[0][1] = fixed_axis.v[0];
+        mat.m[1][1] = fixed_axis.v[1];
+        mat.m[2][1] = fixed_axis.v[2];
+        mat.m[0][2] = vector_b.v[0];
+        mat.m[1][2] = vector_b.v[1];
+        mat.m[2][2] = vector_b.v[2];
+        mat.m[3][0] = 0.f;
+        mat.m[3][1] = 0.f;
+        mat.m[3][2] = 0.f;
+        break;
+    case eLollipop_z_match:
         mat.m[0][0] = vector_a.v[0];
         mat.m[1][0] = vector_a.v[1];
         mat.m[2][0] = vector_a.v[2];
@@ -3410,41 +3538,15 @@ void LollipopizeActor(br_actor* pSubject_actor, br_matrix34* ref_to_world, tLoll
         mat.m[3][1] = 0.f;
         mat.m[3][2] = 0.f;
         break;
-    case eLollipop_y_match:
-        mat.m[0][0] = vector_b.v[0];
-        mat.m[1][0] = vector_b.v[1];
-        mat.m[2][0] = vector_b.v[2];
-        mat.m[0][1] = vector_a.v[0];
-        mat.m[1][1] = vector_a.v[1];
-        mat.m[2][1] = vector_a.v[2];
-        mat.m[0][2] = fixed_axis.v[0];
-        mat.m[1][2] = fixed_axis.v[1];
-        mat.m[2][2] = fixed_axis.v[2];
-        mat.m[3][0] = 0.f;
-        mat.m[3][1] = 0.f;
-        mat.m[3][2] = 0.f;
-        break;
-    case eLollipop_z_match:
-        mat.m[0][0] = vector_b.v[0];
-        mat.m[1][0] = vector_b.v[1];
-        mat.m[2][0] = vector_b.v[2];
-        mat.m[0][1] = vector_a.v[0];
-        mat.m[1][1] = vector_a.v[1];
-        mat.m[2][1] = vector_a.v[2];
-        mat.m[0][2] = fixed_axis.v[0];
-        mat.m[1][2] = fixed_axis.v[1];
-        mat.m[2][2] = fixed_axis.v[2];
-        mat.m[3][0] = 0.f;
-        mat.m[3][1] = 0.f;
-        mat.m[3][2] = 0.f;
-        break;
+
+        DETHRACE_DEFAULT_BREAK
     }
     BrMatrix34Pre(&pSubject_actor->t.t.mat, &mat);
 }
 
 // IDA: void __usercall CalcActorGlobalPos(br_vector3 *pResult@<EAX>, br_actor *pActor@<EDX>)
+// FUNCTION: CARM95 0x0043f6c2
 void CalcActorGlobalPos(br_vector3* pResult, br_actor* pActor) {
-    LOG_TRACE("(%p, %p)", pResult, pActor);
 
     pResult->v[0] = 0.0;
     pResult->v[1] = 0.0;
@@ -3458,162 +3560,121 @@ void CalcActorGlobalPos(br_vector3* pResult, br_actor* pActor) {
 }
 
 // IDA: int __usercall PointOutOfSight@<EAX>(br_vector3 *pPoint@<EAX>, br_scalar pMax_distance)
+// FUNCTION: CARM95 0x0043f744
 int PointOutOfSight(br_vector3* pPoint, br_scalar pMax_distance) {
     br_vector3 distance_vector;
-    LOG_TRACE("(%p, %f)", pPoint, pMax_distance);
 
     if (gMirror_on__graphics) {
         distance_vector.v[0] = pPoint->v[0] - gRearview_camera_to_world.m[3][0];
         distance_vector.v[1] = pPoint->v[1] - gRearview_camera_to_world.m[3][1];
         distance_vector.v[2] = pPoint->v[2] - gRearview_camera_to_world.m[3][2];
-        if (distance_vector.v[0] * distance_vector.v[0]
-                    + distance_vector.v[1] * distance_vector.v[1]
-                    + distance_vector.v[2] * distance_vector.v[2]
-                < pMax_distance
+        if (BrVector3LengthSquared(&distance_vector) < pMax_distance
             && gRearview_camera_to_world.m[2][2] * distance_vector.v[2]
                     + gRearview_camera_to_world.m[2][1] * distance_vector.v[1]
                     + gRearview_camera_to_world.m[2][0] * distance_vector.v[0]
-                < 0.0) {
+                < 0.0f) {
             return 0;
         }
     }
     distance_vector.v[0] = pPoint->v[0] - gCamera_to_world.m[3][0];
     distance_vector.v[1] = pPoint->v[1] - gCamera_to_world.m[3][1];
     distance_vector.v[2] = pPoint->v[2] - gCamera_to_world.m[3][2];
-    return distance_vector.v[0] * distance_vector.v[0] + distance_vector.v[1] * distance_vector.v[1] + distance_vector.v[2] * distance_vector.v[2] >= pMax_distance
-        || gCamera_to_world.m[2][2] * distance_vector.v[2] + gCamera_to_world.m[2][1] * distance_vector.v[1] + gCamera_to_world.m[2][0] * distance_vector.v[0] >= 0.0;
+    if (BrVector3LengthSquared(&distance_vector) >= pMax_distance) {
+        return 1;
+    }
+    if (gCamera_to_world.m[2][2] * distance_vector.v[2] + gCamera_to_world.m[2][1] * distance_vector.v[1] + gCamera_to_world.m[2][0] * distance_vector.v[0] >= 0.0f) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
+#define GROOVE_PATH_SIN_COS(TRIG, TIME, PERIOD, AMPLITUDE)      \
+    ((PERIOD) != 0.0f                                           \
+            ? (br_scalar)(TRIG(BrAngleToRadian(BrDegreeToAngle( \
+                              SAW(TIME, PERIOD) * 360.0f)))     \
+                  * (AMPLITUDE))                                \
+            : 0.0f)
+
+#define GROOVE_PATH_FLOAT(MODE, TIME, PERIOD, AMPLITUDE)                                       \
+    ((MODE) == eMove_continuous                                                                \
+            ? ((PERIOD) != 0.0f                                                                \
+                      ? SAW(TIME, PERIOD) * (AMPLITUDE)                                        \
+                      : 0.0)                                                                   \
+            : ((MODE) == eMove_controlled                                                      \
+                      ? PERIOD * AMPLITUDE                                                     \
+                      : ((MODE) == eMove_absolute                                              \
+                                ? (PERIOD)                                                     \
+                                : ((MODE) == eMove_linear                                      \
+                                          ? ((PERIOD) != 0.0f                                  \
+                                                    ? MapSawToTriangle(SAW(TIME, PERIOD))      \
+                                                        * (AMPLITUDE)                          \
+                                                    : 0.0f)                                    \
+                                          : ((MODE) == eMove_flash                             \
+                                                    ? (fmod((TIME), (PERIOD)) * 2.0 > (PERIOD) \
+                                                              ? -(AMPLITUDE)                   \
+                                                              : (AMPLITUDE))                   \
+                                                    : GROOVE_PATH_SIN_COS(sin, TIME, PERIOD, AMPLITUDE))))))
+
 // IDA: void __usercall PathGrooveBastard(tGroovidelic_spec *pGroove@<EAX>, tU32 pTime@<EDX>, br_matrix34 *pMat@<EBX>, int pInterrupt_it@<ECX>)
+// FUNCTION: CARM95 0x0043fb08
 void PathGrooveBastard(tGroovidelic_spec* pGroove, tU32 pTime, br_matrix34* pMat, int pInterrupt_it) {
     br_scalar pos;
-    LOG_TRACE("(%p, %d, %p, %d)", pGroove, pTime, pMat, pInterrupt_it);
 
-    if (pGroove->path_type == eGroove_path_straight) {
+    switch (pGroove->path_type) {
+    case eGroove_path_straight:
         if (pGroove->path_data.straight_info.x_delta != 0.0f) {
 
-            switch (pGroove->path_mode) {
-            case eMove_continuous:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period * pGroove->path_data.straight_info.x_delta;
-                }
-                break;
-            case eMove_controlled:
-                pos = pGroove->path_data.straight_info.period * pGroove->path_data.straight_info.x_delta;
-                break;
-            case eMove_absolute:
-                pos = pGroove->path_data.straight_info.period;
-                break;
-            case eMove_flash:
-                if (fmodf(pTime, pGroove->path_data.straight_info.period) * 2.0f <= pGroove->path_data.straight_info.period) {
-                    pos = pGroove->path_data.straight_info.x_delta;
-                } else {
-                    pos = -pGroove->path_data.straight_info.x_delta;
-                }
-                break;
-            case eMove_harmonic:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = sinf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period * 360.0f)))
-                        * pGroove->path_data.straight_info.x_delta;
-                }
-                break;
-            case eMove_linear:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = MapSawToTriangle(fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period)
-                        * pGroove->path_data.straight_info.x_delta;
-                }
-                break;
-            default:
-                TELL_ME_IF_WE_PASS_THIS_WAY();
-            }
-
-            pos += pGroove->path_data.straight_info.centre.v[0];
+            pos = pGroove->path_data.straight_info.centre.v[0]
+                + GROOVE_PATH_FLOAT(pGroove->path_mode, pTime,
+                    pGroove->path_data.straight_info.period,
+                    pGroove->path_data.straight_info.x_delta);
             if (pInterrupt_it) {
                 pGroove->path_resumption_value = pos;
-                if (pMat->m[3][0] <= pos) {
-                    pGroove->path_interrupt_status = eInterrupt_greater_than;
-                } else {
+                if (pMat->m[3][0] > pos) {
                     pGroove->path_interrupt_status = eInterrupt_less_than;
+                } else {
+                    pGroove->path_interrupt_status = eInterrupt_greater_than;
                 }
+                pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
+                pMat->m[3][0] = pos;
             } else if (pGroove->path_interrupt_status == eInterrupt_none) {
-                BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                 pMat->m[3][0] = pos;
             } else if (pGroove->path_interrupt_status == eInterrupt_less_than) {
                 if (pGroove->path_resumption_value > pos) {
                     pGroove->path_interrupt_status = eInterrupt_none;
-                    BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                    pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                     pMat->m[3][0] = pos;
                 }
             } else if (pGroove->path_resumption_value < pos) {
                 pGroove->path_interrupt_status = eInterrupt_none;
-                BrVector3Copy(&pGroove->actor->t.t.euler.t, &pGroove->path_data.straight_info.centre);
+                pGroove->actor->t.t.euler.t = pGroove->path_data.straight_info.centre;
                 pMat->m[3][0] = pos;
             }
         }
 
         if (pGroove->path_data.straight_info.y_delta != 0.0f) {
-            switch (pGroove->path_mode) {
-            case eMove_continuous:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period * pGroove->path_data.straight_info.y_delta;
-                }
-                break;
-            case eMove_controlled:
-                pos = pGroove->path_data.straight_info.period * pGroove->path_data.straight_info.y_delta;
-                break;
-            case eMove_absolute:
-                pos = pGroove->path_data.straight_info.period;
-                break;
-            case eMove_flash:
-                if (fmodf(pTime, pGroove->path_data.straight_info.period) * 2.0f <= pGroove->path_data.straight_info.period) {
-                    pos = pGroove->path_data.straight_info.y_delta;
-                } else {
-                    pos = -pGroove->path_data.straight_info.y_delta;
-                }
-                break;
-            case eMove_harmonic:
-                if (pGroove->path_data.straight_info.period == 0.0) {
-                    pos = 0.f;
-                } else {
-                    pos = sinf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period * 360.0f)))
-                        * pGroove->path_data.straight_info.y_delta;
-                }
-                break;
-            case eMove_linear:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = MapSawToTriangle(fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period)
-                        * pGroove->path_data.straight_info.y_delta;
-                }
-                break;
-            default:
-                TELL_ME_IF_WE_PASS_THIS_WAY();
-            }
-
-            pos += pGroove->path_data.straight_info.centre.v[1];
+            pos = pGroove->path_data.straight_info.centre.v[1]
+                + GROOVE_PATH_FLOAT(pGroove->path_mode, pTime,
+                    pGroove->path_data.straight_info.period,
+                    pGroove->path_data.straight_info.y_delta);
             if (pInterrupt_it) {
                 pGroove->path_resumption_value = pos;
-                if (pMat->m[3][1] <= pos) {
-                    pGroove->path_interrupt_status = eInterrupt_greater_than;
-                } else {
+                if (pMat->m[3][1] > pos) {
                     pGroove->path_interrupt_status = eInterrupt_less_than;
+                } else {
+                    pGroove->path_interrupt_status = eInterrupt_greater_than;
                 }
+                pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
+                pMat->m[3][1] = pos;
             } else if (pGroove->path_interrupt_status == eInterrupt_none) {
-                BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                 pMat->m[3][1] = pos;
             } else if (pGroove->path_interrupt_status == eInterrupt_less_than) {
                 if (pGroove->path_resumption_value > pos) {
                     pGroove->path_interrupt_status = eInterrupt_none;
-                    BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                    pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                     pMat->m[3][1] = pos;
                 }
             } else if (pGroove->path_resumption_value < pos) {
@@ -3624,127 +3685,110 @@ void PathGrooveBastard(tGroovidelic_spec* pGroove, tU32 pTime, br_matrix34* pMat
         }
 
         if (pGroove->path_data.straight_info.z_delta != 0.0f) {
-            switch (pGroove->path_mode) {
-            case eMove_continuous:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period * pGroove->path_data.straight_info.z_delta;
-                }
-                break;
-            case eMove_controlled:
-                pos = pGroove->path_data.straight_info.period * pGroove->path_data.straight_info.z_delta;
-                break;
-            case eMove_absolute:
-                pos = pGroove->path_data.straight_info.period;
-                break;
-            case eMove_flash:
-                if (fmodf(pTime, pGroove->path_data.straight_info.period) * 2.0f <= pGroove->path_data.straight_info.period) {
-                    pos = pGroove->path_data.straight_info.z_delta;
-                } else {
-                    pos = -pGroove->path_data.straight_info.z_delta;
-                }
-                break;
-            case eMove_harmonic:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = sinf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period * 360.0f)))
-                        * pGroove->path_data.straight_info.z_delta;
-                }
-                break;
-            case eMove_linear:
-                if (pGroove->path_data.straight_info.period == 0.0f) {
-                    pos = 0.f;
-                } else {
-                    pos = MapSawToTriangle(fmodf(pTime, pGroove->path_data.straight_info.period) / pGroove->path_data.straight_info.period)
-                        * pGroove->path_data.straight_info.z_delta;
-                }
-                break;
-            default:
-                TELL_ME_IF_WE_PASS_THIS_WAY();
-            }
-
-            pos += pGroove->path_data.straight_info.centre.v[1];
+            pos = pGroove->path_data.straight_info.centre.v[2]
+                + GROOVE_PATH_FLOAT(pGroove->path_mode, pTime,
+                    pGroove->path_data.straight_info.period,
+                    pGroove->path_data.straight_info.z_delta);
             if (pInterrupt_it) {
                 pGroove->path_resumption_value = pos;
-                if (pMat->m[3][2] <= pos) {
-                    pGroove->path_interrupt_status = eInterrupt_greater_than;
-                } else {
+                if (pMat->m[3][2] > pos) {
                     pGroove->path_interrupt_status = eInterrupt_less_than;
+                } else {
+                    pGroove->path_interrupt_status = eInterrupt_greater_than;
                 }
+                pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
+                pMat->m[3][2] = pos;
             } else {
                 if (pGroove->path_interrupt_status == eInterrupt_none) {
-                    BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                    pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                     pMat->m[3][2] = pos;
                 } else if (pGroove->path_interrupt_status == eInterrupt_less_than) {
                     if (pGroove->path_resumption_value > pos) {
                         pGroove->path_interrupt_status = eInterrupt_none;
-                        BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                        pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                         pMat->m[3][2] = pos;
                     }
                 } else if (pGroove->path_resumption_value < pos) {
                     pGroove->path_interrupt_status = eInterrupt_none;
-                    BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.straight_info.centre);
+                    pGroove->actor->t.t.translate.t = pGroove->path_data.straight_info.centre;
                     pMat->m[3][2] = pos;
                 }
             }
         }
-        BrVector3Copy(&pGroove->object_position, &pGroove->actor->t.t.translate.t);
-    } else if (pGroove->path_type == eGroove_path_circular) {
-        BrVector3Copy(&pGroove->actor->t.t.translate.t, &pGroove->path_data.circular_info.centre);
+        pGroove->object_position = pGroove->actor->t.t.translate.t;
+        break;
+    case eGroove_path_circular:
+        pGroove->actor->t.t.translate.t = pGroove->path_data.circular_info.centre;
         if (pGroove->path_data.circular_info.axis == eGroove_axis_y) {
-            if (pGroove->path_data.circular_info.period == 0.0f) {
-                pos = 0.f;
-            } else {
-                pos = cosf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.circular_info.period) / pGroove->path_data.circular_info.period * 360.0f))) * pGroove->path_data.circular_info.radius;
-            }
-            pMat->m[3][0] = pGroove->path_data.circular_info.centre.v[0] + pos;
+            pMat->m[3][0] = pGroove->path_data.circular_info.centre.v[0]
+                + GROOVE_PATH_SIN_COS(cos, pTime,
+                    pGroove->path_data.circular_info.period,
+                    pGroove->path_data.circular_info.radius);
         } else if (pGroove->path_data.circular_info.axis == eGroove_axis_z) {
-            if (pGroove->path_data.circular_info.period == 0.0f) {
-                pos = 0.f;
-            } else {
-                pos = sinf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.circular_info.period) / pGroove->path_data.circular_info.period * 360.0f))) * pGroove->path_data.circular_info.radius;
-            }
-            pMat->m[3][0] = pGroove->path_data.circular_info.centre.v[0] + pos;
+            pMat->m[3][0] = pGroove->path_data.circular_info.centre.v[0]
+                + GROOVE_PATH_SIN_COS(sin, pTime,
+                    pGroove->path_data.circular_info.period,
+                    pGroove->path_data.circular_info.radius);
         }
 
         if (pGroove->path_data.circular_info.axis == eGroove_axis_x) {
-            if (pGroove->path_data.circular_info.period == 0.0f) {
-                pos = 0.f;
-            } else {
-                pos = sinf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.circular_info.period) / pGroove->path_data.circular_info.period * 360.0f))) * pGroove->path_data.circular_info.radius;
-            }
-            pMat->m[3][1] = pGroove->path_data.circular_info.centre.v[1] + pos;
+            pMat->m[3][1] = pGroove->path_data.circular_info.centre.v[1]
+                + GROOVE_PATH_SIN_COS(sin, pTime,
+                    pGroove->path_data.circular_info.period,
+                    pGroove->path_data.circular_info.radius);
         } else if (pGroove->path_data.circular_info.axis == eGroove_axis_z) {
-            if (pGroove->path_data.circular_info.period == 0.0f) {
-                pos = 0.f;
-            } else {
-                pos = cosf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.circular_info.period) / pGroove->path_data.circular_info.period * 360.0f))) * pGroove->path_data.circular_info.radius;
-            }
-            pMat->m[3][1] = pGroove->path_data.circular_info.centre.v[1] + pos;
+            pMat->m[3][1] = pGroove->path_data.circular_info.centre.v[1]
+                + GROOVE_PATH_SIN_COS(cos, pTime,
+                    pGroove->path_data.circular_info.period,
+                    pGroove->path_data.circular_info.radius);
         }
 
         if (pGroove->path_data.circular_info.axis == eGroove_axis_x) {
-            if (pGroove->path_data.circular_info.period == 0.0f) {
-                pos = 0.f;
-            } else {
-                pos = cosf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.circular_info.period) / pGroove->path_data.circular_info.period * 360.0f))) * pGroove->path_data.circular_info.radius;
-            }
-            pMat->m[3][2] = pGroove->path_data.circular_info.centre.v[1] + pos;
-        } else if (pGroove->path_data.circular_info.axis == eGroove_axis_z) {
-            if (pGroove->path_data.circular_info.period == 0.0f) {
-                pos = 0.f;
-            } else {
-                pos = sinf(BrAngleToRadian(BrDegreeToAngle(fmodf(pTime, pGroove->path_data.circular_info.period) / pGroove->path_data.circular_info.period * 360.0f))) * pGroove->path_data.circular_info.radius;
-            }
-            pMat->m[3][2] = pGroove->path_data.circular_info.centre.v[1] + pos;
+            pMat->m[3][2] = pGroove->path_data.circular_info.centre.v[2]
+                + GROOVE_PATH_SIN_COS(cos, pTime,
+                    pGroove->path_data.circular_info.period,
+                    pGroove->path_data.circular_info.radius);
+        } else if (pGroove->path_data.circular_info.axis == eGroove_axis_y) {
+            pMat->m[3][2] = pGroove->path_data.circular_info.centre.v[2]
+                + GROOVE_PATH_SIN_COS(sin, pTime,
+                    pGroove->path_data.circular_info.period,
+                    pGroove->path_data.circular_info.radius);
         }
-        BrVector3Copy(&pGroove->object_position, &pGroove->actor->t.t.translate.t);
+        pGroove->object_position = pGroove->actor->t.t.translate.t;
+        break;
+
+        DETHRACE_DEFAULT_BREAK;
     }
 }
 
+#define GROOVE_ANGLE(MODE, TIME, PERIOD)                                                                           \
+    BrDegreeToAngle(((MODE) == eMove_continuous                                                                    \
+            ? ((PERIOD) != 0.0f ? SAW(TIME, PERIOD) * 360.0 : 0.0)                                                 \
+            : ((MODE) == eMove_controlled                                                                          \
+                      ? (PERIOD) * 360.0                                                                           \
+                      : ((MODE) == eMove_absolute                                                                  \
+                                ? (PERIOD)                                                                         \
+                                : ((MODE) == eMove_linear                                                          \
+                                          ? ((PERIOD) != 0.0f ? MapSawToTriangle(SAW(TIME, PERIOD)) * 360.0 : 0.0) \
+                                          : ((MODE) == eMove_flash                                                 \
+                                                    ? (fmod((TIME), (PERIOD)) * 2.0 > (PERIOD) ? -360.0 : 360.0)   \
+                                                    : ((PERIOD) != 0.0f ? sin(BrAngleToRadian(BrDegreeToAngle(SAW(TIME, PERIOD) * 360.0))) * 360.0 : 0.0)))))))
+
+#define GROOVE_FLOAT(MODE, TIME, PERIOD, AMPLITUDE)                                                                          \
+    ((MODE) == eMove_continuous                                                                                              \
+            ? ((PERIOD) != 0.0f ? SAW(TIME, PERIOD) * (AMPLITUDE) : 0.0)                                                     \
+            : ((MODE) == eMove_controlled                                                                                    \
+                      ? (PERIOD) * (AMPLITUDE)                                                                               \
+                      : ((MODE) == eMove_absolute                                                                            \
+                                ? (PERIOD)                                                                                   \
+                                : ((MODE) == eMove_linear                                                                    \
+                                          ? ((PERIOD) != 0.0f ? MapSawToTriangle(SAW(TIME, PERIOD)) * (AMPLITUDE) : 0.0f)    \
+                                          : ((MODE) == eMove_flash                                                           \
+                                                    ? (fmod((TIME), (PERIOD)) * 2.0 > (PERIOD) ? -(AMPLITUDE) : (AMPLITUDE)) \
+                                                    : ((PERIOD) != 0.0f ? (br_scalar)(sin(BrAngleToRadian(BrDegreeToAngle(SAW(TIME, PERIOD) * 360.0))) * (AMPLITUDE)) : 0.0f))))))
+
 // IDA: void __usercall ObjectGrooveBastard(tGroovidelic_spec *pGroove@<EAX>, tU32 pTime@<EDX>, br_matrix34 *pMat@<EBX>, int pInterrupt_it@<ECX>)
+// FUNCTION: CARM95 0x00440abe
 void ObjectGrooveBastard(tGroovidelic_spec* pGroove, tU32 pTime, br_matrix34* pMat, int pInterrupt_it) {
     int rock_it;
     br_scalar x_size;
@@ -3752,456 +3796,124 @@ void ObjectGrooveBastard(tGroovidelic_spec* pGroove, tU32 pTime, br_matrix34* pM
     br_scalar z_size;
     br_scalar pos;
     br_bounds* bounds;
-    LOG_TRACE("(%p, %d, %p, %d)", pGroove, pTime, pMat, pInterrupt_it);
 
+#ifdef DETHRACE_FIX_BUGS
     x_size = 0;
     y_size = 0;
     z_size = 0;
     pos = 0;
+#endif
 
     switch (pGroove->object_type) {
     case eGroove_object_spin:
-        if (pGroove->object_data.spin_info.axis == eGroove_axis_y) {
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period * 360.0;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                pos = pGroove->object_data.spin_info.period * 360.0;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                pos = pGroove->object_data.spin_info.period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.spin_info.period) * 2.0 <= pGroove->object_data.spin_info.period) {
-                    pos = 3.85156;
-                } else {
-                    pos = -3.85156;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = sin(
-                              BrAngleToRadian(
-                                  BrDegreeToAngle(
-                                      fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period * 360.0)))
-                        * 360.0;
-                }
-            } else {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period;
-                    pos = MapSawToTriangle(pos) * 360.0;
-                }
-            }
-            DRMatrix34PostRotateY(pMat, BrDegreeToAngle(pos));
-        } else if (pGroove->object_data.spin_info.axis == eGroove_axis_z) {
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period * 360.0;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                pos = pGroove->object_data.spin_info.period * 360.0;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                pos = pGroove->object_data.spin_info.period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.spin_info.period) * 2.0 <= pGroove->object_data.spin_info.period) {
-                    pos = 3.85156;
-                } else {
-                    pos = -3.85156;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = sin(
-                              BrAngleToRadian(
-                                  BrDegreeToAngle(
-                                      fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period * 360.0)))
-                        * 360.0;
-                }
-            } else {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period;
-                    pos = MapSawToTriangle(pos) * 360.0;
-                }
-            }
-            DRMatrix34PostRotateZ(pMat, BrDegreeToAngle(pos));
-        } else if (pGroove->object_data.spin_info.axis == eGroove_axis_x) {
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period * 360.0;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                pos = pGroove->object_data.spin_info.period * 360.0;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                pos = pGroove->object_data.spin_info.period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.spin_info.period) * 2.0 <= pGroove->object_data.spin_info.period) {
-                    pos = 3.85156;
-                } else {
-                    pos = -3.85156;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = sin(
-                              BrAngleToRadian(
-                                  BrDegreeToAngle(
-                                      fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period * 360.0)))
-                        * 360.0;
-                }
-            } else {
-                if (pGroove->object_data.spin_info.period != 0.0) {
-                    pos = fmod(pTime, pGroove->object_data.spin_info.period) / pGroove->object_data.spin_info.period;
-                    pos = MapSawToTriangle(pos) * 360.0;
-                }
-            }
-            DRMatrix34PostRotateX(pMat, BrDegreeToAngle(pos));
+        switch (pGroove->object_data.spin_info.axis) {
+        case eGroove_axis_x:
+            DRMatrix34PostRotateX(pMat, GROOVE_ANGLE(pGroove->object_mode, pTime, pGroove->object_data.spin_info.period));
+            break;
+        case eGroove_axis_y:
+            DRMatrix34PostRotateY(pMat, GROOVE_ANGLE(pGroove->object_mode, pTime, pGroove->object_data.spin_info.period));
+            break;
+        case eGroove_axis_z:
+            DRMatrix34PostRotateZ(pMat, GROOVE_ANGLE(pGroove->object_mode, pTime, pGroove->object_data.spin_info.period));
+            break;
         }
         break;
     case eGroove_object_rock:
         rock_it = 1;
-        if (pGroove->object_mode == eMove_continuous) {
-            if (pGroove->object_data.rock_info.period != 0.0) {
-                pos = fmod(pTime, pGroove->object_data.rock_info.period) / pGroove->object_data.rock_info.period * pGroove->object_data.rock_info.max_angle;
-            }
-        } else if (pGroove->object_mode == eMove_controlled) {
-            pos = pGroove->object_data.rock_info.period * pGroove->object_data.rock_info.max_angle;
-        } else if (pGroove->object_mode == eMove_absolute) {
-            pos = pGroove->object_data.rock_info.period;
-        } else if (pGroove->object_mode == eMove_flash) {
-            if (fmod(pTime, pGroove->object_data.rock_info.period) * 2.0 <= pGroove->object_data.rock_info.period) {
-                pos = pGroove->object_data.rock_info.max_angle;
-            } else {
-                pos = -pGroove->object_data.rock_info.max_angle;
-            }
-        } else if (pGroove->object_mode == eMove_harmonic) {
-            if (pGroove->object_data.rock_info.period != 0.0) {
-                pos = sin(
-                          BrAngleToRadian(
-                              BrDegreeToAngle(
-                                  fmod(pTime, pGroove->object_data.rock_info.period) / pGroove->object_data.rock_info.period * 360.0)))
-                    * pGroove->object_data.rock_info.max_angle;
-            }
-        } else {
-            if (pGroove->object_data.rock_info.period != 0.0) {
-                pos = fmod(pTime, pGroove->object_data.rock_info.period) / pGroove->object_data.rock_info.period;
-                pos = MapSawToTriangle(pos) * pGroove->object_data.rock_info.max_angle;
-            }
-        }
+        pos = GROOVE_FLOAT(pGroove->object_mode, pTime,
+            pGroove->object_data.rock_info.period, pGroove->object_data.rock_info.max_angle);
 
         if (pInterrupt_it) {
             pGroove->object_resumption_value = pos;
-            if (pGroove->object_data.rock_info.current_angle <= pos) {
-                pGroove->object_interrupt_status = eInterrupt_greater_than;
-            } else {
+            if (pGroove->object_data.rock_info.current_angle > pos) {
                 pGroove->object_interrupt_status = eInterrupt_less_than;
+            } else {
+                pGroove->object_interrupt_status = eInterrupt_greater_than;
             }
         } else if (pGroove->object_interrupt_status == eInterrupt_less_than) {
-            if (pGroove->object_resumption_value <= pos || gAction_replay_mode) {
-                rock_it = 0;
-            } else {
+            if (pGroove->object_resumption_value > pos && !gAction_replay_mode) {
                 pGroove->object_interrupt_status = eInterrupt_none;
+            } else {
+                rock_it = 0;
             }
         } else if (pGroove->object_interrupt_status == eInterrupt_greater_than) {
-            if (pGroove->object_resumption_value >= pos || gAction_replay_mode) {
-                rock_it = 0;
-            } else {
+            if (pGroove->object_resumption_value < pos && !gAction_replay_mode) {
                 pGroove->object_interrupt_status = eInterrupt_none;
+            } else {
+                rock_it = 0;
             }
         }
         if (rock_it) {
             pGroove->object_data.rock_info.current_angle = pos;
         }
 
-        if (pGroove->object_data.rock_info.axis == eGroove_axis_y) {
-            DRMatrix34PostRotateY(pMat, BrDegreeToAngle(pGroove->object_data.rock_info.current_angle));
-        } else if (pGroove->object_data.rock_info.axis == eGroove_axis_z) {
-            DRMatrix34PostRotateZ(pMat, BrDegreeToAngle(pGroove->object_data.rock_info.current_angle));
-        } else if (pGroove->object_data.rock_info.axis == eGroove_axis_x) {
+        switch (pGroove->object_data.rock_info.axis) {
+        case eGroove_axis_x:
             DRMatrix34PostRotateX(pMat, BrDegreeToAngle(pGroove->object_data.rock_info.current_angle));
+            break;
+        case eGroove_axis_y:
+            DRMatrix34PostRotateY(pMat, BrDegreeToAngle(pGroove->object_data.rock_info.current_angle));
+            break;
+        case eGroove_axis_z:
+            DRMatrix34PostRotateZ(pMat, BrDegreeToAngle(pGroove->object_data.rock_info.current_angle));
+            break;
         }
         break;
     case eGroove_object_throb:
-        if (pGroove->object_mode == eMove_continuous) {
-            if (pGroove->object_data.throb_info.z_period != 0.0) {
-                z_size = fmod(pTime, pGroove->object_data.throb_info.z_period) / pGroove->object_data.throb_info.z_period * pGroove->object_data.throb_info.z_magnitude;
-            }
-        } else if (pGroove->object_mode == eMove_controlled) {
-            z_size = pGroove->object_data.throb_info.z_magnitude * pGroove->object_data.throb_info.z_period;
-        } else if (pGroove->object_mode == eMove_absolute) {
-            z_size = pGroove->object_data.throb_info.z_period;
-        } else if (pGroove->object_mode == eMove_flash) {
-            if (fmod(pTime, pGroove->object_data.throb_info.z_period) * 2.0 <= pGroove->object_data.throb_info.z_period) {
-                z_size = pGroove->object_data.throb_info.z_magnitude;
-            } else {
-                z_size = -pGroove->object_data.throb_info.z_magnitude;
-            }
-        } else if (pGroove->object_mode == eMove_harmonic) {
-            if (pGroove->object_data.throb_info.z_period != 0.0) {
-                z_size = sin(
-                             BrAngleToRadian(
-                                 BrDegreeToAngle(
-                                     fmod(pTime, pGroove->object_data.throb_info.z_period) / pGroove->object_data.throb_info.z_period * 360.0)))
-                    * pGroove->object_data.throb_info.z_magnitude;
-            }
-        } else {
-            if (pGroove->object_data.throb_info.z_period != 0.0) {
-                z_size = fmod(pTime, pGroove->object_data.throb_info.z_period) / pGroove->object_data.throb_info.z_period;
-                z_size = MapSawToTriangle(z_size) * pGroove->object_data.throb_info.z_magnitude;
-            }
-        }
-
-        if (pGroove->object_mode == eMove_continuous) {
-            if (pGroove->object_data.throb_info.x_period != 0.0) {
-                x_size = fmod(pTime, pGroove->object_data.throb_info.x_period) / pGroove->object_data.throb_info.x_period * pGroove->object_data.throb_info.x_magnitude;
-            }
-        } else if (pGroove->object_mode == eMove_controlled) {
-            x_size = pGroove->object_data.throb_info.x_magnitude * pGroove->object_data.throb_info.x_period;
-        } else if (pGroove->object_mode == eMove_absolute) {
-            x_size = pGroove->object_data.throb_info.x_period;
-        } else if (pGroove->object_mode == eMove_flash) {
-            if (fmod(pTime, pGroove->object_data.throb_info.x_period) * 2.0 <= pGroove->object_data.throb_info.x_period) {
-                x_size = pGroove->object_data.throb_info.x_magnitude;
-            } else {
-                x_size = -pGroove->object_data.throb_info.x_magnitude;
-            }
-        } else if (pGroove->object_mode == eMove_harmonic) {
-            if (pGroove->object_data.throb_info.x_period != 0.0) {
-                x_size = sin(
-                             BrAngleToRadian(
-                                 BrDegreeToAngle(
-                                     fmod(pTime, pGroove->object_data.throb_info.x_period) / pGroove->object_data.throb_info.x_period * 360.0)))
-                    * pGroove->object_data.throb_info.x_magnitude;
-            }
-        } else {
-            if (pGroove->object_data.throb_info.x_period != 0.0) {
-                x_size = fmod(pTime, pGroove->object_data.throb_info.x_period) / pGroove->object_data.throb_info.x_period;
-                x_size = MapSawToTriangle(x_size) * pGroove->object_data.throb_info.x_magnitude;
-            }
-        }
-
-        if (pGroove->object_mode == eMove_continuous) {
-            if (pGroove->object_data.throb_info.y_period != 0.0) {
-                y_size = fmod(pTime, pGroove->object_data.throb_info.y_period) / pGroove->object_data.throb_info.y_period * pGroove->object_data.throb_info.y_magnitude;
-            }
-        } else if (pGroove->object_mode == eMove_controlled) {
-            y_size = pGroove->object_data.throb_info.y_magnitude * pGroove->object_data.throb_info.y_period;
-        } else if (pGroove->object_mode == eMove_absolute) {
-            y_size = pGroove->object_data.throb_info.y_period;
-        } else if (pGroove->object_mode == eMove_flash) {
-            if (fmod(pTime, pGroove->object_data.throb_info.y_period) * 2.0 <= pGroove->object_data.throb_info.y_period) {
-                y_size = pGroove->object_data.throb_info.y_magnitude;
-            } else {
-                y_size = -pGroove->object_data.throb_info.y_magnitude;
-            }
-        } else if (pGroove->object_mode == eMove_harmonic) {
-            if (pGroove->object_data.throb_info.y_period != 0.0) {
-                y_size = sin(
-                             BrAngleToRadian(
-                                 BrDegreeToAngle(
-                                     fmod(pTime, pGroove->object_data.throb_info.y_period) / pGroove->object_data.throb_info.y_period * 360.0)))
-                    * pGroove->object_data.throb_info.y_magnitude;
-            }
-        } else {
-            if (pGroove->object_data.throb_info.y_period != 0.0) {
-                y_size = fmod(pTime, pGroove->object_data.throb_info.y_period) / pGroove->object_data.throb_info.y_period;
-                y_size = MapSawToTriangle(y_size) * pGroove->object_data.throb_info.y_magnitude;
-            }
-        }
-
-        BrMatrix34PostScale(pMat, x_size + 1.0, y_size + 1.0, z_size + 1.0);
+        BrMatrix34PostScale(pMat,
+            GROOVE_FLOAT(pGroove->object_mode, pTime,
+                pGroove->object_data.throb_info.x_period, pGroove->object_data.throb_info.x_magnitude)
+                + 1.0,
+            GROOVE_FLOAT(pGroove->object_mode, pTime,
+                pGroove->object_data.throb_info.y_period, pGroove->object_data.throb_info.y_magnitude)
+                + 1.0,
+            GROOVE_FLOAT(pGroove->object_mode, pTime,
+                pGroove->object_data.throb_info.z_period, pGroove->object_data.throb_info.z_magnitude)
+                + 1.0);
         /* FALLTHROUGH */
     case eGroove_object_shear:
         bounds = &pGroove->actor->model->bounds;
-        if (pGroove->object_data.shear_info.x_magnitude == 0.0) {
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.shear_info.z_period != 0.0) {
-                    z_size = fmod(pTime, pGroove->object_data.shear_info.z_period) / pGroove->object_data.shear_info.z_period * pGroove->object_data.shear_info.z_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                z_size = pGroove->object_data.shear_info.z_magnitude * pGroove->object_data.shear_info.z_period;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                z_size = pGroove->object_data.shear_info.z_period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.shear_info.z_period) * 2.0 <= pGroove->object_data.shear_info.z_period) {
-                    z_size = pGroove->object_data.shear_info.z_magnitude;
-                } else {
-                    z_size = -pGroove->object_data.shear_info.z_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.shear_info.z_period != 0.0) {
-                    z_size = sin(
-                                 BrAngleToRadian(
-                                     BrDegreeToAngle(
-                                         fmod(pTime, pGroove->object_data.shear_info.z_period) / pGroove->object_data.shear_info.z_period * 360.0)))
-                        * pGroove->object_data.shear_info.z_magnitude;
-                }
-            } else {
-                if (pGroove->object_data.shear_info.z_period != 0.0) {
-                    z_size = fmod(pTime, pGroove->object_data.shear_info.z_period) / pGroove->object_data.shear_info.z_period;
-                    z_size = MapSawToTriangle(z_size) * pGroove->object_data.shear_info.z_magnitude;
-                }
-            }
-
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.shear_info.y_period != 0.0) {
-                    y_size = fmod(pTime, pGroove->object_data.shear_info.y_period) / pGroove->object_data.shear_info.y_period * pGroove->object_data.shear_info.y_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                y_size = pGroove->object_data.shear_info.y_magnitude * pGroove->object_data.shear_info.y_period;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                y_size = pGroove->object_data.shear_info.y_period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.shear_info.y_period) * 2.0 <= pGroove->object_data.shear_info.y_period) {
-                    y_size = pGroove->object_data.shear_info.y_magnitude;
-                } else {
-                    y_size = -pGroove->object_data.shear_info.y_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.shear_info.y_period != 0.0) {
-                    y_size = sin(
-                                 BrAngleToRadian(
-                                     BrDegreeToAngle(
-                                         fmod(pTime, pGroove->object_data.shear_info.y_period) / pGroove->object_data.shear_info.y_period * 360.0)))
-                        * pGroove->object_data.shear_info.y_magnitude;
-                }
-            } else {
-                if (pGroove->object_data.shear_info.y_period != 0.0) {
-                    y_size = fmod(pTime, pGroove->object_data.shear_info.y_period) / pGroove->object_data.shear_info.y_period;
-                    y_size = MapSawToTriangle(y_size) * pGroove->object_data.shear_info.y_magnitude;
-                }
-            }
-            BrMatrix34PostShearX(pMat, y_size / (bounds->max.v[1] - bounds->min.v[1]), z_size / bounds->max.v[2] - bounds->min.v[2]);
-        } else if (pGroove->object_data.shear_info.y_magnitude == 0.0) {
-
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.shear_info.z_period != 0.0) {
-                    z_size = fmod(pTime, pGroove->object_data.shear_info.z_period) / pGroove->object_data.shear_info.z_period * pGroove->object_data.shear_info.z_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                z_size = pGroove->object_data.shear_info.z_magnitude * pGroove->object_data.shear_info.z_period;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                z_size = pGroove->object_data.shear_info.z_period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.shear_info.z_period) * 2.0 <= pGroove->object_data.shear_info.z_period) {
-                    z_size = pGroove->object_data.shear_info.z_magnitude;
-                } else {
-                    z_size = -pGroove->object_data.shear_info.z_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.shear_info.z_period != 0.0) {
-                    z_size = sin(
-                                 BrAngleToRadian(
-                                     BrDegreeToAngle(
-                                         fmod(pTime, pGroove->object_data.shear_info.z_period) / pGroove->object_data.shear_info.z_period * 360.0)))
-                        * pGroove->object_data.shear_info.z_magnitude;
-                }
-            } else {
-                if (pGroove->object_data.shear_info.z_period != 0.0) {
-                    z_size = fmod(pTime, pGroove->object_data.shear_info.z_period) / pGroove->object_data.shear_info.z_period;
-                    z_size = MapSawToTriangle(z_size) * pGroove->object_data.shear_info.z_magnitude;
-                }
-            }
-
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.shear_info.x_period != 0.0) {
-                    x_size = fmod(pTime, pGroove->object_data.shear_info.x_period) / pGroove->object_data.shear_info.x_period * pGroove->object_data.shear_info.x_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                x_size = pGroove->object_data.shear_info.x_magnitude * pGroove->object_data.shear_info.x_period;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                x_size = pGroove->object_data.shear_info.x_period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.shear_info.x_period) * 2.0 <= pGroove->object_data.shear_info.x_period) {
-                    x_size = pGroove->object_data.shear_info.x_magnitude;
-                } else {
-                    x_size = -pGroove->object_data.shear_info.x_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.shear_info.x_period != 0.0) {
-                    x_size = sin(
-                                 BrAngleToRadian(
-                                     BrDegreeToAngle(
-                                         fmod(pTime, pGroove->object_data.shear_info.x_period) / pGroove->object_data.shear_info.x_period * 360.0)))
-                        * pGroove->object_data.shear_info.x_magnitude;
-                }
-            } else { // linear
-                if (pGroove->object_data.shear_info.x_period != 0.0) {
-                    x_size = fmod(pTime, pGroove->object_data.shear_info.x_period) / pGroove->object_data.shear_info.x_period;
-                    x_size = MapSawToTriangle(x_size) * pGroove->object_data.shear_info.x_magnitude;
-                }
-            }
-
-            BrMatrix34PostShearY(pMat, x_size / (bounds->max.v[0] - bounds->min.v[0]), z_size / (bounds->max.v[2] - bounds->min.v[2]));
-        } else { // x_magnitude == 0
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.shear_info.y_period != 0.0) {
-                    y_size = fmod(pTime, pGroove->object_data.shear_info.y_period) / pGroove->object_data.shear_info.y_period * pGroove->object_data.shear_info.y_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                y_size = pGroove->object_data.shear_info.y_magnitude * pGroove->object_data.shear_info.y_period;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                y_size = pGroove->object_data.shear_info.y_period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.shear_info.y_period) * 2.0 <= pGroove->object_data.shear_info.y_period) {
-                    y_size = pGroove->object_data.shear_info.y_magnitude;
-                } else {
-                    y_size = -pGroove->object_data.shear_info.y_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.shear_info.y_period != 0.0) {
-                    y_size = sin(
-                                 BrAngleToRadian(
-                                     BrDegreeToAngle(
-                                         fmod(pTime, pGroove->object_data.shear_info.y_period) / pGroove->object_data.shear_info.y_period * 360.0)))
-                        * pGroove->object_data.shear_info.y_magnitude;
-                }
-            } else {
-                if (pGroove->object_data.shear_info.y_period != 0.0) {
-                    y_size = fmod(pTime, pGroove->object_data.shear_info.y_period) / pGroove->object_data.shear_info.y_period;
-                    y_size = MapSawToTriangle(y_size) * pGroove->object_data.shear_info.y_magnitude;
-                }
-            }
-
-            if (pGroove->object_mode == eMove_continuous) {
-                if (pGroove->object_data.shear_info.x_period != 0.0) {
-                    x_size = fmod(pTime, pGroove->object_data.shear_info.x_period) / pGroove->object_data.shear_info.x_period * pGroove->object_data.shear_info.x_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_controlled) {
-                x_size = pGroove->object_data.shear_info.x_magnitude * pGroove->object_data.shear_info.x_period;
-            } else if (pGroove->object_mode == eMove_absolute) {
-                x_size = pGroove->object_data.shear_info.x_period;
-            } else if (pGroove->object_mode == eMove_flash) {
-                if (fmod(pTime, pGroove->object_data.shear_info.x_period) * 2.0 <= pGroove->object_data.shear_info.x_period) {
-                    x_size = pGroove->object_data.shear_info.x_magnitude;
-                } else {
-                    x_size = -pGroove->object_data.shear_info.x_magnitude;
-                }
-            } else if (pGroove->object_mode == eMove_harmonic) {
-                if (pGroove->object_data.shear_info.x_period != 0.0) {
-                    x_size = sin(
-                                 BrAngleToRadian(
-                                     BrDegreeToAngle(
-                                         fmod(pTime, pGroove->object_data.shear_info.x_period) / pGroove->object_data.shear_info.x_period * 360.0)))
-                        * pGroove->object_data.shear_info.x_magnitude;
-                }
-            } else {
-                if (pGroove->object_data.shear_info.x_period != 0.0) {
-                    x_size = fmod(pTime, pGroove->object_data.shear_info.x_period) / pGroove->object_data.shear_info.x_period;
-                    x_size = MapSawToTriangle(x_size) * pGroove->object_data.shear_info.x_magnitude;
-                }
-            }
-            BrMatrix34PostShearZ(pMat, x_size / (bounds->max.v[0] - bounds->min.v[0]), y_size / (bounds->max.v[1] - bounds->min.v[1]));
+        x_size = bounds->max.v[0] - bounds->min.v[0];
+        y_size = bounds->max.v[1] - bounds->min.v[1];
+        z_size = bounds->max.v[2] - bounds->min.v[2];
+        if (pGroove->object_data.shear_info.x_magnitude == 0.0f) {
+            BrMatrix34PostShearX(pMat,
+                GROOVE_FLOAT(pGroove->object_mode, pTime,
+                    pGroove->object_data.shear_info.y_period, pGroove->object_data.shear_info.y_magnitude)
+                    / y_size,
+                GROOVE_FLOAT(pGroove->object_mode, pTime,
+                    pGroove->object_data.shear_info.z_period, pGroove->object_data.shear_info.z_magnitude)
+                    / z_size);
+        } else if (pGroove->object_data.shear_info.y_magnitude == 0.0f) {
+            BrMatrix34PostShearY(pMat,
+                GROOVE_FLOAT(pGroove->object_mode, pTime,
+                    pGroove->object_data.shear_info.x_period, pGroove->object_data.shear_info.x_magnitude)
+                    / x_size,
+                GROOVE_FLOAT(pGroove->object_mode, pTime,
+                    pGroove->object_data.shear_info.z_period, pGroove->object_data.shear_info.z_magnitude)
+                    / z_size);
+        } else {
+            BrMatrix34PostShearZ(pMat,
+                GROOVE_FLOAT(pGroove->object_mode, pTime,
+                    pGroove->object_data.shear_info.x_period, pGroove->object_data.shear_info.x_magnitude)
+                    / x_size,
+                GROOVE_FLOAT(pGroove->object_mode, pTime,
+                    pGroove->object_data.shear_info.y_period, pGroove->object_data.shear_info.y_magnitude)
+                    / y_size);
         }
-        break;
     default:
         return;
     }
 }
 
 // IDA: void __usercall GrooveThisDelic(tGroovidelic_spec *pGroove@<EAX>, tU32 pTime@<EDX>, int pInterrupt_it@<EBX>)
+// FUNCTION: CARM95 0x0043f886
 void GrooveThisDelic(tGroovidelic_spec* pGroove, tU32 pTime, int pInterrupt_it) {
     br_actor* the_actor;
     br_vector3 actor_pos;
     br_matrix34* the_mat;
     tInterrupt_status old_path_interrupt;
     tInterrupt_status old_object_interrupt;
-    LOG_TRACE8("(%p, %d, %d)", pGroove, pTime, pInterrupt_it);
 
     old_path_interrupt = pGroove->path_interrupt_status;
     old_object_interrupt = pGroove->object_interrupt_status;
@@ -4237,9 +3949,9 @@ void GrooveThisDelic(tGroovidelic_spec* pGroove, tU32 pTime, int pInterrupt_it) 
         the_mat->m[3][1] = -pGroove->object_centre.v[1];
         the_mat->m[3][2] = -pGroove->object_centre.v[2];
         ObjectGrooveBastard(pGroove, pTime, the_mat, pInterrupt_it);
-        the_actor->t.t.mat.m[3][0] += pGroove->object_position.v[0] + pGroove->object_centre.v[0];
-        the_actor->t.t.mat.m[3][1] += pGroove->object_position.v[1] + pGroove->object_centre.v[1];
-        the_actor->t.t.mat.m[3][2] += pGroove->object_position.v[2] + pGroove->object_centre.v[2];
+        the_mat->m[3][0] += pGroove->object_position.v[0] + pGroove->object_centre.v[0];
+        the_mat->m[3][1] += pGroove->object_position.v[1] + pGroove->object_centre.v[1];
+        the_mat->m[3][2] += pGroove->object_position.v[2] + pGroove->object_centre.v[2];
         if (pGroove->lollipop_mode != eLollipop_none) {
             LollipopizeActor(pGroove->actor, &gCamera_to_world, pGroove->lollipop_mode);
         }
@@ -4256,20 +3968,19 @@ void GrooveThisDelic(tGroovidelic_spec* pGroove, tU32 pTime, int pInterrupt_it) 
 }
 
 // IDA: void __cdecl GrooveThoseDelics()
+// FUNCTION: CARM95 0x004430dd
 void GrooveThoseDelics(void) {
     int i;
     tGroovidelic_spec* the_groove;
     float f_the_time;
-    LOG_TRACE("()");
 
     if (gGroovidelics_array != NULL) {
-        f_the_time = (double)GetTotalTime();
+        f_the_time = (float)GetTotalTime();
         gPrevious_groove_times[1] = gPrevious_groove_times[0];
         gPrevious_groove_times[0] = f_the_time;
 
-        for (i = 0; i < gGroovidelics_array_size; i++) {
-            the_groove = &gGroovidelics_array[i];
-            if (the_groove->owner != -999 && !the_groove->done_this_frame) {
+        for (i = 0, the_groove = gGroovidelics_array; i < gGroovidelics_array_size; i++, the_groove++) {
+            if (the_groove->owner != NO_OWNER && !the_groove->done_this_frame) {
                 GrooveThisDelic(the_groove, f_the_time, 0);
             }
         }
@@ -4277,13 +3988,12 @@ void GrooveThoseDelics(void) {
 }
 
 // IDA: void __usercall StopGroovidelic(br_actor *pActor@<EAX>)
+// FUNCTION: CARM95 0x00443186
 void StopGroovidelic(br_actor* pActor) {
     int i;
     tGroovidelic_spec* the_groove;
-    LOG_TRACE("(%p)", pActor);
 
-    for (i = 0; i < gGroovidelics_array_size; i++) {
-        the_groove = &gGroovidelics_array[i];
+    for (i = 0, the_groove = gGroovidelics_array; i < gGroovidelics_array_size; i++, the_groove++) {
         if (the_groove->actor == pActor) {
             if (the_groove->path_interrupt_status == eInterrupt_none && the_groove->object_interrupt_status == eInterrupt_none) {
                 GrooveThisDelic(the_groove, gPrevious_groove_times[1], 1);
@@ -4294,9 +4004,9 @@ void StopGroovidelic(br_actor* pActor) {
 }
 
 // IDA: void __usercall SetGrooveInterrupt(int pGroove_index@<EAX>, br_matrix34 *pMatrix@<EDX>, int pPath_interrupt@<EBX>, int pObject_interrupt@<ECX>, float pPath_resumption, float pObject_resumption)
+// FUNCTION: CARM95 0x00443208
 void SetGrooveInterrupt(int pGroove_index, br_matrix34* pMatrix, int pPath_interrupt, int pObject_interrupt, float pPath_resumption, float pObject_resumption) {
     tGroovidelic_spec* the_groove;
-    LOG_TRACE("(%d, %p, %d, %d, %f, %f)", pGroove_index, pMatrix, pPath_interrupt, pObject_interrupt, pPath_resumption, pObject_resumption);
 
     the_groove = &gGroovidelics_array[pGroove_index];
     the_groove->path_interrupt_status = pPath_interrupt;
@@ -4307,46 +4017,59 @@ void SetGrooveInterrupt(int pGroove_index, br_matrix34* pMatrix, int pPath_inter
 }
 
 // IDA: void __cdecl ResetGrooveFlags()
+// FUNCTION: CARM95 0x0044325f
 void ResetGrooveFlags(void) {
     int i;
     tGroovidelic_spec* the_groove;
-    LOG_TRACE("()");
 
-    the_groove = gGroovidelics_array;
-    for (i = 0; i < gGroovidelics_array_size; i++) {
+    for (i = 0, the_groove = gGroovidelics_array; i < gGroovidelics_array_size; i++, the_groove++) {
         the_groove->done_this_frame = 0;
-        the_groove++;
     }
 }
 
 // IDA: tSpecial_volume* __cdecl GetDefaultSpecialVolumeForWater()
+// FUNCTION: CARM95 0x004432a9
 tSpecial_volume* GetDefaultSpecialVolumeForWater(void) {
-    LOG_TRACE("()");
 
     return gDefault_water_spec_vol;
 }
 
 // IDA: tSpecial_volume* __usercall FindSpecialVolume@<EAX>(br_vector3 *pP@<EAX>, tSpecial_volume *pLast_vol@<EDX>)
+// FUNCTION: CARM95 0x004432be
 tSpecial_volume* FindSpecialVolume(br_vector3* pP, tSpecial_volume* pLast_vol) {
     int i;
     tSpecial_volume* v;
     br_vector3 p;
-    LOG_TRACE("(%p, %p)", pP, pLast_vol);
 
     for (i = 0, v = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, v++) {
-        if (!v->no_mat && v->bounds.min.v[0] < pP->v[0] && pP->v[0] < v->bounds.max.v[0] && v->bounds.min.v[1] < pP->v[1] && pP->v[1] < v->bounds.max.v[1] && v->bounds.min.v[2] < pP->v[2] && pP->v[2] < v->bounds.max.v[2]) {
+        if (v->no_mat) {
+            continue;
+        }
+        if (v->bounds.min.v[0] < pP->v[0]
+            && v->bounds.max.v[0] > pP->v[0]
+            && v->bounds.min.v[2] < pP->v[2]
+            && v->bounds.max.v[2] > pP->v[2]
+            && v->bounds.min.v[1] < pP->v[1]
+            && v->bounds.max.v[1] > pP->v[1]) {
             BrMatrix34ApplyP(&p, pP, &v->inv_mat);
-            if (-1.f < p.v[0] && p.v[0] < 1.f && -1.f < p.v[1] && p.v[1] < 1.f && -1.f < p.v[2] && p.v[2] < 1.f) {
-                return v;
+            if (p.v[0] < -1.f || p.v[0] > 1.f) {
+                continue;
             }
+            if (p.v[1] < -1.f || p.v[1] > 1.f) {
+                continue;
+            }
+            if (p.v[2] < -1.f || p.v[2] > 1.f) {
+                continue;
+            }
+            return v;
         }
     }
     return NULL;
 }
 
 // IDA: void __cdecl SaveAdditionalActors()
+// FUNCTION: CARM95 0x00443448
 void SaveAdditionalActors(void) {
-    LOG_TRACE("()");
 
     if (gAdditional_actors != NULL) {
         SaveAdditionalStuff();
@@ -4354,137 +4077,136 @@ void SaveAdditionalActors(void) {
 }
 
 // IDA: br_scalar __usercall DistanceFromFace@<ST0>(br_vector3 *pPos@<EAX>, tFace_ref *pFace@<EDX>)
+// FUNCTION: CARM95 0x00443465
 br_scalar DistanceFromFace(br_vector3* pPos, tFace_ref* pFace) {
     br_vector3 normal;
-    LOG_TRACE("(%p, %p)", pPos, pFace);
 
     return BrVector3Dot(&pFace->normal, pPos) - pFace->d;
 }
 
 // IDA: br_uint_32 __cdecl CalcHighestID(br_actor *pActor, int *pHighest)
+// FUNCTION: CARM95 0x00443e52
 br_uint_32 CalcHighestID(br_actor* pActor, int* pHighest) {
     char s[256];
     int number;
-    LOG_TRACE("(%p, %p)", pActor, pHighest);
 
-    if (pActor->identifier == NULL || pActor->identifier[0] == '@') {
-        return 0;
-    }
-    strcpy(s, &pActor->identifier[4]);
-    s[4] = '\0';
-    sscanf(s, "%d", &number);
-    if (*pHighest < number) {
-        *pHighest = number;
+    if (pActor->identifier != NULL && pActor->identifier[0] == '@') {
+        strcpy(s, &pActor->identifier[4]);
+        s[4] = '\0';
+        sscanf(s, "%d", &number);
+        if (*pHighest < number) {
+            *pHighest = number;
+        }
     }
     return 0;
 }
 
 // IDA: br_uint_32 __cdecl SetID(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x004435e0
 br_uint_32 SetID(br_actor* pActor, void* pArg) {
     char s[256];
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
-    if (pActor->identifier == NULL) {
-        return 0;
+    if (pActor->identifier != NULL) {
+        strcpy(s, pActor->identifier);
+        strtok(s, ".");
+        strcat(s, "0000");
+        sprintf(&s[4], "%04d", (int)(intptr_t)pArg);
+        strcat(s, ".ACT");
+        BrResFree(pActor->identifier);
+        pActor->identifier = BrResStrDup(pActor, s);
     }
-    strcpy(s, pActor->identifier);
-    strtok(s, ".");
-    strcat(s, "0000");
-    sprintf(&s[4], "%04d", (int)(intptr_t)pArg);
-    strcat(s, ".ACT");
-    BrResFree(pActor->identifier);
-    pActor->identifier = BrResStrDup(pActor, s);
     return 0;
 }
 
 // IDA: void __usercall UniquificateActorsName(br_actor *pUniverse_actor@<EAX>, br_actor *pActor@<EDX>)
+// FUNCTION: CARM95 0x004434a5
 void UniquificateActorsName(br_actor* pUniverse_actor, br_actor* pActor) {
     int highest;
-    LOG_TRACE("(%p, %p)", pUniverse_actor, pActor);
 
-    if (pActor->identifier == NULL || pActor->identifier[0] == '@') {
-        return;
+    if (pActor->identifier != NULL && pActor->identifier[0] != '@') {
+        highest = 0;
+        DRActorEnumRecurse(pUniverse_actor, (br_actor_enum_cbfn*)CalcHighestNonAmID, &highest);
+        DRActorEnumRecurse(pActor, (br_actor_enum_cbfn*)SetID, (void*)(uintptr_t)(highest + 1));
     }
-    highest = 0;
-    DRActorEnumRecurse(pUniverse_actor, (br_actor_enum_cbfn*)CalcHighestNonAmID, &highest);
-    DRActorEnumRecurse(pActor, (br_actor_enum_cbfn*)SetID, (void*)(uintptr_t)(highest + 1));
 }
 
 // IDA: void __usercall AccessoryHeadup(br_actor *pActor@<EAX>, char *pPrefix@<EDX>)
+// FUNCTION: CARM95 0x00443d5b
 void AccessoryHeadup(br_actor* pActor, char* pPrefix) {
     char s[256];
     int i;
     br_actor* original_actor;
-    LOG_TRACE("(%p, \"%s\")", pActor, pPrefix);
 
     strcpy(s, pPrefix);
     if (pActor->identifier != NULL) {
         strcat(s, pActor->identifier);
     }
-    NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, s);
+    NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, s);
 }
 
 // IDA: br_uint_32 __cdecl CalcHighestNonAmID(br_actor *pActor, int *pHighest)
+// FUNCTION: CARM95 0x00443504
 br_uint_32 CalcHighestNonAmID(br_actor* pActor, int* pHighest) {
     char s[256];
     int number;
-    LOG_TRACE("(%p, %p)", pActor, pHighest);
 
-    if (pActor->identifier == NULL || pActor->identifier[0] == '&') {
-        return 0;
+    if (pActor->identifier != NULL && pActor->identifier[0] == '&') {
+
+        if (strlen(pActor->identifier) != 12) {
+            number = 0;
+        } else {
+            strcpy(s, &pActor->identifier[4]);
+            strtok(s, ".");
+            sscanf(s, "%d", &number);
+        }
+        if (*pHighest < number) {
+            *pHighest = number;
+        }
     }
-    if (strlen(pActor->identifier) == 12) {
-        strcpy(s, &pActor->identifier[4]);
-        strtok(s, ".");
-        sscanf(s, "%d", &number);
-    } else {
-        number = 0;
-    }
-    if (*pHighest < number) {
-        *pHighest = number;
-    }
+
     return 0;
 }
 
 // IDA: br_uint_32 __cdecl SetIDAndDupModel(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x00443ef5
 br_uint_32 SetIDAndDupModel(br_actor* pActor, void* pArg) {
     char s[256];
     char s2[256];
     br_model* new_model;
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
-    if (pActor->identifier == NULL || pActor->identifier[0] == '@') {
-        return 0;
-    }
-    *(int*)(uintptr_t)pArg = *(int*)(uintptr_t)pArg + 1;
-    strcpy(s, pActor->identifier);
-    s[0] = '@';
-    strtok(s, ".");
-    strcat(s, "0000");
-    sprintf(&s[4], "%04d", *(int*)(uintptr_t)pArg);
-    strcpy(s2, s);
-    strcat(s, ".ACT");
-    BrResFree(pActor->identifier);
-    pActor->identifier = BrResStrDup(pActor, s);
-    if (pActor->model != NULL) {
-        strcat(s2, ".DAT");
-        new_model = BrModelAllocate(s2, pActor->model->nvertices, pActor->model->nfaces);
-        memcpy(new_model->vertices, pActor->model->vertices, pActor->model->nvertices * sizeof(br_vertex));
-        memcpy(new_model->faces, pActor->model->faces, pActor->model->nfaces * sizeof(br_face));
-        new_model->flags |= BR_MODF_UPDATEABLE;
-        BrModelAdd(new_model);
-        BrModelUpdate(new_model, BR_MODU_ALL);
-        pActor->model = new_model;
-        gAdditional_models[gNumber_of_additional_models] = new_model;
-        gNumber_of_additional_models++;
+    if (pActor->identifier) {
+        if (pActor->identifier[0] != '@') {
+            *(int*)(uintptr_t)pArg = *(int*)(uintptr_t)pArg + 1;
+            strcpy(s, pActor->identifier);
+            s[0] = '@';
+            strtok(s, ".");
+            strcat(s, "0000");
+            sprintf(&s[4], "%04d", *(int*)(uintptr_t)pArg);
+            strcpy(s2, s);
+            strcat(s, ".ACT");
+            BrResFree(pActor->identifier);
+            pActor->identifier = BrResStrDup(pActor, s);
+            if (pActor->model != NULL) {
+                strcat(s2, ".DAT");
+                new_model = BrModelAllocate(s2, pActor->model->nvertices, pActor->model->nfaces);
+                memcpy(new_model->vertices, pActor->model->vertices, pActor->model->nvertices * sizeof(br_vertex));
+                memcpy(new_model->faces, pActor->model->faces, pActor->model->nfaces * sizeof(br_face));
+                new_model->flags |= BR_MODF_UPDATEABLE;
+                BrModelAdd(new_model);
+                BrModelUpdate(new_model, BR_MODU_ALL);
+                pActor->model = new_model;
+                gAdditional_models[gNumber_of_additional_models] = new_model;
+                gNumber_of_additional_models++;
+            }
+        }
     }
     return 0;
 }
 
 // IDA: void __usercall DuplicateIfNotAmpersand(br_actor *pActor@<EAX>)
+// FUNCTION: CARM95 0x00443df2
 void DuplicateIfNotAmpersand(br_actor* pActor) {
     int highest;
-    LOG_TRACE("(%p)", pActor);
 
     if (pActor->identifier != NULL && pActor->identifier[0] != '&') {
         highest = 0;
@@ -4494,6 +4216,7 @@ void DuplicateIfNotAmpersand(br_actor* pActor) {
 }
 
 // IDA: void __usercall DropActor(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x004436c2
 void DropActor(int pIndex) {
     FILE* f;
     tPath_name the_path;
@@ -4512,7 +4235,6 @@ void DropActor(int pIndex) {
     br_transform new_transform;
     br_actor* a;
     br_actor* last_non_ampersand;
-    LOG_TRACE("(%d)", pIndex);
 
     if (PDKeyDown(KEY_CTRL_ANY)) {
         pIndex += 20;
@@ -4523,10 +4245,10 @@ void DropActor(int pIndex) {
     PathCat(the_path, gApplication_path, "ACCESSRY.TXT");
     f = DRfopen(the_path, "rt");
     for (i = 0; i <= pIndex; i++) {
-        if (!feof(f)) {
-            GetAString(f, s);
-        } else {
+        if (feof(f)) {
             s[0] = '\0';
+        } else {
+            GetAString(f, s);
         }
     }
     if (s[0] != '\0') {
@@ -4546,15 +4268,16 @@ void DropActor(int pIndex) {
             face_bastard = -1;
             for (i = 0; i < face_count; i++) {
                 distance_bastard = DistanceFromFace(gOur_pos, &the_list[i]);
-                if (distance_bastard < nearest_bastard) {
+                if (fabs(distance_bastard) < fabs(nearest_bastard)) {
                     nearest_bastard = distance_bastard;
                     face_bastard = i;
                 }
             }
 
             if (face_bastard >= 0) {
-                BrVector3Scale(&gLast_actor->t.t.translate.t, &the_list[face_bastard].normal, -nearest_bastard);
-                BrVector3Accumulate(&gLast_actor->t.t.translate.t, gOur_pos);
+                gLast_actor->t.t.mat.m[3][0] = the_list[face_bastard].normal.v[0] * (-nearest_bastard) + gOur_pos->v[0];
+                gLast_actor->t.t.mat.m[3][1] = the_list[face_bastard].normal.v[1] * (-nearest_bastard) + gOur_pos->v[1];
+                gLast_actor->t.t.mat.m[3][2] = the_list[face_bastard].normal.v[2] * (-nearest_bastard) + gOur_pos->v[2];
                 if (!PDKeyDown(KEY_SHIFT_ANY)) {
                     if (the_list[face_bastard].normal.v[1] > the_list[face_bastard].normal.v[0] && the_list[face_bastard].normal.v[2] > the_list[face_bastard].normal.v[0]) {
                         BrVector3Set(&side_vector, -1.f, 0.f, 0.f);
@@ -4564,27 +4287,29 @@ void DropActor(int pIndex) {
                         BrVector3Set(&side_vector, 0.f, 0.f, -1.f);
                     }
                     new_transform.type = BR_TRANSFORM_LOOK_UP;
-                    BrVector3Cross(&new_transform.t.look_up.look, &the_list[face_bastard].normal, &side_vector);
-                    BrVector3Copy(&new_transform.t.look_up.up, &the_list[face_bastard].normal);
-                    BrVector3Copy(&new_transform.t.look_up.t, &gLast_actor->t.t.translate.t);
+                    BrVector3Cross(&new_transform.t.look_up.look, &side_vector, &the_list[face_bastard].normal);
+                    new_transform.t.look_up.up = the_list[face_bastard].normal;
+                    new_transform.t.look_up.t = gLast_actor->t.t.translate.t;
                     BrTransformToTransform(&gLast_actor->t, &new_transform);
                 }
 
                 gKnown_actor = gLast_actor;
-                BrVector3Copy(&gActor_centre, &gLast_actor->t.t.translate.t);
+                gActor_centre = gLast_actor->t.t.translate.t;
                 DuplicateIfNotAmpersand(gLast_actor);
                 UniquificateActorsName(gUniverse_actor, gLast_actor);
                 gLast_actor->model->flags |= BR_MODF_UPDATEABLE;
-                if (gLast_actor->identifier == NULL || gLast_actor->identifier[0] == '&') {
+                if (gLast_actor->identifier != NULL && gLast_actor->identifier[0] != '&') {
+                    BrActorAdd(gAdditional_actors, gLast_actor);
+                } else {
+                    a = gAdditional_actors->children;
                     last_non_ampersand = gAdditional_actors;
-                    for (a = gAdditional_actors->children; a != NULL; a = a->next) {
-                        if (a->identifier != NULL && a->identifier[0] != '&') {
+                    while (a != NULL) {
+                        if (a->identifier && a->identifier[0] != '&') {
                             last_non_ampersand = a;
                         }
+                        a = a->next;
                     }
                     BrActorAdd(last_non_ampersand, gLast_actor);
-                } else {
-                    BrActorAdd(gAdditional_actors, gLast_actor);
                 }
                 SaveAdditionalStuff();
                 AccessoryHeadup(gLast_actor, "Shat out ");
@@ -4595,597 +4320,600 @@ void DropActor(int pIndex) {
 }
 
 // IDA: void __cdecl DropActor0()
+// FUNCTION: CARM95 0x00444145
 void DropActor0(void) {
-    LOG_TRACE("()");
 
     DropActor(0);
 }
 
 // IDA: void __cdecl DropActor1()
+// FUNCTION: CARM95 0x0044415a
 void DropActor1(void) {
-    LOG_TRACE("()");
 
     DropActor(1);
 }
 
 // IDA: void __cdecl DropActor2()
+// FUNCTION: CARM95 0x0044416f
 void DropActor2(void) {
-    LOG_TRACE("()");
 
     DropActor(2);
 }
 
 // IDA: void __cdecl DropActor3()
+// FUNCTION: CARM95 0x00444184
 void DropActor3(void) {
-    LOG_TRACE("()");
 
     DropActor(3);
 }
 
 // IDA: void __cdecl DropActor4()
+// FUNCTION: CARM95 0x00444199
 void DropActor4(void) {
-    LOG_TRACE("()");
 
     DropActor(4);
 }
 
 // IDA: void __cdecl DropActor5()
+// FUNCTION: CARM95 0x004441ae
 void DropActor5(void) {
-    LOG_TRACE("()");
 
     DropActor(5);
 }
 
 // IDA: void __cdecl DropActor6()
+// FUNCTION: CARM95 0x004441c3
 void DropActor6(void) {
-    LOG_TRACE("()");
 
     DropActor(6);
 }
 
 // IDA: void __cdecl DropActor7()
+// FUNCTION: CARM95 0x004441d8
 void DropActor7(void) {
-    LOG_TRACE("()");
 
     DropActor(7);
 }
 
 // IDA: void __cdecl DropActor8()
+// FUNCTION: CARM95 0x004441ed
 void DropActor8(void) {
-    LOG_TRACE("()");
 
     DropActor(8);
 }
 
 // IDA: void __cdecl DropActor9()
+// FUNCTION: CARM95 0x00444202
 void DropActor9(void) {
-    LOG_TRACE("()");
 
     DropActor(9);
 }
 
 // IDA: br_uint_32 __cdecl IdentifyAccCB(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x00444275
 br_uint_32 IdentifyAccCB(br_actor* pActor, void* pArg) {
     br_scalar distance;
     char s[256];
     br_vector3 v;
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
-    if (pActor == NULL || pActor->model == NULL) {
-        return 0;
-    }
-    BrVector3Add(&v, &pActor->model->bounds.max, &pActor->model->bounds.min);
-    BrVector3InvScale(&v, &v, 2.f);
-    BrVector3Accumulate(&v, &pActor->t.t.translate.t);
-    BrVector3Sub(&v, &v, gOur_pos);
-    distance = BrVector3LengthSquared(&v);
-    if (distance < gNearest_distance) {
-        gNearest_actor = pActor;
-        gNearest_distance = distance;
+    if (pActor != NULL && pActor->model != NULL) {
+        v.v[0] = (pActor->model->bounds.max.v[0] + pActor->model->bounds.min.v[0]) / 2.0f;
+        v.v[1] = (pActor->model->bounds.max.v[1] + pActor->model->bounds.min.v[1]) / 2.0f;
+        v.v[2] = (pActor->model->bounds.max.v[2] + pActor->model->bounds.min.v[2]) / 2.0f;
+        BrVector3Accumulate(&v, &pActor->t.t.translate.t);
+        BrVector3Sub(&v, &v, gOur_pos);
+        distance = BrVector3LengthSquared(&v);
+        if (distance < gNearest_distance) {
+            gNearest_distance = distance;
+            gNearest_actor = pActor;
+        }
     }
     return 0;
 }
 
 // IDA: void __cdecl IdentifyAcc()
+// FUNCTION: CARM95 0x00444217
 void IdentifyAcc(void) {
-    LOG_TRACE("()");
-
     gNearest_distance = FLT_MAX;
     gNearest_actor = NULL;
     DRActorEnumRecurse(gAdditional_actors, (br_actor_enum_cbfn*)IdentifyAccCB, NULL);
     if (gNearest_actor != NULL) {
         gLast_actor = gNearest_actor;
-        AccessoryHeadup(gNearest_actor, "Locked onto ");
+        AccessoryHeadup(gLast_actor, "Locked onto ");
     }
 }
 
 // IDA: br_uint_32 __cdecl DelGrooveRef(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x0044443b
 br_uint_32 DelGrooveRef(br_actor* pActor, void* pArg) {
     tGroovidelic_spec* the_groove;
     int i;
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
-    for (i = 0; i < gGroovidelics_array_size; i++) {
-        the_groove = &gGroovidelics_array[i];
+    for (i = 0, the_groove = gGroovidelics_array; i < gGroovidelics_array_size; i++, the_groove++) {
         if (the_groove->actor == pActor) {
-            the_groove->owner = -999;
+            the_groove->owner = NO_OWNER;
         }
     }
     return 0;
 }
 
 // IDA: br_uint_32 __cdecl DelReferencedModels(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x0044449a
 br_uint_32 DelReferencedModels(br_actor* pActor, void* pArg) {
     tGroovidelic_spec* the_groove;
     int i;
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
     for (i = 0; i < gNumber_of_additional_models; i++) {
         if (pActor->model == gAdditional_models[i]) {
             BrModelRemove(pActor->model);
             BrModelFree(pActor->model);
-            memmove(&gAdditional_models[i], &gAdditional_models[i + 1], (gNumber_of_additional_models - i - 1) * sizeof(br_model*));
+#ifdef DETHRACE_FIX_BUGS
+            memmove(gAdditional_models + i, gAdditional_models + i + 1, (gNumber_of_additional_models - i - 1) * sizeof(br_model*));
+#else
+            memcpy(gAdditional_models + i, gAdditional_models + i + 1, (gNumber_of_additional_models - i - 1) * 4);
+#endif
             gNumber_of_additional_models--;
+            break;
         }
     }
     return 0;
 }
 
 // IDA: void __cdecl DeleteAcc()
+// FUNCTION: CARM95 0x004443bb
 void DeleteAcc(void) {
-    LOG_TRACE("()");
-
-    if (gLast_actor == NULL) {
-        return;
+    if (gLast_actor != NULL) {
+        AccessoryHeadup(gLast_actor, "Murdered ");
+        DRActorEnumRecurse(gLast_actor, (br_actor_enum_cbfn*)DelReferencedModels, NULL);
+        DRActorEnumRecurse(gLast_actor, (br_actor_enum_cbfn*)DelGrooveRef, NULL);
+        BrActorRemove(gLast_actor);
+        BrActorFree(gLast_actor);
+        gLast_actor = NULL;
+        SaveAdditionalStuff();
     }
-    AccessoryHeadup(gLast_actor, "Murdered ");
-    DRActorEnumRecurse(gLast_actor, (br_actor_enum_cbfn*)DelReferencedModels, NULL);
-    DRActorEnumRecurse(gLast_actor, (br_actor_enum_cbfn*)DelGrooveRef, NULL);
-    BrActorRemove(gLast_actor);
-    BrActorFree(gLast_actor);
-    gLast_actor = NULL;
-    SaveAdditionalStuff();
 }
 
 // IDA: br_uint_32 __cdecl OffsetModel(br_actor *pActor, void *pArg)
+// FUNCTION: CARM95 0x00444737
 br_uint_32 OffsetModel(br_actor* pActor, void* pArg) {
     int i;
-    LOG_TRACE("(%p, %p)", pActor, pArg);
 
-    if (pActor->model == NULL) {
-        return 0;
-    }
-    for (i = 0; i < pActor->model->nvertices; i++) {
-        BrVector3Accumulate(&pActor->model->vertices[i].p, (br_vector3*)pArg);
+    if (pActor->model != NULL) {
+
+        for (i = 0; i < pActor->model->nvertices; i++) {
+            BrVector3Accumulate(&pActor->model->vertices[i].p, (br_vector3*)pArg);
+        }
     }
     return 0;
 }
 
 // IDA: void __usercall OffsetActor(br_actor *pActor@<EAX>, br_vector3 *pOffset@<EDX>)
+// FUNCTION: CARM95 0x00444717
 void OffsetActor(br_actor* pActor, br_vector3* pOffset) {
-    LOG_TRACE("(%p, %p)", pActor, pOffset);
 
     DRActorEnumRecurse(pActor, (br_actor_enum_cbfn*)OffsetModel, pOffset);
 }
 
 // IDA: void __usercall CentreActor(br_actor *pActor@<EAX>, br_vector3 *pOffset@<EDX>)
+// FUNCTION: CARM95 0x00444803
 void CentreActor(br_actor* pActor, br_vector3* pOffset) {
-    LOG_TRACE("(%p, %p)", pActor, pOffset);
 
-    if (pActor->model == NULL) {
-        BrVector3Set(pOffset, 0.f, 0.f, 0.f);
-    } else if (gKnown_actor == gLast_actor) {
-        BrVector3Scale(pOffset, &gActor_centre, -1.f);
+    if (pActor->model != NULL) {
+        if (gKnown_actor == gLast_actor) {
+            BrVector3Scale(pOffset, &gActor_centre, -1.f);
+        } else {
+            pOffset->v[0] = (pActor->model->bounds.max.v[0] + pActor->model->bounds.min.v[0]) / -2.0f;
+            pOffset->v[1] = (pActor->model->bounds.max.v[1] + pActor->model->bounds.min.v[1]) / -2.0f;
+            pOffset->v[2] = (pActor->model->bounds.max.v[2] + pActor->model->bounds.min.v[2]) / -2.0f;
+        }
     } else {
-        BrVector3Add(pOffset, &pActor->model->bounds.max, &pActor->model->bounds.min);
-        BrVector3Scale(pOffset, pOffset, -2.f);
+        BrVector3Set(pOffset, 0.f, 0.f, 0.f);
     }
+
     DRActorEnumRecurse(pActor, (br_actor_enum_cbfn*)OffsetModel, pOffset);
-    BrVector3Scale(pOffset, pOffset, -1.f);
+    BrVector3Negate(pOffset, pOffset);
 }
 
 // IDA: void __cdecl SnapAccToVertical()
+// FUNCTION: CARM95 0x00444538
 void SnapAccToVertical(void) {
-    LOG_TRACE("()");
-
-    if (gLast_actor == NULL) {
-        return;
+    if (gLast_actor != NULL) {
+        BrVector3Set((br_vector3*)gLast_actor->t.t.mat.m[0], 1.f, 0.f, 0.f);
+        BrVector3Set((br_vector3*)gLast_actor->t.t.mat.m[1], 0.f, 1.f, 0.f);
+        BrVector3Set((br_vector3*)gLast_actor->t.t.mat.m[2], 0.f, 0.f, 1.f);
+        SaveAdditionalStuff();
     }
-    BrVector3Set((br_vector3*)gLast_actor->t.t.mat.m[0], 1.f, 0.f, 0.f);
-    BrVector3Set((br_vector3*)gLast_actor->t.t.mat.m[1], 0.f, 1.f, 0.f);
-    BrVector3Set((br_vector3*)gLast_actor->t.t.mat.m[2], 0.f, 0.f, 1.f);
-    SaveAdditionalStuff();
 }
 
 // IDA: void __usercall RotateAccessory(br_angle pAngle@<EAX>)
+// FUNCTION: CARM95 0x004445d9
 void RotateAccessory(br_angle pAngle) {
     br_vector3 mr_offset;
-    LOG_TRACE("(%d)", pAngle);
 
-    if (gLast_actor == NULL) {
-        return;
+    if (gLast_actor != NULL) {
+        if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
+            CentreActor(gLast_actor, &mr_offset);
+        }
+        switch (gCurrent_rotate_mode) {
+        case eRotate_mode_x:
+            BrMatrix34PreRotateX(&gLast_actor->t.t.mat, pAngle);
+            break;
+        case eRotate_mode_y:
+            BrMatrix34PreRotateY(&gLast_actor->t.t.mat, pAngle);
+            break;
+        case eRotate_mode_z:
+            BrMatrix34PreRotateZ(&gLast_actor->t.t.mat, pAngle);
+            break;
+        }
+        if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
+            DRActorEnumRecurseWithTrans(gLast_actor, NULL, ApplyTransToModels, NULL);
+            OffsetActor(gLast_actor, &mr_offset);
+        }
+        SaveAdditionalStuff();
     }
-    if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
-        CentreActor(gLast_actor, &mr_offset);
-    }
-    switch (gCurrent_rotate_mode) {
-    case eRotate_mode_x:
-        BrMatrix34PreRotateX(&gLast_actor->t.t.mat, pAngle);
-        break;
-    case eRotate_mode_y:
-        BrMatrix34PreRotateY(&gLast_actor->t.t.mat, pAngle);
-        break;
-    case eRotate_mode_z:
-        BrMatrix34PreRotateZ(&gLast_actor->t.t.mat, pAngle);
-        break;
-    }
-    if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
-        DRActorEnumRecurseWithTrans(gLast_actor, NULL, ApplyTransToModels, NULL);
-        OffsetActor(gLast_actor, &mr_offset);
-    }
-    SaveAdditionalStuff();
 }
 
 // IDA: void __cdecl ScaleAccessory(float pScaling_factor)
+// FUNCTION: CARM95 0x00444b74
 void ScaleAccessory(float pScaling_factor) {
     br_vector3 mr_offset;
-    LOG_TRACE("(%f)", pScaling_factor);
 
-    if (gLast_actor == NULL) {
-        return;
+    if (gLast_actor != NULL) {
+        if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
+            CentreActor(gLast_actor, &mr_offset);
+        }
+        switch (gCurrent_scale_mode) {
+        case eScale_mode_all:
+            BrMatrix34PreScale(&gLast_actor->t.t.mat, pScaling_factor, pScaling_factor, pScaling_factor);
+            break;
+        case eScale_mode_x:
+            BrMatrix34PreScale(&gLast_actor->t.t.mat, pScaling_factor, 1.f, 1.f);
+            break;
+        case eScale_mode_y:
+            BrMatrix34PreScale(&gLast_actor->t.t.mat, 1.f, pScaling_factor, 1.f);
+            break;
+        case eScale_mode_z:
+            BrMatrix34PreScale(&gLast_actor->t.t.mat, 1.f, 1.f, pScaling_factor);
+            break;
+        }
+        if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
+            DRActorEnumRecurseWithTrans(gLast_actor, NULL, ApplyTransToModels, NULL);
+            OffsetActor(gLast_actor, &mr_offset);
+        }
+        SaveAdditionalStuff();
     }
-    if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
-        CentreActor(gLast_actor, &mr_offset);
-    }
-    switch (gCurrent_scale_mode) {
-    case eScale_mode_all:
-        BrMatrix34PreScale(&gLast_actor->t.t.mat, pScaling_factor, pScaling_factor, pScaling_factor);
-        break;
-    case eScale_mode_x:
-        BrMatrix34PreScale(&gLast_actor->t.t.mat, pScaling_factor, 1.f, 1.f);
-        break;
-    case eScale_mode_y:
-        BrMatrix34PreScale(&gLast_actor->t.t.mat, 1.f, pScaling_factor, 1.f);
-        break;
-    case eScale_mode_z:
-        BrMatrix34PreScale(&gLast_actor->t.t.mat, 1.f, 1.f, pScaling_factor);
-        break;
-    }
-    if (!gSpec_vol_mode && gLast_actor->identifier != NULL && gLast_actor->identifier[0] == '@') {
-        DRActorEnumRecurseWithTrans(gLast_actor, NULL, ApplyTransToModels, NULL);
-        OffsetActor(gLast_actor, &mr_offset);
-    }
-    SaveAdditionalStuff();
 }
 
 // IDA: void __cdecl MoveAccessory(br_scalar pX_shift, br_scalar pY_shift, br_scalar pZ_shift)
+// FUNCTION: CARM95 0x00444d87
 void MoveAccessory(br_scalar pX_shift, br_scalar pY_shift, br_scalar pZ_shift) {
     br_vector3 v;
-    LOG_TRACE("(%f, %f, %f)", pX_shift, pY_shift, pZ_shift);
 
-    if (gLast_actor == NULL) {
-        return;
+    if (gLast_actor != NULL) {
+        BrVector3Set(&v, pX_shift, pY_shift, pZ_shift);
+        BrVector3Accumulate(&gLast_actor->t.t.translate.t, &v);
+        SaveAdditionalStuff();
     }
-    BrVector3SetFloat(&v, pX_shift, pY_shift, pZ_shift);
-    BrVector3Accumulate(&gLast_actor->t.t.translate.t, &v);
-    SaveAdditionalStuff();
 }
 
 // IDA: void __cdecl RotateAccL()
+// FUNCTION: CARM95 0x004445c1
 void RotateAccL(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(90));
+    RotateAccessory(BR_ANGLE_DEG(90));
 }
 
 // IDA: void __cdecl RotateAccL2()
+// FUNCTION: CARM95 0x0044491e
 void RotateAccL2(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(15));
+    RotateAccessory(BR_ANGLE_DEG(15));
 }
 
 // IDA: void __cdecl RotateAccL3()
+// FUNCTION: CARM95 0x00444936
 void RotateAccL3(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(5));
+    RotateAccessory(BR_ANGLE_DEG(5));
 }
 
 // IDA: void __cdecl RotateAccL4()
+// FUNCTION: CARM95 0x0044494e
 void RotateAccL4(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(1));
+    RotateAccessory(BR_ANGLE_DEG(1));
 }
 
 // IDA: void __cdecl RotateAccR()
+// FUNCTION: CARM95 0x00444966
 void RotateAccR(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(270));
+    RotateAccessory(BR_ANGLE_DEG(-90));
 }
 
 // IDA: void __cdecl RotateAccR2()
+// FUNCTION: CARM95 0x0044497e
 void RotateAccR2(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(345));
+    RotateAccessory(BR_ANGLE_DEG(-15));
 }
 
 // IDA: void __cdecl RotateAccR3()
+// FUNCTION: CARM95 0x00444996
 void RotateAccR3(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(355));
+    RotateAccessory(BR_ANGLE_DEG(-5));
 }
 
 // IDA: void __cdecl RotateAccR4()
+// FUNCTION: CARM95 0x004449ae
 void RotateAccR4(void) {
-    LOG_TRACE("()");
 
-    RotateAccessory(BrDegreeToAngle(359));
+    RotateAccessory(BR_ANGLE_DEG(-1));
 }
 
 // IDA: void __cdecl CycleAccRotate()
+// FUNCTION: CARM95 0x004449c6
 void CycleAccRotate(void) {
-    LOG_TRACE("()");
-
-    gCurrent_rotate_mode = (gCurrent_rotate_mode == eRotate_mode_z) ? eRotate_mode_x : (gCurrent_rotate_mode + 1);
+    if (gCurrent_rotate_mode++ == eRotate_mode_z) {
+        gCurrent_rotate_mode = eRotate_mode_x;
+    }
     switch (gCurrent_rotate_mode) {
     case eRotate_mode_x:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Rotate mode: X");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Rotate mode: X");
         break;
     case eRotate_mode_y:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Rotate mode: Y");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Rotate mode: Y");
         break;
     case eRotate_mode_z:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Rotate mode: Z");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Rotate mode: Z");
         break;
     }
 }
 
 // IDA: void __cdecl CycleAccScale()
+// FUNCTION: CARM95 0x00444a82
 void CycleAccScale(void) {
-    LOG_TRACE("()");
 
-    gCurrent_scale_mode = (gCurrent_scale_mode == eScale_mode_z) ? eScale_mode_all : (gCurrent_scale_mode + 1);
+    if (gCurrent_scale_mode++ == eScale_mode_z) {
+        gCurrent_scale_mode = eScale_mode_all;
+    }
     switch (gCurrent_scale_mode) {
     case eScale_mode_all:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Scale mode: ALL");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Scale mode: ALL");
         break;
     case eScale_mode_x:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Scale mode: X");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Scale mode: X");
         break;
     case eScale_mode_y:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Scale mode: Y");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Scale mode: Y");
         break;
     case eScale_mode_z:
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "Scale mode: Z");
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "Scale mode: Z");
         break;
     }
 }
 
 // IDA: void __cdecl ScaleAccUp2()
+// FUNCTION: CARM95 0x00444b5c
 void ScaleAccUp2(void) {
-    LOG_TRACE("()");
 
     ScaleAccessory(1.2f);
 }
 
 // IDA: void __cdecl ScaleAccUp3()
+// FUNCTION: CARM95 0x00444cf3
 void ScaleAccUp3(void) {
-    LOG_TRACE("()");
 
     ScaleAccessory(1.05f);
 }
 
 // IDA: void __cdecl ScaleAccUp4()
+// FUNCTION: CARM95 0x00444d0b
 void ScaleAccUp4(void) {
-    LOG_TRACE("()");
 
     ScaleAccessory(1.002f);
 }
 
 // IDA: void __cdecl ScaleAccDown2()
+// FUNCTION: CARM95 0x00444d23
 void ScaleAccDown2(void) {
-    LOG_TRACE("()");
 
     ScaleAccessory(1 / 1.2f);
 }
 
 // IDA: void __cdecl ScaleAccDown3()
+// FUNCTION: CARM95 0x00444d3b
 void ScaleAccDown3(void) {
-    LOG_TRACE("()");
 
-    ScaleAccessory(1 / 1.05f);
+    ScaleAccessory(1 / 1.05);
 }
 
 // IDA: void __cdecl ScaleAccDown4()
+// FUNCTION: CARM95 0x00444d53
 void ScaleAccDown4(void) {
-    LOG_TRACE("()");
 
-    ScaleAccessory(1 / 1.002f);
+    ScaleAccessory(1 / 1.002);
 }
 
 // IDA: void __cdecl MoveXAccL()
+// FUNCTION: CARM95 0x00444d6b
 void MoveXAccL(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(1.f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccL2()
+// FUNCTION: CARM95 0x00444df2
 void MoveXAccL2(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(.2f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccL3()
+// FUNCTION: CARM95 0x00444e0e
 void MoveXAccL3(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(.02f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccL4()
+// FUNCTION: CARM95 0x00444e2a
 void MoveXAccL4(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(.002f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccR()
+// FUNCTION: CARM95 0x00444e46
 void MoveXAccR(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(-1.f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccR2()
+// FUNCTION: CARM95 0x00444e62
 void MoveXAccR2(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(-.2f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccR3()
+// FUNCTION: CARM95 0x00444e7e
 void MoveXAccR3(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(-.02f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveXAccR4()
+// FUNCTION: CARM95 0x00444e9a
 void MoveXAccR4(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(-.002f, 0.f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccL()
+// FUNCTION: CARM95 0x00444eb6
 void MoveYAccL(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 1.f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccL2()
+// FUNCTION: CARM95 0x00444ed2
 void MoveYAccL2(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, .2f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccL3()
+// FUNCTION: CARM95 0x00444eee
 void MoveYAccL3(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, .02f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccL4()
+// FUNCTION: CARM95 0x00444f0a
 void MoveYAccL4(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, .002f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccR()
+// FUNCTION: CARM95 0x00444f26
 void MoveYAccR(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, -1.f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccR2()
+// FUNCTION: CARM95 0x00444f42
 void MoveYAccR2(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, -.2f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccR3()
+// FUNCTION: CARM95 0x00444f5e
 void MoveYAccR3(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, -.02f, 0.f);
 }
 
 // IDA: void __cdecl MoveYAccR4()
+// FUNCTION: CARM95 0x00444f7a
 void MoveYAccR4(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, -.002f, 0.f);
 }
 
 // IDA: void __cdecl MoveZAccL()
+// FUNCTION: CARM95 0x00444f96
 void MoveZAccL(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, 1.f);
 }
 
 // IDA: void __cdecl MoveZAccL2()
+// FUNCTION: CARM95 0x00444fb2
 void MoveZAccL2(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, .2f);
 }
 
 // IDA: void __cdecl MoveZAccL3()
+// FUNCTION: CARM95 0x00444fce
 void MoveZAccL3(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, .02f);
 }
 
 // IDA: void __cdecl MoveZAccL4()
+// FUNCTION: CARM95 0x00444fea
 void MoveZAccL4(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, .002f);
 }
 
 // IDA: void __cdecl MoveZAccR()
+// FUNCTION: CARM95 0x00445006
 void MoveZAccR(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, -1.f);
 }
 
 // IDA: void __cdecl MoveZAccR2()
+// FUNCTION: CARM95 0x00445022
 void MoveZAccR2(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, -.2f);
 }
 
 // IDA: void __cdecl MoveZAccR3()
+// FUNCTION: CARM95 0x0044503e
 void MoveZAccR3(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, -.02f);
 }
 
 // IDA: void __cdecl MoveZAccR4()
+// FUNCTION: CARM95 0x0044505a
 void MoveZAccR4(void) {
-    LOG_TRACE("()");
 
     MoveAccessory(0.f, 0.f, -.002f);
 }
 
 // IDA: br_material* __cdecl GetInternalMat()
+// FUNCTION: CARM95 0x00445076
 br_material* GetInternalMat(void) {
-    LOG_TRACE("()");
 
     return BrMaterialFind("SPECVOL.MAT");
 }
 
 // IDA: br_material* __cdecl GetExternalMat()
+// FUNCTION: CARM95 0x00445093
 br_material* GetExternalMat(void) {
-    LOG_TRACE("()");
 
     return BrMaterialFind("SPECVOL2.MAT");
 }
@@ -5198,6 +4926,7 @@ br_material* GetExternalMat(void) {
     } while (0)
 
 // IDA: void __usercall BuildSpecVolModel(tSpecial_volume *pSpec@<EAX>, int pIndex@<EDX>, br_material *pInt_mat@<EBX>, br_material *pExt_mat@<ECX>)
+// FUNCTION: CARM95 0x004452b1
 void BuildSpecVolModel(tSpecial_volume* pSpec, int pIndex, br_material* pInt_mat, br_material* pExt_mat) {
     int i;
     int j;
@@ -5205,7 +4934,6 @@ void BuildSpecVolModel(tSpecial_volume* pSpec, int pIndex, br_material* pInt_mat
     tSpecial_volume* v;
     br_actor* actor;
     br_model* model;
-    LOG_TRACE("(%p, %d, %p, %p)", pSpec, pIndex, pInt_mat, pExt_mat);
 
     actor = BrActorAllocate(BR_ACTOR_MODEL, NULL);
     BrMatrix34Copy(&actor->t.t.mat, &pSpec->mat);
@@ -5251,10 +4979,10 @@ void BuildSpecVolModel(tSpecial_volume* pSpec, int pIndex, br_material* pInt_mat
     DrVertexSet(model->faces[11].vertices, 11, 10, 2);
 
     memcpy(&model->faces[12], model->faces, 12 * sizeof(br_face));
-    for (i = 12; i < 24; i++) {
-        temp = model->faces[i].vertices[0];
-        model->faces[i].vertices[0] = model->faces[i].vertices[1];
-        model->faces[i].vertices[1] = temp;
+    for (j = 12; j < 24; j++) {
+        temp = model->faces[j].vertices[0];
+        model->faces[j].vertices[0] = model->faces[j].vertices[1];
+        model->faces[j].vertices[1] = temp;
     }
     model->faces[5].material = model->faces[4].material = model->faces[1].material = model->faces[0].material = DRMaterialClone(pExt_mat);
     model->faces[11].material = model->faces[10].material = model->faces[9].material = model->faces[8].material = DRMaterialClone(pExt_mat);
@@ -5272,6 +5000,7 @@ void BuildSpecVolModel(tSpecial_volume* pSpec, int pIndex, br_material* pInt_mat
 #undef DrVertexSet
 
 // IDA: void __usercall DropSpecVol(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x004450d0
 void DropSpecVol(int pIndex) {
     FILE* f;
     tPath_name the_path;
@@ -5280,108 +5009,105 @@ void DropSpecVol(int pIndex) {
     tSpecial_volume spec;
     tSpecial_volume* new_specs;
     char s[256];
-    LOG_TRACE("(%d)", pIndex);
 
     PathCat(the_path, gApplication_path, "SPECVOL.TXT");
     f = DRfopen(the_path, "rt");
-    if (f == NULL) {
-        return;
-    }
-    spec_count = GetAnInt(f);
-    // pIndex = 1 means first special volume
-    if (pIndex > spec_count) {
+    if (f != NULL) {
+        spec_count = GetAnInt(f);
+        // pIndex = 1 means first special volume
+        if (pIndex <= spec_count) {
+            for (i = 0; i < pIndex; i++) {
+                ParseSpecialVolume(f, &spec, NULL);
+            }
+            spec.no_mat = 0;
+            BrMatrix34Copy(&spec.mat, &gProgram_state.current_car.car_master_actor->t.t.mat);
+            new_specs = BrMemAllocate((gProgram_state.special_volume_count + 1) * sizeof(tSpecial_volume), kMem_new_special_vol);
+            memcpy(new_specs, gProgram_state.special_volumes, gProgram_state.special_volume_count * sizeof(tSpecial_volume));
+            memcpy(&new_specs[gProgram_state.special_volume_count], &spec, sizeof(tSpecial_volume));
+            gProgram_state.special_volume_count++;
+            BrMemFree(gProgram_state.special_volumes);
+            gProgram_state.special_volumes = new_specs;
+            BuildSpecVolModel(&spec, gProgram_state.special_volume_count - 1, GetInternalMat(), GetExternalMat());
+            gLast_actor = gSpec_vol_actors[gProgram_state.special_volume_count - 1];
+            UpdateSpecVol();
+            sprintf(s, "Shat out special volume #%d (type %d)", gProgram_state.special_volume_count - 1, pIndex);
+            NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, s);
+            SaveSpecialVolumes();
+        }
         fclose(f);
-        return;
     }
-    for (i = 0; i < pIndex; i++) {
-        ParseSpecialVolume(f, &spec, NULL);
-    }
-    spec.no_mat = 0;
-    BrMatrix34Copy(&spec.mat, &gProgram_state.current_car.car_master_actor->t.t.mat);
-    new_specs = BrMemAllocate((gProgram_state.special_volume_count + 1) * sizeof(tSpecial_volume), kMem_new_special_vol);
-    memcpy(new_specs, gProgram_state.special_volumes, gProgram_state.special_volume_count * sizeof(tSpecial_volume));
-    memcpy(&new_specs[gProgram_state.special_volume_count], &spec, sizeof(tSpecial_volume));
-    gProgram_state.special_volume_count++;
-    BrMemFree(gProgram_state.special_volumes);
-    gProgram_state.special_volumes = new_specs;
-    BuildSpecVolModel(&spec, gProgram_state.special_volume_count - 1, GetInternalMat(), GetExternalMat());
-    gLast_actor = gSpec_vol_actors[gProgram_state.special_volume_count - 1];
-    UpdateSpecVol();
-    sprintf(s, "Shat out special volume #%d (type %d)", gProgram_state.special_volume_count - 1, pIndex);
-    NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, s);
-    SaveSpecialVolumes();
-    fclose(f);
 }
 
 // IDA: void __cdecl DropSpecVol0()
+// FUNCTION: CARM95 0x004450b0
 void DropSpecVol0(void) {
-    LOG_TRACE("()");
 }
 
 // IDA: void __cdecl DropSpecVol1()
+// FUNCTION: CARM95 0x004450bb
 void DropSpecVol1(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(1);
 }
 
 // IDA: void __cdecl DropSpecVol2()
+// FUNCTION: CARM95 0x00445b86
 void DropSpecVol2(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(2);
 }
 
 // IDA: void __cdecl DropSpecVol3()
+// FUNCTION: CARM95 0x00445b9b
 void DropSpecVol3(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(3);
 }
 
 // IDA: void __cdecl DropSpecVol4()
+// FUNCTION: CARM95 0x00445bb0
 void DropSpecVol4(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(4);
 }
 
 // IDA: void __cdecl DropSpecVol5()
+// FUNCTION: CARM95 0x00445bc5
 void DropSpecVol5(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(5);
 }
 
 // IDA: void __cdecl DropSpecVol6()
+// FUNCTION: CARM95 0x00445bda
 void DropSpecVol6(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(6);
 }
 
 // IDA: void __cdecl DropSpecVol7()
+// FUNCTION: CARM95 0x00445bef
 void DropSpecVol7(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(7);
 }
 
 // IDA: void __cdecl DropSpecVol8()
+// FUNCTION: CARM95 0x00445c04
 void DropSpecVol8(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(8);
 }
 
 // IDA: void __cdecl DropSpecVol9()
+// FUNCTION: CARM95 0x00445c19
 void DropSpecVol9(void) {
-    LOG_TRACE("()");
 
     DropSpecVol(9);
 }
 
 // IDA: void __cdecl IdentifySpecVol()
+// FUNCTION: CARM95 0x00445c2e
 void IdentifySpecVol(void) {
     int i;
     int min_index;
@@ -5390,34 +5116,35 @@ void IdentifySpecVol(void) {
     br_scalar d;
     br_vector3* p;
     char s[256];
-    LOG_TRACE("()");
 
     min_d = FLT_MAX;
-    min_index = -1;
     p = &gProgram_state.current_car.pos;
-    for (i = 0; i < gProgram_state.special_volume_count; i++) {
-        v = &gProgram_state.special_volumes[i];
+    min_index = -1;
+    for (i = 0, v = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, v++) {
+        if (v->no_mat) {
+            continue;
+        }
         d = Vector3DistanceSquared((br_vector3*)v->mat.m[3], p);
         if (d < min_d) {
-            min_index = i;
             min_d = d;
+            min_index = i;
         }
     }
-    if (min_index < 0) {
-        gLast_actor = NULL;
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "No special volumes to lock onto");
-    } else {
+    if (min_index >= 0) {
         sprintf(s, "Locked onto Special Volume #%d", min_index);
-        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, s);
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, s);
         gLast_actor = gSpec_vol_actors[min_index];
+    } else {
+        gLast_actor = NULL;
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "No special volumes to lock onto");
     }
 }
 
 // IDA: void __usercall DelSpecVolumeGraph(int pIndex@<EAX>)
+// FUNCTION: CARM95 0x00445ed2
 void DelSpecVolumeGraph(int pIndex) {
     br_actor* actor;
     br_model* model;
-    LOG_TRACE("(%d)", pIndex);
 
     actor = gSpec_vol_actors[pIndex];
     model = actor->model;
@@ -5441,204 +5168,203 @@ void DelSpecVolumeGraph(int pIndex) {
 }
 
 // IDA: void __cdecl DeleteSpecVol()
+// FUNCTION: CARM95 0x00445dc5
 void DeleteSpecVol(void) {
     int index;
-    LOG_TRACE("()");
 
     index = FindSpecVolIndex(gLast_actor);
-    if (index < 0) {
-        return;
+    if (index >= 0) {
+        DelSpecVolumeGraph(index);
+        memmove(&gProgram_state.special_volumes[index], &gProgram_state.special_volumes[index + 1], (gProgram_state.special_volume_count - index - 1) * sizeof(tSpecial_volume));
+        memmove(&gSpec_vol_actors[index], &gSpec_vol_actors[index + 1], (gProgram_state.special_volume_count - index - 1) * sizeof(br_actor*));
+        gProgram_state.special_volume_count--;
+        NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -kFont_BLUEHEAD, "There's been a special volumes MURDER!!");
+        gLast_actor = NULL;
+        if (&gProgram_state.special_volumes[index] < gDefault_water_spec_vol) {
+            gDefault_water_spec_vol--;
+        }
+        SaveSpecialVolumes();
     }
-    DelSpecVolumeGraph(index);
-    memmove(&gProgram_state.special_volumes[index], &gProgram_state.special_volumes[index + 1], (gProgram_state.special_volume_count - index - 1) * sizeof(tSpecial_volume));
-    memmove(&gSpec_vol_actors[index], &gSpec_vol_actors[index + 1], (gProgram_state.special_volume_count - index - 1) * sizeof(br_actor*));
-    gProgram_state.special_volume_count--;
-    NewTextHeadupSlot(eHeadupSlot_misc, 0, 2000, -2, "There's been a special volumes MURDER!!");
-    gLast_actor = NULL;
-    if (&gProgram_state.special_volumes[index] < gDefault_water_spec_vol) {
-        gDefault_water_spec_vol--;
-    }
-    SaveSpecialVolumes();
 }
 
 // IDA: void __cdecl RotateSpecVolL()
+// FUNCTION: CARM95 0x00446022
 void RotateSpecVolL(void) {
-    LOG_TRACE("()");
 
     RotateAccL();
 }
 
 // IDA: void __cdecl RotateSpecVolL2()
+// FUNCTION: CARM95 0x00446032
 void RotateSpecVolL2(void) {
-    LOG_TRACE("()");
 
     RotateAccL2();
 }
 
 // IDA: void __cdecl RotateSpecVolL3()
+// FUNCTION: CARM95 0x00446042
 void RotateSpecVolL3(void) {
-    LOG_TRACE("()");
 
     RotateAccL3();
 }
 
 // IDA: void __cdecl RotateSpecVolL4()
+// FUNCTION: CARM95 0x00446052
 void RotateSpecVolL4(void) {
-    LOG_TRACE("()");
 
     RotateAccL4();
 }
 
 // IDA: void __cdecl RotateSpecVolR()
+// FUNCTION: CARM95 0x00446062
 void RotateSpecVolR(void) {
-    LOG_TRACE("()");
 
     RotateAccR();
 }
 
 // IDA: void __cdecl RotateSpecVolR2()
+// FUNCTION: CARM95 0x00446072
 void RotateSpecVolR2(void) {
-    LOG_TRACE("()");
 
     RotateAccR2();
 }
 
 // IDA: void __cdecl RotateSpecVolR3()
+// FUNCTION: CARM95 0x00446082
 void RotateSpecVolR3(void) {
-    LOG_TRACE("()");
 
     RotateAccR3();
 }
 
 // IDA: void __cdecl RotateSpecVolR4()
+// FUNCTION: CARM95 0x00446092
 void RotateSpecVolR4(void) {
-    LOG_TRACE("()");
 
     RotateAccR4();
 }
 
 // IDA: void __cdecl CycleSpecVolRotate()
+// FUNCTION: CARM95 0x004460a2
 void CycleSpecVolRotate(void) {
-    LOG_TRACE("()");
 
     CycleAccRotate();
 }
 
 // IDA: void __cdecl CycleSpecVolScale()
+// FUNCTION: CARM95 0x004460b2
 void CycleSpecVolScale(void) {
-    LOG_TRACE("()");
 
     CycleAccScale();
 }
 
 // IDA: void __cdecl ScaleSpecVolUp2()
+// FUNCTION: CARM95 0x004460c2
 void ScaleSpecVolUp2(void) {
-    LOG_TRACE("()");
 
     ScaleAccUp2();
 }
 
 // IDA: void __cdecl ScaleSpecVolUp3()
+// FUNCTION: CARM95 0x004460d2
 void ScaleSpecVolUp3(void) {
-    LOG_TRACE("()");
 
     ScaleAccUp3();
 }
 
 // IDA: void __cdecl ScaleSpecVolUp4()
+// FUNCTION: CARM95 0x004460e2
 void ScaleSpecVolUp4(void) {
-    LOG_TRACE("()");
 
     ScaleAccUp4();
 }
 
 // IDA: void __cdecl ScaleSpecVolDown2()
+// FUNCTION: CARM95 0x004460f2
 void ScaleSpecVolDown2(void) {
-    LOG_TRACE("()");
 
     ScaleAccDown2();
 }
 
 // IDA: void __cdecl ScaleSpecVolDown3()
+// FUNCTION: CARM95 0x00446102
 void ScaleSpecVolDown3(void) {
-    LOG_TRACE("()");
 
     ScaleAccDown3();
 }
 
 // IDA: void __cdecl ScaleSpecVolDown4()
+// FUNCTION: CARM95 0x00446112
 void ScaleSpecVolDown4(void) {
-    LOG_TRACE("()");
 
     ScaleAccDown4();
 }
 
 // IDA: void __cdecl MoveXSpecVolL()
+// FUNCTION: CARM95 0x00446122
 void MoveXSpecVolL(void) {
-    LOG_TRACE("()");
 
     MoveXAccL();
 }
 
 // IDA: void __cdecl MoveXSpecVolL2()
+// FUNCTION: CARM95 0x00446132
 void MoveXSpecVolL2(void) {
-    LOG_TRACE("()");
 
     MoveXAccL2();
 }
 
 // IDA: void __cdecl MoveXSpecVolL3()
+// FUNCTION: CARM95 0x00446142
 void MoveXSpecVolL3(void) {
-    LOG_TRACE("()");
 
     MoveXAccL3();
 }
 
 // IDA: void __cdecl MoveXSpecVolL4()
+// FUNCTION: CARM95 0x00446152
 void MoveXSpecVolL4(void) {
-    LOG_TRACE("()");
 
     MoveXAccL4();
 }
 
 // IDA: void __cdecl MoveXSpecVolR()
+// FUNCTION: CARM95 0x00446162
 void MoveXSpecVolR(void) {
-    LOG_TRACE("()");
 
     MoveXAccR();
 }
 
 // IDA: void __cdecl MoveXSpecVolR2()
+// FUNCTION: CARM95 0x00446172
 void MoveXSpecVolR2(void) {
-    LOG_TRACE("()");
 
     MoveXAccR2();
 }
 
 // IDA: void __cdecl MoveXSpecVolR3()
+// FUNCTION: CARM95 0x00446182
 void MoveXSpecVolR3(void) {
-    LOG_TRACE("()");
 
     MoveXAccR3();
 }
 
 // IDA: void __cdecl MoveXSpecVolR4()
+// FUNCTION: CARM95 0x00446192
 void MoveXSpecVolR4(void) {
-    LOG_TRACE("()");
 
     MoveXAccR4();
 }
 
 // IDA: void __cdecl MoveYSpecVolL()
+// FUNCTION: CARM95 0x004461a2
 void MoveYSpecVolL(void) {
-    LOG_TRACE("()");
 
     MoveYAccL();
 }
 
 // IDA: void __cdecl MoveYSpecVolL2()
+// FUNCTION: CARM95 0x004461b2
 void MoveYSpecVolL2(void) {
-    LOG_TRACE("()");
 
 #if defined(DETHRACE_FIX_BUGS)
     MoveYAccL2();
@@ -5648,111 +5374,112 @@ void MoveYSpecVolL2(void) {
 }
 
 // IDA: void __cdecl MoveYSpecVolL3()
+// FUNCTION: CARM95 0x004461c2
 void MoveYSpecVolL3(void) {
-    LOG_TRACE("()");
 
     MoveYAccL3();
 }
 
 // IDA: void __cdecl MoveYSpecVolL4()
+// FUNCTION: CARM95 0x004461d2
 void MoveYSpecVolL4(void) {
-    LOG_TRACE("()");
 
     MoveYAccL4();
 }
 
 // IDA: void __cdecl MoveYSpecVolR()
+// FUNCTION: CARM95 0x004461e2
 void MoveYSpecVolR(void) {
-    LOG_TRACE("()");
 
     MoveYAccR();
 }
 
 // IDA: void __cdecl MoveYSpecVolR2()
+// FUNCTION: CARM95 0x004461f2
 void MoveYSpecVolR2(void) {
-    LOG_TRACE("()");
 
     MoveYAccR2();
 }
 
 // IDA: void __cdecl MoveYSpecVolR3()
+// FUNCTION: CARM95 0x00446202
 void MoveYSpecVolR3(void) {
-    LOG_TRACE("()");
 
     MoveYAccR3();
 }
 
 // IDA: void __cdecl MoveYSpecVolR4()
+// FUNCTION: CARM95 0x00446212
 void MoveYSpecVolR4(void) {
-    LOG_TRACE("()");
 
     MoveYAccR4();
 }
 
 // IDA: void __cdecl MoveZSpecVolL()
+// FUNCTION: CARM95 0x00446222
 void MoveZSpecVolL(void) {
-    LOG_TRACE("()");
 
     MoveZAccL();
 }
 
 // IDA: void __cdecl MoveZSpecVolL2()
+// FUNCTION: CARM95 0x00446232
 void MoveZSpecVolL2(void) {
-    LOG_TRACE("()");
 
     MoveZAccL2();
 }
 
 // IDA: void __cdecl MoveZSpecVolL3()
+// FUNCTION: CARM95 0x00446242
 void MoveZSpecVolL3(void) {
-    LOG_TRACE("()");
 
     MoveZAccL3();
 }
 
 // IDA: void __cdecl MoveZSpecVolL4()
+// FUNCTION: CARM95 0x00446252
 void MoveZSpecVolL4(void) {
-    LOG_TRACE("()");
 
     MoveZAccL4();
 }
 
 // IDA: void __cdecl MoveZSpecVolR()
+// FUNCTION: CARM95 0x00446262
 void MoveZSpecVolR(void) {
-    LOG_TRACE("()");
 
     MoveZAccR();
 }
 
 // IDA: void __cdecl MoveZSpecVolR2()
+// FUNCTION: CARM95 0x00446272
 void MoveZSpecVolR2(void) {
-    LOG_TRACE("()");
 
     MoveZAccR2();
 }
 
 // IDA: void __cdecl MoveZSpecVolR3()
+// FUNCTION: CARM95 0x00446282
 void MoveZSpecVolR3(void) {
-    LOG_TRACE("()");
 
     MoveZAccR3();
 }
 
 // IDA: void __cdecl MoveZSpecVolR4()
+// FUNCTION: CARM95 0x00446292
 void MoveZSpecVolR4(void) {
-    LOG_TRACE("()");
 
     MoveZAccR4();
 }
 
 // IDA: void __cdecl SnapSpecVolToVertical()
+// FUNCTION: CARM95 0x004462a2
 void SnapSpecVolToVertical(void) {
-    LOG_TRACE("()");
 
     SnapAccToVertical();
 }
 
 // IDA: void __cdecl ShowSpecialVolumes()
+// FUNCTION: CARM95 0x004462b2
 void ShowSpecialVolumes(void) {
     int i;
     int j;
@@ -5762,31 +5489,28 @@ void ShowSpecialVolumes(void) {
     br_model* model;
     br_material* internal_mat;
     br_material* external_mat;
-    LOG_TRACE("()");
 
     gLast_actor = NULL;
     gSpec_vol_mode = 1;
     internal_mat = GetInternalMat();
     external_mat = GetExternalMat();
-    for (i = 0; i < gProgram_state.special_volume_count; i++) {
-        v = &gProgram_state.special_volumes[i];
-        if (!v->no_mat) {
-            BuildSpecVolModel(v, i, internal_mat, external_mat);
-        } else {
+    for (i = 0, v = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, v++) {
+        if (v->no_mat) {
             gSpec_vol_actors[i] = NULL;
+        } else {
+            BuildSpecVolModel(v, i, internal_mat, external_mat);
         }
     }
 }
 
 // IDA: void __cdecl HideSpecialVolumes()
+// FUNCTION: CARM95 0x00446351
 void HideSpecialVolumes(void) {
     int i;
     tSpecial_volume* v;
-    LOG_TRACE("()");
 
     gSpec_vol_mode = 0;
-    for (i = 0; i < gProgram_state.special_volume_count; i++) {
-        v = &gProgram_state.special_volumes[i];
+    for (i = 0, v = gProgram_state.special_volumes; i < gProgram_state.special_volume_count; i++, v++) {
         if (!v->no_mat) {
             DelSpecVolumeGraph(i);
         }

@@ -1,5 +1,8 @@
 #define _GNU_SOURCE
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +46,40 @@ char* OS_GetWorkingDirectory(char* argv0) {
 
 void OS_InstallSignalHandler(char* program_name) {
     return;
+}
+
+void OS_RemoveSignalHandler(void) {
+}
+
+// The game runs from its own folder on the SD card, so there is no per-user pref directory:
+// failing here makes the harness fall back to the working directory.
+int OS_GetPrefPath(char* dest, char* name) {
+    return -1;
+}
+
+// Network play is not supported on Switch.
+int OS_GetAdapterAddress(char* name, void* pSockaddr_in) {
+    return 0;
+}
+
+int OS_InitSockets(void) {
+    return 0;
+}
+
+void OS_CleanupSockets(void) {
+}
+
+int OS_GetLastSocketError(void) {
+    return errno;
+}
+
+int OS_SetSocketNonBlocking(int socket) {
+    int flags = fcntl(socket, F_GETFL);
+    return fcntl(socket, F_SETFL, flags | O_NONBLOCK);
+}
+
+int OS_CloseSocket(int socket) {
+    return close(socket);
 }
 
 char* OS_GetNextFileInDirectory(void) {

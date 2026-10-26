@@ -1,52 +1,66 @@
-# Create object files so we can link them into the main binary and into tests without building twice.
-add_library(dethrace_obj OBJECT)
-
 option(DETHRACE_REPLAY_DEBUG "Debug replay" OFF)
 
-target_include_directories(dethrace_obj
+# Create our main game binary.
+if(MSVC_42_FOR_RECCMP)
+    add_executable(dethrace WIN32)
+
+    set(CMAKE_C_FLAGS_DEBUG "/Oi /Zi /MLd /G5 /w")
+
+    add_compile_definitions(_DEBUG)
+    set_target_properties(dethrace PROPERTIES OUTPUT_NAME "CARM95")
+    target_link_options(dethrace PRIVATE /INCREMENTAL:NO /subsystem:windows /ENTRY:mainCRTStartup)
+    target_link_libraries(dethrace PRIVATE ws2_32)
+
+    file(GLOB DETHRACE_COMMON_C_FILES "${CMAKE_CURRENT_SOURCE_DIR}/common/*.c")
+    set_source_files_properties(${DETHRACE_COMMON_C_FILES} PROPERTIES COMPILE_FLAGS "/FAs")
+
+    reccmp_add_target(dethrace ID CARM95)
+    reccmp_configure()
+else()
+    add_executable(dethrace
+        WIN32
+        ${CMAKE_SOURCE_DIR}/packaging/macos/dethrace.icns
+        ${CMAKE_SOURCE_DIR}/packaging/windows/dethrace.rc
+    )
+    get_property(build_rpaths GLOBAL PROPERTY DETHRACE_BUILD_RPATHS)
+    set_property(TARGET dethrace APPEND PROPERTY BUILD_RPATH "${build_rpaths}")
+
+    if(MSVC)
+        target_link_libraries(dethrace PRIVATE dbghelp)
+        target_link_options(dethrace PRIVATE /subsystem:windows /ENTRY:mainCRTStartup)
+        target_compile_definitions(dethrace PRIVATE -D_CRT_SECURE_NO_WARNINGS -DSDL_MAIN_HANDLED -DWIN32_LEAN_AND_MEAN)
+    endif()
+endif()
+
+target_include_directories(dethrace
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        common
-        pd
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    common
+    pd
 )
 
-if (NINTENDO_SWITCH)
-
-    target_include_directories(
-        dethrace_obj
-        PUBLIC
-        ${DEVKITPRO}/libnx/include
-        ${DEVKITPRO}/portlibs/switch/include
-        ${DEVKITPRO}/portlibs/switch/include/SDL2
-        ${DEVKITPRO}/devkitA64/aarch64-none-elf/include
-    )
-
-endif ()
-
-if (DETHRACE_ASAN)
-    target_compile_options(dethrace_obj PUBLIC -fsanitize=address)
-    target_link_options(dethrace_obj PUBLIC -fsanitize=address)
+if(DETHRACE_ASAN)
+    target_compile_options(dethrace PUBLIC -fsanitize=address)
+    target_link_options(dethrace PUBLIC -fsanitize=address)
 endif()
 
-if (NOT NINTENDO_SWITCH)
-    target_link_libraries(dethrace_obj PUBLIC SDL2::SDL2 smackw32 harness BRender::Full BRender::DDI s3)
-else()
-    target_compile_options(dethrace_obj PRIVATE -march=armv8-a -mtune=cortex-a57 -O2 -ffunction-sections)
-    target_link_libraries(dethrace_obj PUBLIC SDL2 smackw32 harness BRender::Full BRender::DDI s3)
-endif()
+target_link_libraries(dethrace PRIVATE smackw32 harness BRender::Full BRender::DDI s3 compile_with_werror)
 
-if(MSVC)
-    target_compile_definitions(dethrace_obj PRIVATE -D_CRT_SECURE_NO_WARNINGS)
-    target_compile_options(dethrace_obj PRIVATE
+if(MSVC_42_FOR_RECCMP)
+# do nothing
+elseif(MSVC)
+    target_compile_definitions(dethrace PRIVATE -D_CRT_SECURE_NO_WARNINGS)
+    target_compile_options(dethrace PRIVATE
         /wd4101
         /wd4996
     )
 else()
-    target_compile_options(dethrace_obj PRIVATE
-        -Wall
+    target_compile_options(dethrace PRIVATE
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Wall>
     )
-    add_compile_flags_if_supported(dethrace_obj
+    add_compile_flags_if_supported(dethrace
         -Wformat
+        -Wno-format-overflow
         -Wno-unused-but-set-variable
         -Wno-unused-variable
         -Wno-unused-result
@@ -54,25 +68,44 @@ else()
         -Wstrict-prototypes
     )
 endif()
-target_compile_definitions(dethrace_obj PRIVATE INSIDE_DETHRACE)
+
+target_compile_definitions(dethrace PRIVATE INSIDE_DETHRACE)
+
 if(DETHRACE_FIX_BUGS)
-    target_compile_definitions(dethrace_obj PRIVATE DETHRACE_FIX_BUGS)
+    target_compile_definitions(dethrace PRIVATE DETHRACE_FIX_BUGS)
 endif()
+
 if(DETHRACE_3DFX_PATCH)
-    target_compile_definitions(dethrace_obj PRIVATE DETHRACE_3DFX_PATCH)
+    target_compile_definitions(dethrace PRIVATE DETHRACE_3DFX_PATCH)
 endif()
 
 if(IS_BIGENDIAN)
-    target_compile_definitions(dethrace_obj PRIVATE BR_ENDIAN_BIG=1)
+    target_compile_definitions(dethrace PRIVATE BR_ENDIAN_BIG=1)
 else()
-    target_compile_definitions(dethrace_obj PRIVATE BR_ENDIAN_LITTLE=1)
+    target_compile_definitions(dethrace PRIVATE BR_ENDIAN_LITTLE=1)
 endif()
 
 if(DETHRACE_REPLAY_DEBUG)
-    target_compile_definitions(dethrace_obj PRIVATE DETHRACE_REPLAY_DEBUG)
+    target_compile_definitions(dethrace PRIVATE DETHRACE_REPLAY_DEBUG)
 endif()
 
-target_sources(dethrace_obj PRIVATE
+if(MINGW)
+    target_compile_options(dethrace PRIVATE -Wno-error=incompatible-pointer-types)
+endif()
+
+target_sources(dethrace PRIVATE
+    common/skidmark.c
+    common/opponent.c
+    common/oil.c
+    common/racesumm.c
+    common/replay.c
+    common/loading.c
+    common/piping.c
+    common/powerup.c
+    common/netgame.c
+    common/world.c
+    common/network.c
+
     common/brucetrk.c
     common/brucetrk.h
     common/car.c
@@ -119,8 +152,6 @@ target_sources(dethrace_obj PRIVATE
     common/input.h
     common/intrface.c
     common/intrface.h
-    common/loading.c
-    common/loading.h
     common/loadsave.c
     common/loadsave.h
     common/main.c
@@ -129,40 +160,24 @@ target_sources(dethrace_obj PRIVATE
     common/mainloop.h
     common/mainmenu.c
     common/mainmenu.h
-    common/netgame.c
-    common/netgame.h
-    common/network.c
-    common/network.h
+
     common/newgame.c
     common/newgame.h
-    common/oil.c
-    common/oil.h
     common/oppocar.c
     common/oppocar.h
-    common/opponent.c
-    common/opponent.h
     common/oppoproc.c
     common/oppoproc.h
     common/options.c
     common/options.h
     common/pedestrn.c
     common/pedestrn.h
-    common/piping.c
-    common/piping.h
-    common/powerup.c
-    common/powerup.h
     common/pratcam.c
     common/pratcam.h
     common/racestrt.c
     common/racestrt.h
-    common/racesumm.c
-    common/racesumm.h
     common/raycast.c
     common/raycast.h
-    common/replay.c
-    common/replay.h
-    common/skidmark.c
-    common/skidmark.h
+
     common/sound.c
     common/sound.h
     common/spark.c
@@ -173,42 +188,38 @@ target_sources(dethrace_obj PRIVATE
     common/trig.h
     common/utility.c
     common/utility.h
-    common/world.c
-    common/world.h
+
     constants.h
     dr_types.h
     pd/net.h
     pd/sys.h
-    pc-win95/win95sys.c
-    pc-win95/dinput.h
-    pc-win95/ssdx.c
-    pc-win95/ssdx.h
-    pc-win95/win95net.c
-    pc-dos/dosnet.c
-    pc-dos/dossys.c
+
+    pc-all/allsys.c
+
+    # original win95 sys and network
+    # pc-win95/win95sys.c
+    # pc-win95/ssdx.c
+    # pc-win95/ssdx.h
+
+    # original dos sys and network
+    # pc-dos/dosnet.c
+    # pc-dos/dossys.c
 )
 
-# Create our main game binary.
-add_executable(dethrace
-    WIN32
-    ${CMAKE_SOURCE_DIR}/packaging/macos/dethrace.icns
-    ${CMAKE_SOURCE_DIR}/packaging/windows/dethrace.rc
-)
-
-target_link_libraries(dethrace PRIVATE dethrace_obj compile_with_werror)
-target_sources(dethrace PRIVATE main.c)
-
-if(MSVC)
-    target_link_libraries(dethrace PRIVATE dbghelp)
-    target_link_options(dethrace PRIVATE /subsystem:windows /ENTRY:mainCRTStartup)
-    target_compile_definitions(dethrace PRIVATE -D_CRT_SECURE_NO_WARNINGS -DSDL_MAIN_HANDLED -DWIN32_LEAN_AND_MEAN)
+if(MSVC_42_FOR_RECCMP)
+    target_sources(dethrace PRIVATE pc-win95/win95net.c)
+else()
+    # dethrace-added cross platform sys and network implementation
+    target_sources(dethrace PRIVATE pc-all/allnet.c)
 endif()
+target_sources(dethrace PRIVATE main.c)
 
 if(DETHRACE_IDE_ROOT_DIR)
     set_target_properties(dethrace PROPERTIES
         VS_DEBUGGER_ENVIRONMENT "DETHRACE_ROOT_DIR=${DETHRACE_IDE_ROOT_DIR}"
     )
 endif()
+
 if(DETHRACE_IDE_ARGUMENTS)
     message(STATUS "before: ${DETHRACE_IDE_ARGUMENTS}")
     separate_arguments(DETHRACE_IDE_ARGUMENTS NATIVE_COMMAND "${DETHRACE_IDE_ARGUMENTS}")
@@ -219,11 +230,14 @@ if(DETHRACE_IDE_ARGUMENTS)
 endif()
 
 if(DETHRACE_INSTALL)
-    install(TARGETS dethrace
-        BUNDLE DESTINATION . COMPONENT Runtime
-        RUNTIME DESTINATION . COMPONENT Runtime
-    )
-
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND DETHRACE_USE_LSB_GAMES)
+        install(TARGETS dethrace RUNTIME DESTINATION games)
+    else()
+        install(TARGETS dethrace
+            BUNDLE DESTINATION . COMPONENT Runtime
+            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime
+        )
+    endif()
     if(APPLE)
         set_target_properties(dethrace PROPERTIES
             BUNDLE True
@@ -237,20 +251,74 @@ if(DETHRACE_INSTALL)
         set_source_files_properties(${CMAKE_SOURCE_DIR}/packaging/macos/dethrace.icns PROPERTIES
             MACOSX_PACKAGE_LOCATION "Resources"
         )
-        target_sources(dethrace_obj PRIVATE
+        target_sources(dethrace PRIVATE
             ${CMAKE_SOURCE_DIR}/packaging/macos/dethrace.icns
         )
+    endif()
+
+    install(TARGETS dethrace
+        BUNDLE DESTINATION . COMPONENT Runtime
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime
+    )
+
+    if(APPLE)
+        if(DETHRACE_PLATFORM_SDL_DYNAMIC)
+            if(DETHRACE_PLATFORM_SDL2)
+                install(CODE "
+                    set(app_root \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}\")
+                    set(app \"\${app_root}/Deth Race.app\")
+                    if(NOT EXISTS \"\${app}\")
+                        set(app \"\${app_root}/${CMAKE_INSTALL_BINDIR}/Deth Race.app\")
+                    endif()
+                    file(INSTALL
+                        DESTINATION \"\${app}/Contents/MacOS\"
+                        TYPE FILE
+                        FOLLOW_SYMLINK_CHAIN
+                        FILES \"$<TARGET_FILE:SDL2::SDL2>\"
+                    )
+                    "
+                    COMPONENT Runtime
+                )
+            endif()
+
+            if(DETHRACE_PLATFORM_SDL3)
+                install(CODE "
+                    set(app_root \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}\")
+                    set(app \"\${app_root}/Deth Race.app\")
+                    if(NOT EXISTS \"\${app}\")
+                        set(app \"\${app_root}/${CMAKE_INSTALL_BINDIR}/Deth Race.app\")
+                    endif()
+                    file(INSTALL
+                        DESTINATION \"\${app}/Contents/MacOS\"
+                        TYPE FILE
+                        FOLLOW_SYMLINK_CHAIN
+                        FILES \"$<TARGET_FILE:SDL3::SDL3>\"
+                    )
+                    file(CREATE_LINK
+                        \"libSDL3.0.dylib\"
+                        \"\${app}/Contents/MacOS/libSDL3.dylib\"
+                        SYMBOLIC
+                    )
+                    "
+                    COMPONENT Runtime
+                )
+            endif()
+        endif()
 
         install(CODE "
             include(BundleUtilities)
-            fixup_bundle(\"${CMAKE_BINARY_DIR}/Deth Race.app\" \"\" \"/Library/Frameworks\")
+            set(app_root \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}\")
+            set(app \"\${app_root}/Deth Race.app\")
+            if(NOT EXISTS \"\${app}\")
+                set(app \"\${app_root}/${CMAKE_INSTALL_BINDIR}/Deth Race.app\")
+            endif()
+            fixup_bundle(\"\${app}\" \"\" \"/Library/Frameworks\")
             execute_process(COMMAND
-                codesign -s - -f \"${CMAKE_BINARY_DIR}/Deth Race.app/Contents/Frameworks/SDL2.framework\"
+                codesign -s - -f --deep \"\${app}\"
             )
             "
-            COMPONENT RUNTIME
+            COMPONENT Runtime
         )
-
     endif()
 
     if(MSVC)
@@ -258,16 +326,46 @@ if(DETHRACE_INSTALL)
             DESTINATION "."
             OPTIONAL
         )
-    endif()
-    if(WIN32)
-        install(FILES  $<TARGET_RUNTIME_DLLS:dethrace>
-            DESTINATION "."
-            OPTIONAL
-        )
+
+        if(DETHRACE_PLATFORM_SDL_DYNAMIC)
+            if(DETHRACE_PLATFORM_SDL1)
+                get_filename_component(sdl1_lib_dir "${SDL_LIBRARY}" DIRECTORY)
+                get_filename_component(sdl1_root_dir "${SDL_LIBRARY}" PATH)
+                set(sdl1_bin_dir "${sdl1_root_dir}/bin" PATH)
+                find_file(SDL1DLL_PATH NAMES "SDL.dll" PATHS ${sdl1_lib_dir} ${sdl1_root_dir} PATH_SUFFIXES "bin" REQUIRED)
+
+                if(SDL1DLL_PATH)
+                    install(FILES "${SDL1DLL_PATH}"
+                        DESTINATION "."
+                        OPTIONAL
+                    )
+                endif()
+            endif()
+
+            if(DETHRACE_PLATFORM_SDL2)
+                install(FILES "$<TARGET_FILE:SDL2::SDL2>"
+                    DESTINATION "."
+                    OPTIONAL
+                )
+            endif()
+
+            if(DETHRACE_PLATFORM_SDL3)
+                install(FILES "$<TARGET_FILE:SDL3::SDL3>"
+                    DESTINATION "."
+                    OPTIONAL
+                )
+            endif()
+        endif()
     endif()
 endif()
 
-if (NINTENDO_SWITCH)
+if(NINTENDO_SWITCH)
+    target_include_directories(dethrace PUBLIC
+        ${DEVKITPRO}/libnx/include
+        ${DEVKITPRO}/portlibs/switch/include
+        ${DEVKITPRO}/portlibs/switch/include/SDL2
+    )
+    target_compile_options(dethrace PRIVATE -march=armv8-a -mtune=cortex-a57 -O2 -ffunction-sections)
 
     # create .nro target
     set(NRO_OUT "${CMAKE_BINARY_DIR}/dethrace.nro")
@@ -275,7 +373,7 @@ if (NINTENDO_SWITCH)
     set(NACP_OUT "${CMAKE_BINARY_DIR}/dethrace.nacp")
     set(NACP_NAME "DethRaceNX")
     set(NACP_AUTHOR "alexart878")
-    set(NACP_VERSION "1.1")
+    set(NACP_VERSION "1.2")
 
     if(NOT COMMAND nx_generate_nacp)
         message(FATAL_ERROR "The `nx_generate_nacp` cmake command is not available. Please use an appropriate Nintendo Switch toolchain.")
@@ -298,5 +396,4 @@ if (NINTENDO_SWITCH)
         ICON ${NRO_ICON}
         NACP ${NACP_OUT}
     )
-
-endif ()
+endif()
